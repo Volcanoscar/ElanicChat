@@ -11,7 +11,6 @@ var urlParams = {};
        urlParams[decode(match[1])] = decode(match[2]);
 })();
 
-var socket = io("http://localhost:8888", {room:"suupp"});
 var params = {
     username : urlParams["username"] || "default",
     product : urlParams["product"] || "default",
