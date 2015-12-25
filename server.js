@@ -48,7 +48,9 @@ app.get("/hi", function(req, res){
     res.send("<h1>Sup</h1>");
 });
 
-app.use(express.static("public"));
+process.env.PWD = process.cwd();
+
+app.use(express.static(process.env.PWD + "/public"));
 
 io.use(function(socket, next) {
     var query = url.parse(socket.request.headers.referer, true).query;
