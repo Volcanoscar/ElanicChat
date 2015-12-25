@@ -78,6 +78,6 @@ io.on("connection", function(socket) {
     delete messages[id];
 });
 
-http.listen(8888, function() {
+http.listen(process.env.PORT || 8888, function() {
     console.log("Listening");
 });
