@@ -1,4 +1,5 @@
 var urlParams = {};
+//To obtain GET params
 (function () {
     var match,
         pl     = /\+/g,

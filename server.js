@@ -5,12 +5,9 @@ var io = require("socket.io")(http);
 var db = require("./models/db.js");
 var url = require("url");
 
-app.get("/hi", function(req, res){
-    res.send("<h1>Sup</h1>");
-});
-
 process.env.PWD = process.cwd();
 
+//Static server to serve files
 app.use(express.static(process.env.PWD + "/public"));
 
 io.use(function(socket, next) {
@@ -31,6 +28,7 @@ io.use(function(socket, next) {
     return next();
 });
 
+//On successful connection, send unread messages with tag: unread
 io.on("connection", function(socket) {
     io.to(socket.id).emit("unread", db.get_unread_messages(socket.id));
 });
