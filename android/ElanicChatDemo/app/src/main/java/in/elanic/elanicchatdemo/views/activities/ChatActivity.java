@@ -2,8 +2,12 @@ package in.elanic.elanicchatdemo.views.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -14,15 +18,19 @@ import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatViewComponent;
+import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.modules.ChatViewModule;
 import in.elanic.elanicchatdemo.presenters.ChatPresenter;
+import in.elanic.elanicchatdemo.views.adapters.ChatAdapter;
 import in.elanic.elanicchatdemo.views.interfaces.ChatView;
 
 public class ChatActivity extends AppCompatActivity implements ChatView {
 
     private static final String TAG = "ChatActivity";
-    @Bind(R.id.textview) TextView mTextView;
+    @Bind(R.id.recyclerview) RecyclerView mRecyclerView;
     @Bind(R.id.edittext) EditText mEditText;
+
+    private ChatAdapter mAdapter;
 
     @Inject
     ChatPresenter mPresenter;
@@ -34,7 +42,14 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
 
-        mTextView.setText(mPresenter.getLatestMessage());
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true));
+
+        mAdapter = new ChatAdapter(this);
+        mAdapter.setHasStableIds(true);
+
+        mRecyclerView.setAdapter(mAdapter);
+        mPresenter.attachView();
+        mPresenter.loadData();
     }
 
 
@@ -47,8 +62,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     }
 
     @Override
-    public void updateLatestMessage(String content) {
-        mTextView.setText(content);
+    public void setData(List<Message> data) {
+        mAdapter.setItems(data);
+        mAdapter.notifyDataSetChanged();
     }
 
     @OnClick(R.id.button)
@@ -59,5 +75,6 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         }
 
         mPresenter.sendMessage(text);
+        mEditText.setText("");
     }
 }

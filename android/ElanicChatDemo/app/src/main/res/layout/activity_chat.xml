@@ -5,11 +5,11 @@
     android:layout_height="match_parent"
     tools:context=".views.activities.ChatActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textview"
-        android:text="Hello World!" />
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/recyclerview"
+        android:layout_marginBottom="48dp"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -26,5 +26,7 @@
         android:layout_toLeftOf="@id/button"
         android:maxLines="2"
         android:hint="Enter Message"
+        android:inputType="textCapSentences"
         android:id="@+id/edittext"/>
+
 </RelativeLayout>

@@ -8,6 +8,6 @@ public interface ChatPresenter {
     void attachView();
     void detachView();
 
-    String getLatestMessage();
+    void loadData();
     void sendMessage(String content);
 }

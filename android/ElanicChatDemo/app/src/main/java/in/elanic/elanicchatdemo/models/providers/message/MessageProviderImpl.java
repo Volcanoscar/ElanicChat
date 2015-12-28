@@ -19,8 +19,13 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public List<Message> getAllMessages() {
+        return mDao.queryBuilder().orderDesc(MessageDao.Properties.Created_at).list();
+    }
+
+    @Override
     public Message getLatestMessage() {
-        List<Message> messages = mDao.loadAll();
+        List<Message> messages = getAllMessages();
         if (messages != null && !messages.isEmpty()) {
             return messages.get(0);
         }

@@ -1,5 +1,8 @@
 package in.elanic.elanicchatdemo.presenters;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.User;
@@ -23,6 +26,8 @@ public class ChatPresenterImpl implements ChatPresenter {
     private User mSender;
     private User mReceiver;
 
+    private List<Message> mMessages;
+
     public ChatPresenterImpl(ChatView mChatView, DaoSession mDaoSession) {
         this.mChatView = mChatView;
         this.mDaoSession = mDaoSession;
@@ -39,18 +44,24 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     @Override
     public void detachView() {
-
+        mMessages.clear();
     }
 
     @Override
-    public String getLatestMessage() {
-        Message message = mMessageProvider.getLatestMessage();
-        return message != null ? message.getContent() : null;
+    public void loadData() {
+        mMessages = mMessageProvider.getAllMessages();
+        mChatView.setData(mMessages);
     }
+
 
     @Override
     public void sendMessage(String content) {
         Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver);
-        mChatView.updateLatestMessage(message.getContent());
+        if (mMessages == null) {
+            mMessages = new ArrayList<>();
+        }
+
+        mMessages.add(0, message);
+        mChatView.setData(mMessages);
     }
 }
