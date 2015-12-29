@@ -1,9 +1,19 @@
 package in.elanic.elanicchatdemo.presenters;
 
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.greenrobot.event.EventBus;
+import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
+import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
+import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
@@ -17,6 +27,7 @@ import in.elanic.elanicchatdemo.views.interfaces.ChatView;
  */
 public class ChatPresenterImpl implements ChatPresenter {
 
+    private static final String TAG = "ChatPresenter";
     private ChatView mChatView;
     private DaoSession mDaoSession;
 
@@ -27,6 +38,10 @@ public class ChatPresenterImpl implements ChatPresenter {
     private User mReceiver;
 
     private List<Message> mMessages;
+
+    private EventBus mEventBus;
+
+    private static final boolean DEBUG = true;
 
     public ChatPresenterImpl(ChatView mChatView, DaoSession mDaoSession) {
         this.mChatView = mChatView;
@@ -48,6 +63,21 @@ public class ChatPresenterImpl implements ChatPresenter {
     }
 
     @Override
+    public void registerForEvents() {
+        mEventBus = EventBus.getDefault();
+        if (!mEventBus.isRegistered(this)) {
+            mEventBus.register(this);
+        }
+    }
+
+    @Override
+    public void unregisterForEvents() {
+        if (mEventBus.isRegistered(this)) {
+            mEventBus.unregister(this);
+        }
+    }
+
+    @Override
     public void loadData() {
         mMessages = mMessageProvider.getAllMessages();
         mChatView.setData(mMessages);
@@ -57,11 +87,55 @@ public class ChatPresenterImpl implements ChatPresenter {
     @Override
     public void sendMessage(String content) {
         Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver);
+
+
+        if (DEBUG) {
+            Log.i(TAG, "receiver_id: " + message.getReceiver_id());
+        }
+
+        addMessageToChat(0, message);
+
+        try {
+            sendMessageToWSService(JSONUtils.toJSON(message).toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addMessageToChat(int position, Message message) {
         if (mMessages == null) {
             mMessages = new ArrayList<>();
         }
 
-        mMessages.add(0, message);
+        mMessages.add(position, message);
         mChatView.setData(mMessages);
+    }
+
+    private void sendMessageToWSService(String data) {
+        EventBus.getDefault().post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, data));
+    }
+
+    private void onNewMessageReceived(String data) {
+        try {
+            Message message = JSONUtils.getMessageFromJSON(new JSONObject(data));
+            boolean addedToDB = mMessageProvider.addNewMessage(message);
+            if (addedToDB) {
+                addMessageToChat(0, message);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onEventMainThread(WSResponseEvent event) {
+        switch (event.getEvent()) {
+            case WSResponseEvent.EVENT_NEW_MESSAGES:
+                String data = event.getData();
+                onNewMessageReceived(data);
+                break;
+        }
     }
 }

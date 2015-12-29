@@ -43,4 +43,7 @@ dependencies {
 
     // EventBus
     compile 'de.greenrobot:eventbus:2.4.0'
+
+    // Websocket
+    compile 'com.neovisionaries:nv-websocket-client:1.17'
 }

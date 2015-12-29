@@ -1,5 +1,6 @@
 package in.elanic.elanicchatdemo.views.activities;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +19,7 @@ import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatViewComponent;
+import in.elanic.elanicchatdemo.controllers.services.WebsocketConnectionService;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.modules.ChatViewModule;
 import in.elanic.elanicchatdemo.presenters.ChatPresenter;
@@ -35,6 +37,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Inject
     ChatPresenter mPresenter;
 
+    private Intent mServiceIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +54,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         mRecyclerView.setAdapter(mAdapter);
         mPresenter.attachView();
         mPresenter.loadData();
+
+        mServiceIntent = new Intent(this, WebsocketConnectionService.class);
+        startService(mServiceIntent);
     }
 
 
@@ -59,6 +66,27 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .chatViewModule(new ChatViewModule(this))
                 .build()
                 .inject(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mPresenter.registerForEvents();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mPresenter.unregisterForEvents();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mServiceIntent != null) {
+            stopService(mServiceIntent);
+        }
+        mPresenter.detachView();
+        super.onDestroy();
     }
 
     @Override

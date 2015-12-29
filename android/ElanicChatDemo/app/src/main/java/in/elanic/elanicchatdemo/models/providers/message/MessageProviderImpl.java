@@ -51,4 +51,9 @@ public class MessageProviderImpl implements MessageProvider {
         mDao.insert(message);
         return message;
     }
+
+    @Override
+    public boolean addNewMessage(Message message) {
+        return mDao.insert(message) != 0;
+    }
 }

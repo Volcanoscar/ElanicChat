@@ -2,6 +2,7 @@ package in.elanic.elanicchatdemo.views.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.User;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -37,7 +39,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof MessageHolder) {
             MessageHolder mHolder = (MessageHolder)holder;
-            mHolder.mTextView.setText(mItems.get(position).getContent());
+            User sender = mItems.get(position).getSender();
+            String sender_text = mItems.get(position).getSender_id();
+            if (sender != null) {
+                sender_text = sender.getUsername();
+            }
+
+            mHolder.mTextView.setText(TextUtils.concat(sender_text, ": ", mItems.get(position).getContent()));
         }
     }
 

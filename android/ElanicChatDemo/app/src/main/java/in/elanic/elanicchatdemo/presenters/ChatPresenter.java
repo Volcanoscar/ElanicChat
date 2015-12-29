@@ -8,6 +8,9 @@ public interface ChatPresenter {
     void attachView();
     void detachView();
 
+    void registerForEvents();
+    void unregisterForEvents();
+
     void loadData();
     void sendMessage(String content);
 }

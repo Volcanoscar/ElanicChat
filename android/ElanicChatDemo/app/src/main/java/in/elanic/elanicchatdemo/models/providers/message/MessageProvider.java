@@ -13,4 +13,6 @@ public interface MessageProvider {
     List<Message> getAllMessages();
     Message getLatestMessage();
     Message createNewMessage(String content, User sender, User receiver);
+
+    boolean addNewMessage(Message message);
 }

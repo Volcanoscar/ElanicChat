@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.user;
 
+import android.util.Log;
+
 import java.util.Date;
 
 import in.elanic.elanicchatdemo.models.db.User;
@@ -10,14 +12,14 @@ import in.elanic.elanicchatdemo.models.db.UserDao;
  */
 public class UserProviderImpl implements UserProvider {
 
+    private static final String TAG = "UserProvider";
     private UserDao mDao;
-
-    public static final String SENDER_ID = "7164";
-    public static final String RECEIVER_ID = "15664";
 
     public UserProviderImpl(UserDao mDao) {
         this.mDao = mDao;
     }
+
+    private static final boolean DEBUG = true;
 
     @Override
     public User getSender() {
@@ -50,6 +52,11 @@ public class UserProviderImpl implements UserProvider {
     @Override
     public User createReceiver() {
         if (!doesUserExit(RECEIVER_ID)) {
+
+            if (DEBUG) {
+                Log.i(TAG, "receiver doesn't exist. Create new");
+            }
+
             User user = new User();
             user.setName("Receiver");
             user.setUser_id(RECEIVER_ID);
@@ -62,11 +69,14 @@ public class UserProviderImpl implements UserProvider {
             return user;
         }
 
+        if (DEBUG) {
+            Log.i(TAG, "receiver exists. get receiver");
+        }
         return getReceiver();
     }
 
     @Override
     public boolean doesUserExit(String userId) {
-        return (mDao.queryBuilder().where(UserDao.Properties.User_id.eq(SENDER_ID)).count() != 0);
+        return (mDao.queryBuilder().where(UserDao.Properties.User_id.eq(userId)).count() != 0);
     }
 }
