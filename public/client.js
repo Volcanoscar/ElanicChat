@@ -18,13 +18,13 @@ var params = {
     seller : urlParams["seller"] == "on",
     timestamp : urlParams["timestamp"] || 0
 };
-for (elem in params) {
+for (var elem in params) {
     if (elem == "seller")
 	$("[name='seller']").prop("checked", params[elem]);
     else
 	$("[name='"+elem+"']").val(params[elem]);
 }
-params["username"] = (params["seller"])? "seller": params["username"];
+params.username = (params["seller"])? "seller": params["username"];
 function add_message(msg) {
     if (msg.constructor == Array)
 	msg.forEach(add_message);
@@ -33,17 +33,23 @@ function add_message(msg) {
 }
 function send_message() {
     var message = $('#m').val();
-    socket.emit('message', message);
+    socket.emit('TYPE_SEND', {
+	message : message
+    });
     add_message({
 	message: message,
-	username: params["username"],
+	username: params.username
     });
     $('#m').val('');
     return false;
 }
 var socket = io.connect(location.href);
-test = $("#channel");
-console.log(params);
-socket.on('message', add_message);
-socket.on('unread', add_message);
+socket.on('connection', function() {
+    socket.emit('TYPE_GET', params.timestamp);
+});
+socket.on('TYPE_SEND', add_message);
+socket.on('TYPE_GET', add_message);
+socket.on('error', function(err) {
+    console.log(err);
+});
 $('#post').submit(send_message);
