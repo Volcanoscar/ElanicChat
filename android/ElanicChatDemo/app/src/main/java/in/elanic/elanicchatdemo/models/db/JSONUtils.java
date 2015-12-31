@@ -23,6 +23,16 @@ public class JSONUtils {
     public static final String KEY_IS_DELETED = "is_deleted";
 
     public static final String KEY_SUCCESS = "success";
+    public static final String KEY_RESPONSE_TYPE = "response_type";
+    public static final String KEY_REQUEST_TYPE = "request_type";
+    public static final String KEY_DATA = "data";
+    public static final String KEY_MESSAGE = "message";
+
+    public static final int REQUEST_SEND_MESSAGE = 1;
+    public static final int REQUEST_GET_USER = 2;
+
+    public static final int RESPONSE_NEW_MESSAGE = 3;
+    public static final int RESPONSE_USER_DATA = 4;
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 

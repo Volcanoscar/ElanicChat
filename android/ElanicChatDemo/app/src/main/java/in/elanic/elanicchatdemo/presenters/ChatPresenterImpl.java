@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import de.greenrobot.event.EventBus;
@@ -88,7 +89,6 @@ public class ChatPresenterImpl implements ChatPresenter {
     public void sendMessage(String content) {
         Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver);
 
-
         if (DEBUG) {
             Log.i(TAG, "receiver_id: " + message.getReceiver_id());
         }
@@ -96,7 +96,11 @@ public class ChatPresenterImpl implements ChatPresenter {
         addMessageToChat(0, message);
 
         try {
-            sendMessageToWSService(JSONUtils.toJSON(message).toString());
+
+            // TODO move this to WSService
+            JSONObject jsonRequest = JSONUtils.toJSON(message);
+            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, JSONUtils.REQUEST_SEND_MESSAGE);
+            sendMessageToWSService(jsonRequest.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -115,7 +119,64 @@ public class ChatPresenterImpl implements ChatPresenter {
         EventBus.getDefault().post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, data));
     }
 
+    private void fetchNewMessagesFromDB() {
+        if (DEBUG) {
+            Log.i(TAG, "fetch recent messages");
+        }
+
+        List<Message> data;
+        if (mMessages != null && !mMessages.isEmpty()) {
+            Log.i(TAG, "timestamp: " + mMessages.get(0).getCreated_at());
+             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at());
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "messages is null. fetch all");
+            }
+            data = mMessageProvider.getAllMessages();
+        }
+
+        if (data != null && !data.isEmpty()) {
+            for (Message message : data) {
+                if (DEBUG) {
+                    Log.i(TAG, "fetched message : " + message.getMessage_id() + " " + message.getContent());
+                }
+                addMessageToChat(0, message);
+            }
+        }
+    }
+
+    private void onMessageSent(Message message) {
+        if (mMessages == null) {
+            addMessageToChat(0, message);
+            return;
+        }
+
+        int matchIndex = -1;
+        for(int i=0; i<mMessages.size(); i++) {
+            Message existingMessage = mMessages.get(i);
+            if (existingMessage.getMessage_id().equals(message.getMessage_id())) {
+                matchIndex = i;
+                break;
+            }
+        }
+
+        if (DEBUG) {
+            Log.i(TAG, "message sent. timestamp: " + message.getCreated_at());
+        }
+
+        if (matchIndex != -1) {
+            mMessages.remove(matchIndex);
+            addMessageToChat(matchIndex, message);
+        }
+    }
+
     private void onNewMessageReceived(String data) {
+
+        if (data == null || data.isEmpty()) {
+            fetchNewMessagesFromDB();
+            return;
+        }
+
         try {
             Message message = JSONUtils.getMessageFromJSON(new JSONObject(data));
             boolean addedToDB = mMessageProvider.addNewMessage(message);
@@ -135,6 +196,11 @@ public class ChatPresenterImpl implements ChatPresenter {
             case WSResponseEvent.EVENT_NEW_MESSAGES:
                 String data = event.getData();
                 onNewMessageReceived(data);
+                break;
+
+            case WSResponseEvent.EVENT_MESSAGE_SENT:
+                Message message = event.getMessage();
+                onMessageSent(message);
                 break;
         }
     }

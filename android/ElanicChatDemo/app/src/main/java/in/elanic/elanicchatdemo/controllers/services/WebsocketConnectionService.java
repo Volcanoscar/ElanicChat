@@ -12,10 +12,12 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +32,8 @@ import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
+import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.modules.WebsocketConnectionServiceModule;
 
@@ -39,8 +43,11 @@ import in.elanic.elanicchatdemo.modules.WebsocketConnectionServiceModule;
 public class WebsocketConnectionService extends Service {
 
     private static final String TAG = "WSService";
+
     @Inject
     DaoSession mDaoSession;
+    private UserProvider mUserProvider;
+    private MessageProvider mMessageProvider;
 
     private WebSocket mWebSocket;
     private EventBus mEventBus;
@@ -69,6 +76,8 @@ public class WebsocketConnectionService extends Service {
                 createWSConnectionRequested();
             }
         };
+
+        mMessageProvider = new MessageProviderImpl(mDaoSession.getMessageDao());
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
@@ -200,15 +209,36 @@ public class WebsocketConnectionService extends Service {
 
             if (jsonResponse.has(JSONUtils.KEY_SUCCESS)) {
                 boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
+                if (success) {
+                    int requestType = jsonResponse.getInt(JSONUtils.KEY_REQUEST_TYPE);
+                    if (requestType == JSONUtils.REQUEST_SEND_MESSAGE) {
+                        onMessageSentSuccessfully(jsonResponse);
+                        return;
+                    }
+                }
 
                 // TODO do something
                 return;
             }
 
             // new message
-
             // TODO save message in database first and then send the update
-            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES, data));
+
+            if (jsonResponse.has(JSONUtils.KEY_RESPONSE_TYPE)) {
+                int responseType = jsonResponse.getInt(JSONUtils.KEY_RESPONSE_TYPE);
+                if (responseType == JSONUtils.RESPONSE_NEW_MESSAGE) {
+                    JSONArray messages = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
+                    if (messages.length() == 0) {
+                        if (DEBUG) {
+                            Log.e(TAG, "empty message array");
+                        }
+                        return;
+                    }
+
+                    parseNewMessages(messages);
+                    mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+                }
+            }
 
 
         } catch (JSONException e) {
@@ -216,6 +246,51 @@ public class WebsocketConnectionService extends Service {
             return;
         }
     }
+
+    private void onMessageSentSuccessfully(JSONObject jsonResponse) throws JSONException {
+
+        if (DEBUG) {
+            Log.i(TAG, "update local message in db");
+        }
+
+        JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
+        Message message;
+        try {
+            message = JSONUtils.getMessageFromJSON(message_json);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        mMessageProvider.updateMessage(message);
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGE_SENT, message));
+    }
+
+    private void parseNewMessages(JSONArray messages) {
+        for(int i=0; i<messages.length(); i++) {
+            try {
+                JSONObject message_json = messages.getJSONObject(i);
+                try {
+                    Message message = JSONUtils.getMessageFromJSON(message_json);
+                    if (DEBUG) {
+                        Log.i(TAG, "json timestamp: " + message_json.getString(JSONUtils.KEY_CREATED_AT));
+                        Log.i(TAG, "message timestamp: " + message.getCreated_at());
+                    }
+                    mMessageProvider.addNewMessage(message);
+
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    ///////////////////////////////////////////
+    //////////////// EVENTS //////////////////
+    /////////////////////////////////////////
 
     public void onEvent(WSRequestEvent event) {
         switch (event.getEvent()) {

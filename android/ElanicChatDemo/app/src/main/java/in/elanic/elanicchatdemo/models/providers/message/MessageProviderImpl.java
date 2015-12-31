@@ -24,6 +24,12 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public List<Message> getMessages(Date timestamp) {
+        return mDao.queryBuilder().where(MessageDao.Properties.Created_at.gt(timestamp))
+                .orderAsc(MessageDao.Properties.Created_at).list();
+    }
+
+    @Override
     public Message getLatestMessage() {
         List<Message> messages = getAllMessages();
         if (messages != null && !messages.isEmpty()) {
@@ -50,6 +56,12 @@ public class MessageProviderImpl implements MessageProvider {
 
         mDao.insert(message);
         return message;
+    }
+
+    @Override
+    public boolean updateMessage(Message message) {
+        mDao.update(message);
+        return true;
     }
 
     @Override
