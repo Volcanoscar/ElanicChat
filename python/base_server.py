@@ -1,5 +1,6 @@
 import tornado.ioloop
 import tornado.web
+from tornado.web import url
 import tornado.websocket
 
 import json
@@ -9,24 +10,59 @@ from tornado.options import define, options, parse_command_line
 from models_db import ModelsProvider
 import datetime
 
-date_format = "%Y-%m-%d %H:%M:%S.%f"
-
 define("port", default=8888, help="run on the give port", type=int)
 
 clients = dict()
 
 REQUEST_SEND_MESSAGE = 1
 REQUEST_GET_USER = 2
+REQUEST_GET_ALL_MESSAGES = 5
 
 RESPONSE_NEW_MESSAGE = 3
 RESPONSE_USER = 4
 
+
+class ApiHandler(tornado.web.RequestHandler):
+
+	def initialize(self, db_provider):
+		self.db_provider = db_provider
+
+	@tornado.web.asynchronous
+	def get(self):
+		userId = self.get_argument("user_id", default=None, strip=False)
+		print "userId", userId
+		if not userId:
+			response = {"success" : False, "code" : 422}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		user = self.db_provider.getUser(userId)
+		if not user:
+			response = {"success" : False, "code" : 404}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		user = self.db_provider.sanitizeEntity(user)
+		response = {"success" : True, "user" : user, "code" : 200} 
+		print "response", response
+			
+		self.write(json.dumps(response))
+		self.finish()
+
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
-	def __init__(self, *args, **kwargs):
-		self.db_provider = ModelsProvider()
-		print "init called"
-		super(WebSocketHandler, self).__init__(*args, **kwargs)
+	def initialize(self, db_provider):
+		self.db_provider = db_provider
+		print "initialize called"
+
+	# def __init__(self, *args, **kwargs):
+	# 	self.db_provider = ModelsProvider()
+	# 	print "init called"
+	# 	super(WebSocketHandler, self).__init__(*args, **kwargs)
 
 	def open(self, **args):
 		print args
@@ -49,8 +85,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 	def parseRequest(self, data):
 		request_type = data['request_type']
-		if request_type == 1:
+		if request_type == REQUEST_SEND_MESSAGE:
 			self.onCreateMessageRequested(data)
+		elif request_type == REQUEST_GET_ALL_MESSAGES:
+			print "get all messages"
+			self.onGetAllMessgesRequested(data)
 
 	def onCreateMessageRequested(self, data):
 		receiver_id = data["receiver_id"]
@@ -58,14 +97,27 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		data["sender_id"] = self.id
 		print "data type: ", type(data)
 
+		if data['receiver_id'] == data['sender_id']:
+			print "receiver_id is same as sender_id"
+			self.write_message(json.dumps( {'success' : False, "request_type" : REQUEST_SEND_MESSAGE, "error" : "receiver_id is same as sender_id" } ))
+			return
+
 		new_message = self.db_provider.createNewMessage(data)
-		new_message['_id'] = str(new_message['_id'])
-		new_message['id'] = new_message['_id']
-		new_message['created_at'] = datetime.datetime.strftime(new_message['created_at'], date_format)[:-3]
-		new_message['updated_at'] = datetime.datetime.strftime(new_message['updated_at'], date_format)[:-3]
+		new_message = self.db_provider.sanitizeEntity(new_message)
+		
 		# print new_message
 		sent = self.sendMessage(new_message, receiver_id)
 		self.write_message(json.dumps({'success' : sent, "message" : new_message, "request_type" : REQUEST_SEND_MESSAGE}))
+
+	def onGetAllMessgesRequested(self, data):
+		userId = self.id
+		messages = self.db_provider.getMessagesForUser(userId)
+		response_messages = []
+		for message in messages:
+			response_messages.append(self.db_provider.sanitizeEntity(message))
+
+		response = {'data' : response_messages, 'request_type' : REQUEST_GET_ALL_MESSAGES, 'success' : True}
+		self.write_message(json.dumps(response))
 
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:
@@ -76,7 +128,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		return False
 
 
-app = tornado.web.Application([(r'/ws', WebSocketHandler)])
+db_provider = ModelsProvider()
+
+app = tornado.web.Application([
+	url(r'/ws', WebSocketHandler, dict(db_provider=db_provider), name="ws"),
+	url(r'/api/login', ApiHandler, dict(db_provider=db_provider), name="login")
+	])
 
 if __name__ == "__main__":
 	parse_command_line()

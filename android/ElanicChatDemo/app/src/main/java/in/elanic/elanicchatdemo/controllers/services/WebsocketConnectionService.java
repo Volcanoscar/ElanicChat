@@ -29,9 +29,11 @@ import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerWebsocketConnectionServiceComponent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
@@ -52,7 +54,7 @@ public class WebsocketConnectionService extends Service {
     private WebSocket mWebSocket;
     private EventBus mEventBus;
 
-    private static final String WS_URL = "ws://192.168.1.50:9999/ws";
+    private String mUserId;
 
     private static final boolean DEBUG = true;
 
@@ -76,8 +78,10 @@ public class WebsocketConnectionService extends Service {
                 createWSConnectionRequested();
             }
         };
-
         mMessageProvider = new MessageProviderImpl(mDaoSession.getMessageDao());
+
+        PreferenceProvider preferenceProvider = new PreferenceProvider(this);
+        mUserId = preferenceProvider.getLoginUserId();
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
@@ -118,6 +122,12 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void createWSConnectionRequested() {
+
+        if (mUserId == null || mUserId.isEmpty()) {
+            Log.e(TAG, "user id is not available");
+            return;
+        }
+
         if (mWebSocket != null && !mWebSocket.isOpen()) {
             if (DEBUG) {
                 Log.e(TAG, "ws connection is already open");
@@ -128,10 +138,10 @@ public class WebsocketConnectionService extends Service {
         try {
 
             if (DEBUG) {
-                Log.i(TAG, "opening ws connection: " + (WS_URL + "?Id=" + UserProvider.SENDER_ID));
+                Log.i(TAG, "opening ws connection: " + (Constants.WS_URL + "?Id=" + mUserId));
             }
 
-            mWebSocket = new WebSocketFactory().createSocket(WS_URL + "?Id=" + UserProvider.SENDER_ID, 3000);
+            mWebSocket = new WebSocketFactory().createSocket(Constants.WS_URL + "?Id=" + mUserId, 3000);
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -211,8 +221,20 @@ public class WebsocketConnectionService extends Service {
                 boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
                 if (success) {
                     int requestType = jsonResponse.getInt(JSONUtils.KEY_REQUEST_TYPE);
-                    if (requestType == JSONUtils.REQUEST_SEND_MESSAGE) {
+                    if (requestType == Constants.REQUEST_SEND_MESSAGE) {
                         onMessageSentSuccessfully(jsonResponse);
+                        return;
+                    } else if (requestType == Constants.REQUEST_GET_ALL_MESSAGES) {
+                        JSONArray messages = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
+                        if (messages.length() == 0) {
+                            if (DEBUG) {
+                                Log.e(TAG, "empty message array");
+                            }
+                            return;
+                        }
+
+                        parseNewMessages(messages);
+                        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
                         return;
                     }
                 }
@@ -226,7 +248,8 @@ public class WebsocketConnectionService extends Service {
 
             if (jsonResponse.has(JSONUtils.KEY_RESPONSE_TYPE)) {
                 int responseType = jsonResponse.getInt(JSONUtils.KEY_RESPONSE_TYPE);
-                if (responseType == JSONUtils.RESPONSE_NEW_MESSAGE) {
+                if (responseType == Constants.RESPONSE_NEW_MESSAGE ||
+                        responseType == Constants.REQUEST_GET_ALL_MESSAGES) {
                     JSONArray messages = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
                     if (messages.length() == 0) {
                         if (DEBUG) {

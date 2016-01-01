@@ -1,6 +1,10 @@
 from pymongo import MongoClient
 import datetime
 
+date_format = "%Y-%m-%d %H:%M:%S.%f"
+
+# m.db.messages.delete_many( {"created_at" : {"$type" : 2} }) to find or delete by type
+
 class ModelsProvider:
 	def __init__(self):
 		self.client = MongoClient('localhost', 27017)
@@ -31,4 +35,17 @@ class ModelsProvider:
 
 	def getUser(self, user_id):
 		user_collection = self.db.users
-		return user_collection.find_one({"user_id" : user['user_id']})
+		return user_collection.find_one({"user_id" : user_id})
+
+	def sanitizeEntity(self, user):
+		user['_id'] = str(user['_id'])
+		user['id'] = user['_id']
+		user['created_at'] = datetime.datetime.strftime(user['created_at'], date_format)[:-3]
+		user['updated_at'] = datetime.datetime.strftime(user['updated_at'], date_format)[:-3]
+		return user
+
+	def getMessagesForUser(self, userId, limit=50):
+		messages_collection = self.db.messages
+		return list(messages_collection.find( { '$or' : [ {'sender_id' : userId}, {'receiver_id' : userId} ] },
+			limit=limit))
+

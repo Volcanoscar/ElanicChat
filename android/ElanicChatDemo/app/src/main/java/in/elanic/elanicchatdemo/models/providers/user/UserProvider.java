@@ -16,5 +16,8 @@ public interface UserProvider {
     User createSender();
     User createReceiver();
 
+    User getUser(String userId);
+
     boolean doesUserExit(String userId);
+    boolean addOrUpdateUser(User user);
 }

@@ -1,5 +1,6 @@
 package in.elanic.elanicchatdemo.presenters;
 
+import android.os.Bundle;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -7,12 +8,12 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -35,6 +36,9 @@ public class ChatPresenterImpl implements ChatPresenter {
     private UserProvider mUserProvider;
     private MessageProvider mMessageProvider;
 
+    private String mSenderId;
+    private String mReceiverId;
+
     private User mSender;
     private User mReceiver;
 
@@ -53,9 +57,17 @@ public class ChatPresenterImpl implements ChatPresenter {
     }
 
     @Override
-    public void attachView() {
-        mSender = mUserProvider.createSender();
-        mReceiver = mUserProvider.createReceiver();
+    public void attachView(Bundle extras) {
+
+        mSenderId = extras.getString(ChatView.EXTRA_SENDER_ID);
+        mReceiverId = extras.getString(ChatView.EXTRA_RECEIVER_ID);
+
+        mSender = mUserProvider.getUser(mSenderId);
+        mReceiver = mUserProvider.getUser(mReceiverId);
+
+        if (mReceiver == null) {
+            Log.e(TAG, "receiver is not available");
+        }
     }
 
     @Override
@@ -80,13 +92,19 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     @Override
     public void loadData() {
-        mMessages = mMessageProvider.getAllMessages();
+        mMessages = mMessageProvider.getAllMessages(mSenderId, mReceiverId);
         mChatView.setData(mMessages);
     }
 
 
     @Override
     public void sendMessage(String content) {
+
+        if (mReceiver == null) {
+            Log.e(TAG, "receiver data is not present");
+            return;
+        }
+
         Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver);
 
         if (DEBUG) {
@@ -99,7 +117,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
             // TODO move this to WSService
             JSONObject jsonRequest = JSONUtils.toJSON(message);
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, JSONUtils.REQUEST_SEND_MESSAGE);
+            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             sendMessageToWSService(jsonRequest.toString());
         } catch (JSONException e) {
             e.printStackTrace();
@@ -127,12 +145,12 @@ public class ChatPresenterImpl implements ChatPresenter {
         List<Message> data;
         if (mMessages != null && !mMessages.isEmpty()) {
             Log.i(TAG, "timestamp: " + mMessages.get(0).getCreated_at());
-             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at());
+             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), mSenderId, mReceiverId);
         } else {
             if (DEBUG) {
                 Log.e(TAG, "messages is null. fetch all");
             }
-            data = mMessageProvider.getAllMessages();
+            data = mMessageProvider.getAllMessages(mSenderId, mReceiverId);
         }
 
         if (data != null && !data.isEmpty()) {

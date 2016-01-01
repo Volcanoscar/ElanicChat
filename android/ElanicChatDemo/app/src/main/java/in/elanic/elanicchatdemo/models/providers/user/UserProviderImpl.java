@@ -76,7 +76,17 @@ public class UserProviderImpl implements UserProvider {
     }
 
     @Override
+    public User getUser(String userId) {
+        return mDao.load(userId);
+    }
+
+    @Override
     public boolean doesUserExit(String userId) {
         return (mDao.queryBuilder().where(UserDao.Properties.User_id.eq(userId)).count() != 0);
+    }
+
+    @Override
+    public boolean addOrUpdateUser(User user) {
+        return mDao.insertOrReplace(user) != 0;
     }
 }
