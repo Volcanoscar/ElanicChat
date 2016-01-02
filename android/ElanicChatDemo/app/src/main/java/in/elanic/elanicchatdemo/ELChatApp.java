@@ -27,11 +27,7 @@ public class ELChatApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        applicationComponent = DaggerApplicationComponent.builder()
-                .applicationModule(new ApplicationModule(this))
-                .devDaoSessionModule(new DevDaoSessionModule(this))
-                .build();
-
+        applicationComponent = createComponent();
         applicationComponent.inject(this);
         mInstance = this;
     }
@@ -45,6 +41,13 @@ public class ELChatApp extends Application {
         }*/
 
         return mDaoSession;
+    }
+
+    protected ApplicationComponent createComponent() {
+        return DaggerApplicationComponent.builder()
+                .applicationModule(new ApplicationModule(this))
+                .devDaoSessionModule(new DevDaoSessionModule(this))
+                .build();
     }
 
     public static ELChatApp getInstance() {
