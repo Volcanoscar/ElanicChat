@@ -19,15 +19,7 @@ module.exports = {
 	GET : "TYPE_GET",
 	FAIL : false,
 	SUCCESS : true,
-	ERROR : 'error'
-    },
-
-    error_msg : function(err, msg) {
-	return {
-	    success : this.API.FAIL,
-	    error : err,
-	    data : msg
-	};
+	ERROR : "TYPE_ERROR"
     }
 
 };

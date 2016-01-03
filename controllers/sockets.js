@@ -1,5 +1,7 @@
-util = require('./util.js');
+var util = require('./util.js');
+// Later: Replace with redis pub/sub
 var active_socks = {};
+var API = util.API;
 
 module.exports = {
 
@@ -19,8 +21,18 @@ module.exports = {
     },
 
     error : function(err, data, socket) {
-	socket.emit(API.ERROR, util.error_msg(err, data));
-	util.log(err);
+	socket.emit(API.ERROR, {
+	    success : API.FAIL,
+	    error : err,
+	    data : data
+	});
+    },
+
+    emit : function(id, event, msg, next) {
+	if (this.is_connected(id))
+	    return active_socks[id].emit(event, msg, next);
+	else
+	    return next(new Error("User disconnected"), msg);
     }
 
 };
