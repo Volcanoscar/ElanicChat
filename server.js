@@ -7,6 +7,7 @@ var app = require("express")(),
     conn = mongoose.createConnection(),
     util = require('./controllers/util.js'),
     socks = require('./controllers/sockets.js'),
+    gcm = require('./controllers/gcm.js'),
     chat;
 
 var API = util.API;
@@ -40,11 +41,14 @@ io.use(function(socket, next) {
 		// If for group, change to array of receivers
 		socks.emit(msg.receiver_id, API.SEND, msg, function(err){
 		    if (err) {
-			// gcm details here
-			
-			msg.delayed = API.SUCCESS;
+			// gcm details here. Change registration token/ device id to suit your needs.
+			gcm.send(msg, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
+			    msg.delayed = API.SUCCESS;
+			    io.to(auth._id).emit(API.SEND, msg);
+			});
 		    }
-		    io.to(auth._id).emit(API.SEND, msg);
+		    else
+			io.to(auth._id).emit(API.SEND, msg);
 		});
 	    });
 	});
