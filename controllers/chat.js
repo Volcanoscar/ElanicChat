@@ -1,16 +1,11 @@
 /*
-Database backend. Implemented completely in memory for now.
-Will change in future. Interface is likely to remain the same.
+Database backend. Interface is likely to remain the same.
 */
+var mongoose = require('mongoose');
 
-var User, Message;
-
-module.exports = function(mongoose){
-    
-    if (!User)
-	User = require('../models/user.js')(mongoose);
-    if (!Message)
-	Message = require('../models/message.js')(mongoose);
+module.exports = function(conn){
+    var User = require('../models/user.js')(conn);
+    var Message = require('../models/message.js')(conn);
 
     function get_owner(prod_no, then) {
 	return then(prod_no);
@@ -64,11 +59,10 @@ module.exports = function(mongoose){
 	},
 
 	authenticate : function(data, next) {
-	    if (!data.user_id)
-		next(false);
+	    if (!data || !data.user_id)
+		return next(false);
             var id = mongoose.Types.ObjectId(data.user_id);
-	    User.findOne({_id : id}).select({'username' : 1, '_id' : 1}).
-		lean().exec(next);
+	    return User.findOne({_id : id}).select({'username' : 1, '_id' : 1}).lean().exec(next);
 	}
     };
     
