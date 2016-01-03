@@ -1,4 +1,6 @@
-module.exports = function(mongoose) {
+var mongoose = require('mongoose');
+
+module.exports = function(conn) {
     var User = new mongoose.Schema({
 	username: String,
 	name : String,
@@ -7,14 +9,15 @@ module.exports = function(mongoose) {
 	gcm_id : String,
 	create_at : { type: Date, default: Date.now },
 	update_at : { type: Date, default: Date.now },
-	is_deleted : Boolean
+	is_deleted : { type: Boolean, default: false}
     });
 
-    var UserModel = mongoose.model('User', User);
-
-    // Add methods to User.statics
-
-    return UserModel;
+    // Add methods to User.statics here
+    try {
+	return conn.model('User', User);
+    } catch(e) {
+	return conn.model('User');
+    }
 
 };
 

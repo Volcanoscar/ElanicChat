@@ -1,18 +1,23 @@
-module.exports = function(mongoose) {
-    var Message = new mongoose.Schema({	
+var mongoose = require('mongoose');
+
+module.exports = function(conn) {
+    var Message = new mongoose.Schema({
+	id : String,
 	type : Number,
 	content : String,
 	sender_id : mongoose.Schema.Types.ObjectId,
 	receiver_id : mongoose.Schema.Types.ObjectId,
 	created_at : { type : Date, default : Date.now},
 	updated_at : { type : Date, default : Date.now},
-	is_deleted : Boolean
+	is_deleted : { type: Boolean, default: false}
     });
-
-    var MessageModel = mongoose.model('Message', Message);
 
     // Add methods to Message.statics
 
-    return MessageModel;
+    try {
+	return conn.model('Message', Message);
+    } catch(e) {
+	return conn.model('Message');
+    }
 
 };
