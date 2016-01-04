@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.models.providers.user;
 import android.util.Log;
 
 import java.util.Date;
+import java.util.List;
 
 import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.db.UserDao;
@@ -88,5 +89,15 @@ public class UserProviderImpl implements UserProvider {
     @Override
     public boolean addOrUpdateUser(User user) {
         return mDao.insertOrReplace(user) != 0;
+    }
+
+    @Override
+    public int addOrUpdateUsers(List<User> users) {
+        int count = 0;
+        for(User user: users) {
+            count = count +  (addOrUpdateUser(user) ? 1 : 0);
+        }
+
+        return count;
     }
 }

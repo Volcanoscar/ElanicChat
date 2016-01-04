@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.user;
 
+import java.util.List;
+
 import in.elanic.elanicchatdemo.models.db.User;
 
 /**
@@ -20,4 +22,5 @@ public interface UserProvider {
 
     boolean doesUserExit(String userId);
     boolean addOrUpdateUser(User user);
+    int addOrUpdateUsers(List<User> users);
 }

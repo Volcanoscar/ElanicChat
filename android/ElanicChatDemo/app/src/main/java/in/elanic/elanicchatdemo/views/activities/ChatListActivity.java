@@ -189,6 +189,11 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     private void logOut() {
+
+        mPresenter.clearDB();
+
+        ELChatApp.get(this).clearDatabase();
+
         PreferenceProvider preferenceProvider = new PreferenceProvider(this);
         preferenceProvider.clear();
 

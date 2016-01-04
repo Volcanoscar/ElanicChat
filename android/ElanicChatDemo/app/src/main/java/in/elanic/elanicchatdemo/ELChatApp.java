@@ -61,4 +61,9 @@ public class ELChatApp extends Application {
     public ApplicationComponent component() {
         return applicationComponent;
     }
+
+    public void clearDatabase() {
+        mDaoSession.getMessageDao().deleteAll();
+        mDaoSession.getUserDao().deleteAll();
+    }
 }

@@ -109,7 +109,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		
 		# print new_message
 		sent = self.sendMessage(new_message, receiver_id)
-		self.write_message(json.dumps({'success' : sent, "message" : new_message, "request_type" : REQUEST_SEND_MESSAGE}))
+		self.write_message(json.dumps({'success' : True, "sent" : sent, "message" : new_message, "request_type" : REQUEST_SEND_MESSAGE}))
 
 	def onGetAllMessgesRequested(self, data):
 		userId = self.id
@@ -123,6 +123,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 	def onGetUsersRequested(self, data):
 		userIds = data['users']
+
+		print "user wants these users: ", userIds
 
 		users = []
 		for userId in userIds:
