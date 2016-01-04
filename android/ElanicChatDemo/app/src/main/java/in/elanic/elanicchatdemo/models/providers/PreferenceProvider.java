@@ -13,6 +13,7 @@ public class PreferenceProvider {
     private SharedPreferences mPref;
 
     private static final String KEY_LOGIN_ID = "login_id";
+    private static final String KEY_SYNC_TIMESTAMP = "sync_timestamp";
 
     private static final String PREF_NAME = "base_pref";
 
@@ -27,6 +28,16 @@ public class PreferenceProvider {
     public void setLoginUserId(String userId) {
         SharedPreferences.Editor editor = mPref.edit();
         editor.putString(KEY_LOGIN_ID, userId);
+        editor.commit();
+    }
+
+    public long getSyncTimestamp() {
+        return mPref.getLong(KEY_SYNC_TIMESTAMP, -1);
+    }
+
+    public void setSyncTimestmap(long timestmap) {
+        SharedPreferences.Editor editor = mPref.edit();
+        editor.putLong(KEY_SYNC_TIMESTAMP, timestmap);
         editor.commit();
     }
 

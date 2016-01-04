@@ -51,13 +51,14 @@ public class ChatListPresenterImpl implements ChatListPresenter {
         boolean newLogin = extras.getBoolean(ChatListView.EXTRA_JUST_LOGGED_IN, true);
         mEventBus = EventBus.getDefault();
 
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                fetchAllDataFromServer();
+            }
+        }, 5000);
+
         if (newLogin) {
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    fetchAllDataFromServer();
-                }
-            }, 5000);
             mChatListView.showProgressBar(true);
             return;
         }
@@ -135,7 +136,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
         JSONObject jsonRequest = new JSONObject();
         try {
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_ALL_MESSAGES);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SYNC, ""));
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -152,6 +153,9 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
                 loadChatList();
                 break;
+
+            case WSResponseEvent.EVENT_NO_NEW_MESSAGES:
+                // TODO Do something
         }
     }
 }

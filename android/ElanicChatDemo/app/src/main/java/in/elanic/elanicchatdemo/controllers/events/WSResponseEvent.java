@@ -11,6 +11,7 @@ public class WSResponseEvent {
     public static final int EVENT_DISCONNECTED = 98;
     public static final int EVENT_MESSAGE_SENT = 97;
     public static final int EVENT_NEW_MESSAGES = 96;
+    public static final int EVENT_NO_NEW_MESSAGES = 95;
 
     private int mEvent;
     private String mData;

@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Jay Rambhia on 29/12/15.
@@ -33,6 +34,7 @@ public class JSONUtils {
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_USER = "user";
     public static final String KEY_USERS = "users";
+    public static final String KEY_SYNC_TIMESTAMP = "sync_timestamp";
 
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -83,5 +85,15 @@ public class JSONUtils {
         user.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
 
         return user;
+    }
+
+    public static String convertDateToString(Date date) {
+        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        return df.format(date);
+    }
+
+    public static Date getDateFromString(String date) throws ParseException {
+        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        return df.parse(date);
     }
 }
