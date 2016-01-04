@@ -86,7 +86,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 	def parseRequest(self, data):
 		request_type = data['request_type']
 		if request_type == REQUEST_SEND_MESSAGE:
-			self.onCreateMessageRequested(data)
+			self.onCreateMessageRequested(data['message'])
 		elif request_type == REQUEST_GET_ALL_MESSAGES:
 			print "get all messages"
 			self.onGetAllMessgesRequested(data)
@@ -151,7 +151,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:
 			messages = [data]
-			response = {"response_type" : RESPONSE_NEW_MESSAGE, "data" : messages}
+			response = {"success" : True, "response_type" : RESPONSE_NEW_MESSAGE, "data" : messages, 
+						'sync_timestamp' : ModelsProvider.getSyncTime()}
 			clients[receiver_id]["object"].write_message(json.dumps(response))
 			return True
 		return False

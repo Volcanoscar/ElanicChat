@@ -270,7 +270,9 @@ public class WebsocketConnectionService extends Service {
             }
 
             int responseType = mWSSHelper.getResponseType(jsonResponse);
+            Log.i(TAG, "response type: " + responseType);
             if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
+                Log.i(TAG, "response_new_message");
                 onNewMessagesArrived(jsonResponse);
                 return;
             }
@@ -298,6 +300,8 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void onNewMessagesArrived(JSONObject jsonResponse) throws JSONException {
+
+        Log.i(TAG, "on new messages arrived");
 
         List<Message> newMessages = mWSSHelper.parseMessagesFromResponse(jsonResponse);
         if (newMessages == null) {
