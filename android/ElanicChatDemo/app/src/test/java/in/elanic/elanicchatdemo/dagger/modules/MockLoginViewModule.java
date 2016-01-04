@@ -1,8 +1,9 @@
-package in.elanic.elanicchatdemo;
+package in.elanic.elanicchatdemo.dagger.modules;
 
-import android.support.test.espresso.core.deps.dagger.Provides;
+//import android.support.test.espresso.core.deps.dagger.Provides;
 
 import dagger.Module;
+import dagger.Provides;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;

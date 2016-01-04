@@ -90,6 +90,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		elif request_type == REQUEST_GET_ALL_MESSAGES:
 			print "get all messages"
 			self.onGetAllMessgesRequested(data)
+		elif request_type == REQUEST_GET_USER:
+			self.onGetUsersRequested(data)	
 
 	def onCreateMessageRequested(self, data):
 		receiver_id = data["receiver_id"]
@@ -118,6 +120,19 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		response = {'data' : response_messages, 'request_type' : REQUEST_GET_ALL_MESSAGES, 'success' : True}
 		self.write_message(json.dumps(response))
+
+	def onGetUsersRequested(self, data):
+		userIds = data['users']
+
+		users = []
+		for userId in userIds:
+			user = self.db_provider.getUser(userId)
+			if user:
+				user = self.db_provider.sanitizeEntity(user)
+				users.append(user)
+
+		response = {'data' : users, 'request_type' : REQUEST_GET_USER, 'success' : True}
+		self.write_message(json.dumps(response))		
 
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:
