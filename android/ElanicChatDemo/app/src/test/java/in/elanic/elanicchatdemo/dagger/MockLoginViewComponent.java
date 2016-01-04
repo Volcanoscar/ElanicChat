@@ -1,12 +1,12 @@
-package in.elanic.elanicchatdemo;
+package in.elanic.elanicchatdemo.dagger;
 
-import android.support.test.espresso.core.deps.dagger.Component;
-
+import dagger.Component;
+import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
-import in.elanic.elanicchatdemo.components.LoginViewComponent;
 import in.elanic.elanicchatdemo.modules.LoginProviderModule;
 import in.elanic.elanicchatdemo.presenters.LoginPresenter;
 import in.elanic.elanicchatdemo.scopes.ActivityScope;
+import in.elanic.elanicchatdemo.views.interfaces.LoginView;
 
 /**
  * Created by Jay Rambhia on 02/01/16.
@@ -20,6 +20,7 @@ import in.elanic.elanicchatdemo.scopes.ActivityScope;
         },
         modules = MockLoginViewModule.class
 )
-public interface MockLoginViewComponent extends LoginViewComponent {
-    void inject(LoginActivityTest view);
+public interface MockLoginViewComponent {
+    void inject(LoginView view);
+    LoginPresenter getPresenter();
 }

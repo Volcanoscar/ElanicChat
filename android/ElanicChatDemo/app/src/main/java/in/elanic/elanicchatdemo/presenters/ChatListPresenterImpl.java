@@ -49,6 +49,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     public void attachView(Bundle extras) {
         mUserId = extras.getString(ChatListView.EXTRA_USER_ID);
         boolean newLogin = extras.getBoolean(ChatListView.EXTRA_JUST_LOGGED_IN, true);
+        mEventBus = EventBus.getDefault();
 
         if (newLogin) {
             mHandler.postDelayed(new Runnable() {
@@ -57,9 +58,10 @@ public class ChatListPresenterImpl implements ChatListPresenter {
                     fetchAllDataFromServer();
                 }
             }, 5000);
+            mChatListView.showProgressBar(true);
+            return;
         }
 
-        mEventBus = EventBus.getDefault();
         loadChatList();
     }
 
@@ -107,6 +109,11 @@ public class ChatListPresenterImpl implements ChatListPresenter {
             // open with receiver id
             mChatListView.openChat(message.getReceiver_id());
         }
+    }
+
+    @Override
+    public void clearDB() {
+
     }
 
     private void loadChatList() {

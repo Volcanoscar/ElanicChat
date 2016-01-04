@@ -21,6 +21,10 @@ public class JSONUtils {
     public static final String KEY_CREATED_AT = "created_at";
     public static final String KEY_UPDATED_AT = "updated_at";
     public static final String KEY_IS_DELETED = "is_deleted";
+    public static final String KEY_USER_ID = "user_id";
+    public static final String KEY_USERNAME = "username";
+    public static final String KEY_GRAPHIC = "graphic";
+    public static final String KEY_NAME = "name";
 
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_RESPONSE_TYPE = "response_type";
@@ -28,6 +32,8 @@ public class JSONUtils {
     public static final String KEY_DATA = "data";
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_USER = "user";
+    public static final String KEY_USERS = "users";
+
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
@@ -62,5 +68,20 @@ public class JSONUtils {
         message.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
 
         return message;
+    }
+
+    public static User getUserFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
+        User user = new User();
+        user.setUser_id(jsonObject.getString(KEY_USER_ID));
+        user.setUsername(jsonObject.getString(KEY_USERNAME));
+        user.setGraphic(jsonObject.getString(KEY_GRAPHIC));
+        user.setName(jsonObject.getString(KEY_NAME));
+
+        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        user.setCreated_at(df.parse(jsonObject.getString(KEY_CREATED_AT)));
+        user.setUpdated_at(df.parse(jsonObject.getString(KEY_UPDATED_AT)));
+        user.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
+
+        return user;
     }
 }

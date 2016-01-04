@@ -98,4 +98,14 @@ public class MessageProviderImpl implements MessageProvider {
     public boolean addNewMessage(Message message) {
         return mDao.insert(message) != 0;
     }
+
+    @Override
+    public int addNewMessages(List<Message> messages) {
+        int count = 0;
+        for (Message message : messages) {
+            count = count + (mDao.insert(message) != 0 ? 1: 0);
+        }
+
+        return count;
+    }
 }

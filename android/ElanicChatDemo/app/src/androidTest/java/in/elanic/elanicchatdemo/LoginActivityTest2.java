@@ -35,6 +35,7 @@ public class LoginActivityTest2 implements LoginView {
 
         /*Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         ELChatApp app = (ELChatApp) instrumentation.getTargetContext().getApplicationContext();*/
+
     }
 
     @Test
