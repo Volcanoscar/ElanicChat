@@ -30,9 +30,12 @@ module.exports = function(conn){
 	},
 
 	save_messages : function(msg, next) {
-
-	    var id = mongoose.Types.ObjectId(msg.receiver_id);
 	    // Later: Move validation to model
+	    if (!msg.receiver_id)
+		return next(new Error("No receiver_id specified"));
+	    if (msg.receiver_id == msg.sender_id)
+		return next(new Error("Can't send mesage to yourself"));
+	    var id = mongoose.Types.ObjectId(msg.receiver_id);
 	    User.findOne({_id : id}).lean().
 		exec(function(err, user) {
 		    // Later: If user is msg.sender_id, throw error
