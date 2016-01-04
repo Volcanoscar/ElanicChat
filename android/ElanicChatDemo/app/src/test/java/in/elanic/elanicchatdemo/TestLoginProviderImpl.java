@@ -1,4 +1,4 @@
-package in.elanic.elanicchatdemo.models.providers.user;
+package in.elanic.elanicchatdemo;
 
 import android.util.Log;
 
@@ -7,40 +7,17 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.api.RetrofitApi;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.User;
-import retrofit.GsonConverterFactory;
-import retrofit.Retrofit;
-import retrofit.RxJavaCallAdapterFactory;
+import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
+import in.elanic.elanicchatdemo.models.providers.user.RetrofitLoginProvider;
 import rx.Observable;
 import rx.functions.Func1;
 
 /**
- * Created by Jay Rambhia on 01/01/16.
+ * Created by Jay Rambhia on 05/01/16.
  */
-public class RetrofitLoginProvider implements LoginProvider {
-
-    protected static final String TAG = "RetrofitLoginProvider";
-    protected RetrofitApi mService;
-    protected static final boolean DEBUG = true;
-
-    public RetrofitLoginProvider() {
-
-        Gson gson = new GsonBuilder()
-                .setDateFormat(JSONUtils.JSON_DATE_FORMAT)
-                .create();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Constants.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .build();
-
-        mService = retrofit.create(RetrofitApi.class);
-    }
-
+public class TestLoginProviderImpl extends RetrofitLoginProvider implements LoginProvider {
     @Override
     public Observable<User> login(String userId) {
         return mService.login(userId)

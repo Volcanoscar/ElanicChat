@@ -34,7 +34,7 @@ public class TestHelper {
         return sApplicationComponent;
     }
 
-    public static MockLoginViewComponent getTestLoginViewComponent(LoginView view) {
+/*    public static MockLoginViewComponent getTestLoginViewComponent(LoginView view) {
         if (sTestLoginViewComponent == null) {
             sTestLoginViewComponent = DaggerMockLoginViewComponent.builder()
                     .applicationComponent(getApplicationComponent())
@@ -44,6 +44,6 @@ public class TestHelper {
         }
 
         return sTestLoginViewComponent;
-    }
+    }*/
 
 }
