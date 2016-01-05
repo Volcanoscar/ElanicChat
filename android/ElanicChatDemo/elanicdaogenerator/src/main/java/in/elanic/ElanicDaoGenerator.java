@@ -39,6 +39,8 @@ public class ElanicDaoGenerator {
         Property senderId = message.addStringProperty("sender_id").getProperty();
         message.addToOne(user, senderId, "sender");
 
+        message.addIntProperty("offer_price");
+
         message.addDateProperty("created_at");
         message.addDateProperty("updated_at");
         message.addBooleanProperty("is_deleted");

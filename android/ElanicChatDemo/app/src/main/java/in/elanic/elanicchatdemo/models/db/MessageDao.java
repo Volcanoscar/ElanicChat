@@ -31,9 +31,10 @@ public class MessageDao extends AbstractDao<Message, String> {
         public final static Property Content = new Property(2, String.class, "content", false, "CONTENT");
         public final static Property Receiver_id = new Property(3, String.class, "receiver_id", false, "RECEIVER_ID");
         public final static Property Sender_id = new Property(4, String.class, "sender_id", false, "SENDER_ID");
-        public final static Property Created_at = new Property(5, java.util.Date.class, "created_at", false, "CREATED_AT");
-        public final static Property Updated_at = new Property(6, java.util.Date.class, "updated_at", false, "UPDATED_AT");
-        public final static Property Is_deleted = new Property(7, Boolean.class, "is_deleted", false, "IS_DELETED");
+        public final static Property Offer_price = new Property(5, Integer.class, "offer_price", false, "OFFER_PRICE");
+        public final static Property Created_at = new Property(6, java.util.Date.class, "created_at", false, "CREATED_AT");
+        public final static Property Updated_at = new Property(7, java.util.Date.class, "updated_at", false, "UPDATED_AT");
+        public final static Property Is_deleted = new Property(8, Boolean.class, "is_deleted", false, "IS_DELETED");
     };
 
     private DaoSession daoSession;
@@ -57,9 +58,10 @@ public class MessageDao extends AbstractDao<Message, String> {
                 "\"CONTENT\" TEXT," + // 2: content
                 "\"RECEIVER_ID\" TEXT," + // 3: receiver_id
                 "\"SENDER_ID\" TEXT," + // 4: sender_id
-                "\"CREATED_AT\" INTEGER," + // 5: created_at
-                "\"UPDATED_AT\" INTEGER," + // 6: updated_at
-                "\"IS_DELETED\" INTEGER);"); // 7: is_deleted
+                "\"OFFER_PRICE\" INTEGER," + // 5: offer_price
+                "\"CREATED_AT\" INTEGER," + // 6: created_at
+                "\"UPDATED_AT\" INTEGER," + // 7: updated_at
+                "\"IS_DELETED\" INTEGER);"); // 8: is_deleted
     }
 
     /** Drops the underlying database table. */
@@ -98,19 +100,24 @@ public class MessageDao extends AbstractDao<Message, String> {
             stmt.bindString(5, sender_id);
         }
  
+        Integer offer_price = entity.getOffer_price();
+        if (offer_price != null) {
+            stmt.bindLong(6, offer_price);
+        }
+ 
         java.util.Date created_at = entity.getCreated_at();
         if (created_at != null) {
-            stmt.bindLong(6, created_at.getTime());
+            stmt.bindLong(7, created_at.getTime());
         }
  
         java.util.Date updated_at = entity.getUpdated_at();
         if (updated_at != null) {
-            stmt.bindLong(7, updated_at.getTime());
+            stmt.bindLong(8, updated_at.getTime());
         }
  
         Boolean is_deleted = entity.getIs_deleted();
         if (is_deleted != null) {
-            stmt.bindLong(8, is_deleted ? 1L: 0L);
+            stmt.bindLong(9, is_deleted ? 1L: 0L);
         }
     }
 
@@ -135,9 +142,10 @@ public class MessageDao extends AbstractDao<Message, String> {
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // content
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // receiver_id
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // sender_id
-            cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // created_at
-            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // updated_at
-            cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0 // is_deleted
+            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // offer_price
+            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // created_at
+            cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // updated_at
+            cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0 // is_deleted
         );
         return entity;
     }
@@ -150,9 +158,10 @@ public class MessageDao extends AbstractDao<Message, String> {
         entity.setContent(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setReceiver_id(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
         entity.setSender_id(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setCreated_at(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
-        entity.setUpdated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
-        entity.setIs_deleted(cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0);
+        entity.setOffer_price(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
+        entity.setCreated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
+        entity.setUpdated_at(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
+        entity.setIs_deleted(cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0);
      }
     
     /** @inheritdoc */
