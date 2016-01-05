@@ -35,6 +35,7 @@ public class MessageDao extends AbstractDao<Message, String> {
         public final static Property Created_at = new Property(6, java.util.Date.class, "created_at", false, "CREATED_AT");
         public final static Property Updated_at = new Property(7, java.util.Date.class, "updated_at", false, "UPDATED_AT");
         public final static Property Is_deleted = new Property(8, Boolean.class, "is_deleted", false, "IS_DELETED");
+        public final static Property Product_id = new Property(9, String.class, "product_id", false, "PRODUCT_ID");
     };
 
     private DaoSession daoSession;
@@ -61,7 +62,8 @@ public class MessageDao extends AbstractDao<Message, String> {
                 "\"OFFER_PRICE\" INTEGER," + // 5: offer_price
                 "\"CREATED_AT\" INTEGER," + // 6: created_at
                 "\"UPDATED_AT\" INTEGER," + // 7: updated_at
-                "\"IS_DELETED\" INTEGER);"); // 8: is_deleted
+                "\"IS_DELETED\" INTEGER," + // 8: is_deleted
+                "\"PRODUCT_ID\" TEXT);"); // 9: product_id
     }
 
     /** Drops the underlying database table. */
@@ -119,6 +121,11 @@ public class MessageDao extends AbstractDao<Message, String> {
         if (is_deleted != null) {
             stmt.bindLong(9, is_deleted ? 1L: 0L);
         }
+ 
+        String product_id = entity.getProduct_id();
+        if (product_id != null) {
+            stmt.bindString(10, product_id);
+        }
     }
 
     @Override
@@ -145,7 +152,8 @@ public class MessageDao extends AbstractDao<Message, String> {
             cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // offer_price
             cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // created_at
             cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // updated_at
-            cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0 // is_deleted
+            cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0, // is_deleted
+            cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9) // product_id
         );
         return entity;
     }
@@ -162,6 +170,7 @@ public class MessageDao extends AbstractDao<Message, String> {
         entity.setCreated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
         entity.setUpdated_at(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
         entity.setIs_deleted(cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0);
+        entity.setProduct_id(cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9));
      }
     
     /** @inheritdoc */
@@ -196,9 +205,12 @@ public class MessageDao extends AbstractDao<Message, String> {
             SqlUtils.appendColumns(builder, "T0", daoSession.getUserDao().getAllColumns());
             builder.append(',');
             SqlUtils.appendColumns(builder, "T1", daoSession.getUserDao().getAllColumns());
+            builder.append(',');
+            SqlUtils.appendColumns(builder, "T2", daoSession.getProductDao().getAllColumns());
             builder.append(" FROM MESSAGE T");
             builder.append(" LEFT JOIN USER T0 ON T.\"RECEIVER_ID\"=T0.\"USER_ID\"");
             builder.append(" LEFT JOIN USER T1 ON T.\"SENDER_ID\"=T1.\"USER_ID\"");
+            builder.append(" LEFT JOIN PRODUCT T2 ON T.\"PRODUCT_ID\"=T2.\"PRODUCT_ID\"");
             builder.append(' ');
             selectDeep = builder.toString();
         }
@@ -215,6 +227,10 @@ public class MessageDao extends AbstractDao<Message, String> {
 
         User sender = loadCurrentOther(daoSession.getUserDao(), cursor, offset);
         entity.setSender(sender);
+        offset += daoSession.getUserDao().getAllColumns().length;
+
+        Product product = loadCurrentOther(daoSession.getProductDao(), cursor, offset);
+        entity.setProduct(product);
 
         return entity;    
     }

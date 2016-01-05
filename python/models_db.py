@@ -23,6 +23,7 @@ class ModelsProvider:
 		message['updated_at'] = date
 		message['is_deleted'] = False
 		message['offer_price'] = 100
+		message['product_id'] = message['product_id']
 		message_id = messages_collection.insert_one(message).inserted_id
 		message['_id'] = message_id
 		return message
@@ -72,3 +73,14 @@ class ModelsProvider:
 					{ '$or' : [ {'sender_id' : userId}, {'receiver_id': userId} ] }
 				]
 			}, limit=limit).sort('created_at', pymongo.DESCENDING))
+
+	def addProduct(self, product):
+		product_collection = self.db.products
+		if not product_collection.find_one({'product_id' : product['product_id']}):
+			# add product
+			_id = product_collection.insert_one(product).inserted_id
+			return _id
+		return None
+
+	def getProduct(self, product_id):
+		return self.db.products.find_one({'product_id' : product_id})	

@@ -19,9 +19,12 @@ import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
+import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
+import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 
@@ -34,6 +37,7 @@ public class WSSHelper {
     private DaoSession mDaoSession;
     private MessageProvider mMessageProvider;
     private UserProvider mUserProvider;
+    private ProductProvider mProductProvider;
 
     private static final boolean DEBUG = true;
 
@@ -41,6 +45,7 @@ public class WSSHelper {
         this.mDaoSession = mDaoSession;
         mMessageProvider = new MessageProviderImpl(mDaoSession.getMessageDao());
         mUserProvider = new UserProviderImpl(mDaoSession.getUserDao());
+        mProductProvider = new ProductProviderImpl(mDaoSession.getProductDao());
     }
 
     public List<User> parseNewUsers(JSONArray jsonArray) {
@@ -192,6 +197,37 @@ public class WSSHelper {
         return null;
     }
 
+    public String createFetchProductsDataRequest(List<String> productIds) {
+        JSONObject jsonRequest = new JSONObject();
+        try {
+            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_PRODUCTS);
+            jsonRequest.put(JSONUtils.KEY_PRODUCTS, new JSONArray(productIds));
+
+            return jsonRequest.toString();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public String createFetchUsersAndProductsDataRequest(List<String> userIds, List<String> productIds) {
+        JSONObject jsonRequest = new JSONObject();
+        try {
+            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_USERS_AND_PRODUCTS);
+            jsonRequest.put(JSONUtils.KEY_PRODUCTS, new JSONArray(productIds));
+            jsonRequest.put(JSONUtils.KEY_USERS, new JSONArray(userIds));
+
+            return jsonRequest.toString();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public long getTimestampFromResponse(JSONObject jsonResponse) {
 
         if (!jsonResponse.has(JSONUtils.KEY_SYNC_TIMESTAMP)) {
@@ -243,5 +279,53 @@ public class WSSHelper {
         }
 
         return Constants.REQUEST_INVALID_CODE;
+    }
+
+    public List<String> getUnknownProductIds(@NonNull List<Message> messages) {
+        Set<String> productIds = new HashSet<>();
+        Iterator<Message> iterator = messages.iterator();
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            productIds.add(message.getProduct_id());
+        }
+
+        List<String> unknownIds = new ArrayList<>();
+        for(String productId : productIds) {
+            if (!mProductProvider.doesProductExist(productId)) {
+                unknownIds.add(productId);
+            }
+        }
+
+        return unknownIds;
+    }
+
+    public List<Product> parseNewProducts(JSONArray jsonArray) {
+        List<Product> products = new ArrayList<>();
+
+        for(int i=0; i<jsonArray.length(); i++) {
+            try {
+                JSONObject product_json = jsonArray.getJSONObject(i);
+                try {
+                    Product product = JSONUtils.getProductFromJSON(product_json);
+                    products.add(product);
+
+                    if (DEBUG) {
+                        Log.i(TAG, "got product: " + product.getProduct_id());
+                    }
+
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return products;
+    }
+
+    public int saveProductsToDB(List<Product> products) {
+        return mProductProvider.addOrUpdateProducts(products);
     }
 }

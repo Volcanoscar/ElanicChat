@@ -45,8 +45,10 @@ def on_open(ws):
 				date = datetime.datetime.now()
 
 				receiver_id = raw_input("Send To: ")
+				product_id = raw_input("product_id: ")
 				message = raw_input("Message: ")
 				data = {"receiver_id" : receiver_id, "content" : message, "sender_id" : userId,
+				"product_id" : product_id,
 				"type" : 1,
 				"created_at" : datetime.datetime.strftime(date, date_format)[:-3],
 				"updated_at" : datetime.datetime.strftime(date, date_format)[:-3],

@@ -83,6 +83,12 @@ public class ChatProviderImpl implements ChatProvider {
                             continue;
                         }
 
+                        if (message.getSender() == null) {
+                            if (DEBUG) {
+                                Log.e(TAG, "sender is null");
+                            }
+                        }
+
                         ChatItem item = new ChatItem(message.getMessage_id(), "", "", 0, message.getSender(), message);
                         mMap.put(c1.getString(4), item);
                     }
@@ -123,6 +129,12 @@ public class ChatProviderImpl implements ChatProvider {
                         Message message = new Message();
                         message.__setDaoSession(mDaoSession);
                         mMessageDao.readEntity(c2, message, 0);
+
+                        if (message.getReceiver() == null) {
+                            if (DEBUG) {
+                                Log.e(TAG, "receiver is null");
+                            }
+                        }
 
                         ChatItem item = new ChatItem(message.getMessage_id(), "", "", 0, message.getReceiver(), message);
                         mMap.put(c2.getString(3), item);

@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
@@ -17,6 +17,8 @@ public class ElanicDaoGenerator {
 
     }
 
+    // If adding new items in entity's schema, add it at the bottom
+    // as when running sql upgrade, columns are added at the end
     private static void addEntities(Schema schema) {
         Entity user = schema.addEntity("User");
         user.addStringProperty("user_id").primaryKey();
@@ -26,6 +28,29 @@ public class ElanicDaoGenerator {
         user.addDateProperty("created_at");
         user.addDateProperty("updated_at");
         user.addBooleanProperty("is_deleted");
+
+        Entity product = schema.addEntity("Product");
+        product.addStringProperty("product_id").primaryKey();
+
+        Property authorId = product.addStringProperty("user_id").getProperty();
+        product.addToOne(user, authorId, "author");
+
+        product.addStringProperty("title");
+        product.addStringProperty("description");
+        product.addIntProperty("selling_price");
+        product.addIntProperty("purchase_price");
+        product.addIntProperty("views");
+        product.addIntProperty("likes");
+        product.addBooleanProperty("is_available");
+        product.addBooleanProperty("is_nwt");
+        product.addStringProperty("category");
+        product.addStringProperty("size");
+        product.addStringProperty("color");
+        product.addStringProperty("brand");
+        product.addStringProperty("status");
+        product.addDateProperty("created_at");
+        product.addDateProperty("updated_at");
+        product.addBooleanProperty("is_deleted");
 
         Entity message = schema.addEntity("Message");
         message.addStringProperty("message_id").primaryKey();
@@ -42,6 +67,9 @@ public class ElanicDaoGenerator {
         message.addDateProperty("created_at");
         message.addDateProperty("updated_at");
         message.addBooleanProperty("is_deleted");
+
+        Property productId = message.addStringProperty("product_id").getProperty();
+        message.addToOne(product, productId, "product");
     }
 
 }
