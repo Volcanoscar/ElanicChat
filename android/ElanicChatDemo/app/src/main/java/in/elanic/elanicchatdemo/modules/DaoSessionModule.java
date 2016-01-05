@@ -15,11 +15,11 @@ import in.elanic.elanicchatdemo.models.db.DaoSession;
  */
 
 @Module
-public class DevDaoSessionModule {
+public class DaoSessionModule {
 
     private Application app;
 
-    public DevDaoSessionModule(Application app) {
+    public DaoSessionModule(Application app) {
         this.app = app;
     }
 
