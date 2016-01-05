@@ -1,7 +1,5 @@
 package in.elanic;
 
-import java.io.IOException;
-
 import de.greenrobot.daogenerator.DaoGenerator;
 import de.greenrobot.daogenerator.Entity;
 import de.greenrobot.daogenerator.Property;
@@ -9,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
