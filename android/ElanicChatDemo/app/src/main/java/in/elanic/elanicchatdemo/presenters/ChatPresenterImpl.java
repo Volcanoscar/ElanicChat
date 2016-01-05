@@ -116,7 +116,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         try {
 
             // TODO move this to WSService
-            JSONObject jsonRequest = JSONUtils.toJSON(message);
+            JSONObject jsonRequest = new JSONObject();
+            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             sendMessageToWSService(jsonRequest.toString());
         } catch (JSONException e) {

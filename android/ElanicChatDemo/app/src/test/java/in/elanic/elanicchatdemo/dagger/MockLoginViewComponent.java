@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.dagger;
 import dagger.Component;
 import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
+import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
 import in.elanic.elanicchatdemo.modules.LoginProviderModule;
 import in.elanic.elanicchatdemo.presenters.LoginPresenter;
 import in.elanic.elanicchatdemo.scopes.ActivityScope;
@@ -16,7 +17,7 @@ import in.elanic.elanicchatdemo.views.interfaces.LoginView;
 @Component(
         dependencies = {
                 ApplicationComponent.class,
-                LoginProviderModule.class
+                TestLoginProviderModule.class
         },
         modules = MockLoginViewModule.class
 )

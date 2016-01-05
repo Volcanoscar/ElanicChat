@@ -1,4 +1,4 @@
-package in.elanic.elanicchatdemo.models.providers.user;
+package in.elanic.elanicchatdemo;
 
 import android.util.Log;
 
@@ -7,10 +7,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.concurrent.ExecutorService;
+
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.RetrofitApi;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
+import in.elanic.elanicchatdemo.models.providers.user.RetrofitLoginProvider;
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
 import retrofit.RxJavaCallAdapterFactory;
@@ -18,15 +22,11 @@ import rx.Observable;
 import rx.functions.Func1;
 
 /**
- * Created by Jay Rambhia on 01/01/16.
+ * Created by Jay Rambhia on 05/01/16.
  */
-public class RetrofitLoginProvider implements LoginProvider {
+public class TestLoginProviderImpl extends RetrofitLoginProvider implements LoginProvider {
 
-    protected static final String TAG = "RetrofitLoginProvider";
-    protected RetrofitApi mService;
-    protected static final boolean DEBUG = true;
-
-    public RetrofitLoginProvider() {
+    public TestLoginProviderImpl() {
 
         Gson gson = new GsonBuilder()
                 .setDateFormat(JSONUtils.JSON_DATE_FORMAT)

@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -55,8 +56,7 @@ public class WebsocketConnectionService extends Service {
 
     @Inject
     DaoSession mDaoSession;
-    private UserProvider mUserProvider;
-    private MessageProvider mMessageProvider;
+    private WSSHelper mWSSHelper;
 
     private WebSocket mWebSocket;
     private EventBus mEventBus;
@@ -64,6 +64,9 @@ public class WebsocketConnectionService extends Service {
     private String mUserId;
 
     private static final boolean DEBUG = true;
+
+    private PreferenceProvider mPreferenceProvider;
+    private long mSyncTimestamp;
 
     private Runnable mConnectionRunnable;
 
@@ -85,11 +88,15 @@ public class WebsocketConnectionService extends Service {
                 createWSConnectionRequested();
             }
         };
-        mMessageProvider = new MessageProviderImpl(mDaoSession.getMessageDao());
-        mUserProvider = new UserProviderImpl(mDaoSession.getUserDao());
 
-        PreferenceProvider preferenceProvider = new PreferenceProvider(this);
-        mUserId = preferenceProvider.getLoginUserId();
+        mPreferenceProvider = new PreferenceProvider(this);
+        mUserId = mPreferenceProvider.getLoginUserId();
+        mSyncTimestamp = mPreferenceProvider.getSyncTimestamp();
+        if (DEBUG) {
+            Log.i(TAG, "sync_timestamp: " + mSyncTimestamp);
+        }
+
+        mWSSHelper = new WSSHelper(mDaoSession);
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
@@ -109,6 +116,7 @@ public class WebsocketConnectionService extends Service {
 
     @Override
     public void onDestroy() {
+        mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
         disconnectWSConnectionRequested();
         unregisterForEvents();
         super.onDestroy();
@@ -208,6 +216,14 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void sendDataRequested(String data) {
+
+        if (data == null || data.isEmpty()) {
+            if (DEBUG) {
+                Log.e(TAG, "request is null or empty");
+                return;
+            }
+        }
+
         if (mWebSocket != null && mWebSocket.isOpen()) {
             if (DEBUG) {
                 Log.i(TAG, "Send text: " + data);
@@ -225,35 +241,40 @@ public class WebsocketConnectionService extends Service {
         try {
             jsonResponse = new JSONObject(data);
 
-            if (jsonResponse.has(JSONUtils.KEY_SUCCESS)) {
-                boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
-                if (success) {
-                    int requestType = jsonResponse.getInt(JSONUtils.KEY_REQUEST_TYPE);
-                    if (requestType == Constants.REQUEST_SEND_MESSAGE) {
-                        onMessageSentSuccessfully(jsonResponse);
-                        return;
-                    } else if (requestType == Constants.REQUEST_GET_ALL_MESSAGES) {
-                        onNewMessagesArrived(jsonResponse);
-                        return;
-                    } else if (requestType == Constants.REQUEST_GET_USER) {
-                        onUserDataFetched(jsonResponse);
-                        return;
-                    }
-                }
-
-                // TODO do something
+            if (!jsonResponse.has(JSONUtils.KEY_SUCCESS)) {
+                // TODO Handle invalid json
                 return;
             }
 
-            // new message
-            // TODO save message in database first and then send the update
+            boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
+            if (!success) {
+                // TODO handle request failure
+                return;
+            }
 
-            if (jsonResponse.has(JSONUtils.KEY_RESPONSE_TYPE)) {
-                int responseType = jsonResponse.getInt(JSONUtils.KEY_RESPONSE_TYPE);
-                if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
-                    onNewMessagesArrived(jsonResponse);
-                    return;
-                }
+            long syncTimestmap = mWSSHelper.getTimestampFromResponse(jsonResponse);
+            if (syncTimestmap != -1) {
+                mSyncTimestamp = syncTimestmap;
+            }
+
+            int requestType = mWSSHelper.getRequestType(jsonResponse);
+            if (requestType == Constants.REQUEST_SEND_MESSAGE) {
+                onMessageSentSuccessfully(jsonResponse);
+                return;
+            } else if (requestType == Constants.REQUEST_GET_ALL_MESSAGES) {
+                onNewMessagesArrived(jsonResponse);
+                return;
+            } else if (requestType == Constants.REQUEST_GET_USER) {
+                onUserDataFetched(jsonResponse);
+                return;
+            }
+
+            int responseType = mWSSHelper.getResponseType(jsonResponse);
+            Log.i(TAG, "response type: " + responseType);
+            if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
+                Log.i(TAG, "response_new_message");
+                onNewMessagesArrived(jsonResponse);
+                return;
             }
 
 
@@ -269,39 +290,36 @@ public class WebsocketConnectionService extends Service {
             Log.i(TAG, "update local message in db");
         }
 
-        JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
-        Message message;
-        try {
-            message = JSONUtils.getMessageFromJSON(message_json);
-        } catch (ParseException e) {
-            e.printStackTrace();
+        Message message = mWSSHelper.saveMessageToDB(jsonResponse);
+        if (message == null) {
+            Log.e(TAG, "unable to save message to db");
             return;
         }
 
-        mMessageProvider.updateMessage(message);
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGE_SENT, message));
     }
 
     private void onNewMessagesArrived(JSONObject jsonResponse) throws JSONException {
-        JSONArray messages = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
-        if (messages.length() == 0) {
+
+        Log.i(TAG, "on new messages arrived");
+
+        List<Message> newMessages = mWSSHelper.parseMessagesFromResponse(jsonResponse);
+        if (newMessages == null) {
             if (DEBUG) {
-                Log.e(TAG, "empty message array");
+                Log.e(TAG, "new messages is null");
             }
+
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NO_NEW_MESSAGES));
             return;
         }
 
-        List<Message> newMessages = parseNewMessages(messages);
-        if (newMessages.isEmpty()) {
-            // TODO do something
-        }
-
-        mMessageProvider.addNewMessages(newMessages);
+        mWSSHelper.saveMessagesToDB(newMessages);
 
         if (DEBUG) {
             Log.i(TAG, "check for users which are not in db");
         }
-        List<String> newUserIds = getUnknownUserIds(newMessages);
+
+        List<String> newUserIds = mWSSHelper.getUnknownUserIds(mUserId, newMessages);
 
         if (newUserIds != null && !newUserIds.isEmpty()) {
             if (DEBUG) {
@@ -315,67 +333,8 @@ public class WebsocketConnectionService extends Service {
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
 
-    private List<Message> parseNewMessages(JSONArray jsonArray) {
-
-        List<Message> messages = new ArrayList<>();
-
-        for(int i=0; i<jsonArray.length(); i++) {
-            try {
-                JSONObject message_json = jsonArray.getJSONObject(i);
-                try {
-                    Message message = JSONUtils.getMessageFromJSON(message_json);
-                    if (DEBUG) {
-                        Log.i(TAG, "json timestamp: " + message_json.getString(JSONUtils.KEY_CREATED_AT));
-                        Log.i(TAG, "message timestamp: " + message.getCreated_at());
-                    }
-                    messages.add(message);
-
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return messages;
-    }
-
-    private List<String> getUnknownUserIds(@NonNull List<Message> messages) {
-        Set<String> userIds = new HashSet<>();
-        Iterator<Message> iterator = messages.iterator();
-        while (iterator.hasNext()) {
-            Message message = iterator.next();
-            userIds.add(message.getSender_id());
-            userIds.add(message.getReceiver_id());
-        }
-
-        List<String> unknownIds = new ArrayList<>();
-        for(String userId : userIds) {
-            if (userId.equals(mUserId)) {
-                continue;
-            }
-
-            if (!mUserProvider.doesUserExit(userId)) {
-                unknownIds.add(userId);
-            }
-        }
-
-        return unknownIds;
-    }
-
     private void fetchUsersData(@NonNull List<String> userIds) {
-        JSONObject jsonRequest = new JSONObject();
-        try {
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_USER);
-            jsonRequest.put(JSONUtils.KEY_USERS, new JSONArray(userIds));
-
-            sendDataRequested(jsonRequest.toString());
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        sendDataRequested(mWSSHelper.createFetchUsersDataRequest(userIds));
     }
 
     private void onUserDataFetched(JSONObject jsonResponse) throws JSONException {
@@ -386,42 +345,13 @@ public class WebsocketConnectionService extends Service {
             }
             return;
         }
-
-        List<User> newUsers = parseNewUsers(users);
-        if (newUsers.isEmpty()) {
-            // TODO do something
-        }
-
-        mUserProvider.addOrUpdateUsers(newUsers);
-
+        mWSSHelper.saveUsersToDB(mWSSHelper.parseNewUsers(users));
         // send event to ui
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
 
-    private List<User> parseNewUsers(JSONArray jsonArray) {
-        List<User> users = new ArrayList<>();
-
-        for(int i=0; i<jsonArray.length(); i++) {
-            try {
-                JSONObject user_json = jsonArray.getJSONObject(i);
-                try {
-                    User user = JSONUtils.getUserFromJSON(user_json);
-                    users.add(user);
-
-                    if (DEBUG) {
-                        Log.i(TAG, "got user: " + user.getUsername());
-                    }
-
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return users;
+    private void syncData() {
+        sendDataRequested(mWSSHelper.createSyncDataRequest(mSyncTimestamp));
     }
 
     ///////////////////////////////////////////
@@ -440,6 +370,10 @@ public class WebsocketConnectionService extends Service {
 
             case WSRequestEvent.EVENT_SEND:
                 sendDataRequested(event.getData());
+                break;
+
+            case WSRequestEvent.EVENT_SYNC:
+                syncData();
                 break;
         }
 

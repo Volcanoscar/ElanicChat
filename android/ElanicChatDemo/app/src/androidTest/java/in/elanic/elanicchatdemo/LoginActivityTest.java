@@ -7,6 +7,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
+import android.widget.EditText;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,10 +16,16 @@ import org.junit.runner.RunWith;
 
 import javax.inject.Inject;
 
+import in.elanic.elanicchatdemo.components.DaggerLoginViewComponent;
+import in.elanic.elanicchatdemo.dagger.DaggerMockLoginViewComponent;
+import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
+import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.modules.LoginProviderModule;
 import in.elanic.elanicchatdemo.presenters.LoginPresenter;
 import in.elanic.elanicchatdemo.views.activities.LoginActivity;
 import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+
 
 /**
  * Created by Jay Rambhia on 02/01/16.
@@ -42,8 +49,16 @@ public class LoginActivityTest extends ActivityInstrumentationTestCase2<LoginAct
 
         mActivity = getActivity();
 
-        /*Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-        ELChatApp app = (ELChatApp) instrumentation.getTargetContext().getApplicationContext();*/
+        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        ELChatApp app = (ELChatApp) instrumentation.getTargetContext().getApplicationContext();
+
+        DaggerMockLoginViewComponent.builder()
+                .applicationComponent(app.component())
+                .testLoginProviderModule(new TestLoginProviderModule())
+                .mockLoginViewModule(new MockLoginViewModule(this))
+                .build()
+                .inject(this);
+
     }
 
     /*public void testActivityExists() {
@@ -51,8 +66,29 @@ public class LoginActivityTest extends ActivityInstrumentationTestCase2<LoginAct
     }*/
 
     public void testLogin() {
-        Log.i(TAG, "login test!");
-        assertEquals(false, true);
+        getInstrumentation().runOnMainSync(new Runnable() {
+            @Override
+            public void run() {
+                ((EditText) mActivity.findViewById(R.id.edittext)).setText("7461");
+            }
+        });
+
+        getInstrumentation().waitForIdleSync();
+        mPresenter.attachView();
+        mPresenter.login(((EditText) mActivity.findViewById(R.id.edittext)).getText().toString());
+    }
+
+    public void testLoginFail() {
+        getInstrumentation().runOnMainSync(new Runnable() {
+            @Override
+            public void run() {
+                ((EditText) mActivity.findViewById(R.id.edittext)).setText("7261");
+            }
+        });
+
+        getInstrumentation().waitForIdleSync();
+        mPresenter.attachView();
+        mPresenter.login(((EditText) mActivity.findViewById(R.id.edittext)).getText().toString());
     }
 
     @Rule
@@ -60,6 +96,9 @@ public class LoginActivityTest extends ActivityInstrumentationTestCase2<LoginAct
 
     @Override
     public void showSnackbar(CharSequence text) {
+        mActivity.showSnackbar(text);
+        assertEquals(text, "7148");
+        getInstrumentation().waitForIdleSync();
 
     }
 

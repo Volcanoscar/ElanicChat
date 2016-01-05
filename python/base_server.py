@@ -86,7 +86,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 	def parseRequest(self, data):
 		request_type = data['request_type']
 		if request_type == REQUEST_SEND_MESSAGE:
-			self.onCreateMessageRequested(data)
+			self.onCreateMessageRequested(data['message'])
 		elif request_type == REQUEST_GET_ALL_MESSAGES:
 			print "get all messages"
 			self.onGetAllMessgesRequested(data)
@@ -101,7 +101,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		if data['receiver_id'] == data['sender_id']:
 			print "receiver_id is same as sender_id"
-			self.write_message(json.dumps( {'success' : False, "request_type" : REQUEST_SEND_MESSAGE, "error" : "receiver_id is same as sender_id" } ))
+			self.write_message(json.dumps( {'success' : False, 
+				"request_type" : REQUEST_SEND_MESSAGE, "error" : "receiver_id is same as sender_id" } ))
 			return
 
 		new_message = self.db_provider.createNewMessage(data)
@@ -109,16 +110,27 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		
 		# print new_message
 		sent = self.sendMessage(new_message, receiver_id)
-		self.write_message(json.dumps({'success' : True, "sent" : sent, "message" : new_message, "request_type" : REQUEST_SEND_MESSAGE}))
+		self.write_message(json.dumps({'success' : True, "sent" : sent, 
+			"message" : new_message, "request_type" : REQUEST_SEND_MESSAGE,
+			"sync_timestamp" : ModelsProvider.getSyncTime()}))
 
 	def onGetAllMessgesRequested(self, data):
 		userId = self.id
-		messages = self.db_provider.getMessagesForUser(userId)
+
+		if data.has_key('sync_timestamp'):
+			sync_timestamp = data['sync_timestamp']
+		else:
+			sync_timestamp = ""	
+
+		messages = self.db_provider.getMessagesForUser(userId, sync_timestamp)
 		response_messages = []
 		for message in messages:
 			response_messages.append(self.db_provider.sanitizeEntity(message))
 
-		response = {'data' : response_messages, 'request_type' : REQUEST_GET_ALL_MESSAGES, 'success' : True}
+		response = {'data' : response_messages,
+			"sync_timestamp" : ModelsProvider.getSyncTime(),
+		 	'request_type' : REQUEST_GET_ALL_MESSAGES,
+					'success' : True}
 		self.write_message(json.dumps(response))
 
 	def onGetUsersRequested(self, data):
@@ -139,7 +151,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:
 			messages = [data]
-			response = {"response_type" : RESPONSE_NEW_MESSAGE, "data" : messages}
+			response = {"success" : True, "response_type" : RESPONSE_NEW_MESSAGE, "data" : messages, 
+						'sync_timestamp' : ModelsProvider.getSyncTime()}
 			clients[receiver_id]["object"].write_message(json.dumps(response))
 			return True
 		return False

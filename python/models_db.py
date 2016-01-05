@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 import datetime
+import pymongo
 
 date_format = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -44,8 +45,29 @@ class ModelsProvider:
 		user['updated_at'] = datetime.datetime.strftime(user['updated_at'], date_format)[:-3]
 		return user
 
-	def getMessagesForUser(self, userId, limit=50):
-		messages_collection = self.db.messages
-		return list(messages_collection.find( { '$or' : [ {'sender_id' : userId}, {'receiver_id' : userId} ] },
-			limit=limit))
+	@staticmethod
+	def getSyncTime():
+		date = datetime.datetime.now()
+		return datetime.datetime.strftime(date, date_format)[:-3]
 
+	def getMessagesForUser(self, userId, timestamp="", limit=50):
+		messages_collection = self.db.messages
+
+		date = None
+		if timestamp:
+			try:
+				date = datetime.datetime.strptime(timestamp, date_format)
+			except ValueError:
+				date = None
+
+		if not date:
+			return list(messages_collection.find( { '$or' : [ {'sender_id' : userId}, {'receiver_id' : userId} ] },
+				limit=limit).sort("created_at", pymongo.DESCENDING))
+
+		print date
+		return list(messages_collection.find({
+				'$and' : [
+					{ 'created_at' : {'$gt' : date} },
+					{ '$or' : [ {'sender_id' : userId}, {'receiver_id': userId} ] }
+				]
+			}, limit=limit).sort('created_at', pymongo.DESCENDING))

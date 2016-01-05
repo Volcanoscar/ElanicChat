@@ -47,15 +47,16 @@ def on_open(ws):
 				receiver_id = raw_input("Send To: ")
 				message = raw_input("Message: ")
 				data = {"receiver_id" : receiver_id, "content" : message, "sender_id" : userId,
-				"request_type" : 1,
+				"type" : 1,
 				"created_at" : datetime.datetime.strftime(date, date_format)[:-3],
 				"updated_at" : datetime.datetime.strftime(date, date_format)[:-3],
-				"is_deleted" : False, "message_id" : str(int(time.time())),
-				"type" : 1}
+				"is_deleted" : False, "message_id" : str(int(time.time()))}
 
 				print "sending: %s to userId: %s" % (message, receiver_id)
 
-				ws.send(json.dumps(data))
+				request = {'message' : data, 'request_type' : 1}
+
+				ws.send(json.dumps(request))
 			except KeyboardInterrupt:
 				print "Closing websocet connection"
 				ws.close()

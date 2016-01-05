@@ -1,6 +1,9 @@
 package in.elanic.elanicchatdemo.dagger.modules;
 
 import dagger.Module;
+import dagger.Provides;
+import in.elanic.elanicchatdemo.MockLoginPresenterImpl;
+import in.elanic.elanicchatdemo.TestLoginPresenterImpl;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
@@ -27,6 +30,6 @@ public class MockLoginViewModule {
 
     @Provides
     public LoginPresenter providePresenter(LoginView view, DaoSession daoSession, LoginProvider loginProvider) {
-        return new LoginPresenterImpl(view, new UserProviderImpl(daoSession.getUserDao()), loginProvider);
+        return new TestLoginPresenterImpl(view, new UserProviderImpl(daoSession.getUserDao()), loginProvider);
     }
 }

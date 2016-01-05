@@ -4,7 +4,9 @@ import android.app.Application;
 
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerApplicationComponent;
+import in.elanic.elanicchatdemo.dagger.DaggerMockLoginViewComponent;
 import in.elanic.elanicchatdemo.dagger.MockLoginViewComponent;
+import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
 import in.elanic.elanicchatdemo.modules.ApplicationModule;
 import in.elanic.elanicchatdemo.modules.DevDaoSessionModule;
 import in.elanic.elanicchatdemo.modules.LoginProviderModule;
@@ -33,16 +35,16 @@ public class TestHelper {
         return sApplicationComponent;
     }
 
-    public static MockLoginViewComponent getTestLoginViewComponent(LoginView view) {
+    /*public static MockLoginViewComponent getTestLoginViewComponent(LoginView view) {
         if (sTestLoginViewComponent == null) {
             sTestLoginViewComponent = DaggerMockLoginViewComponent.builder()
                     .applicationComponent(getApplicationComponent())
                     .loginProviderModule(new LoginProviderModule())
-                    .loginViewModule(new LoginViewModule(view))
+                    .mockLoginViewModule(new MockLoginViewModule(view))
                     .build();
         }
 
         return sTestLoginViewComponent;
-    }
+    }*/
 
 }
