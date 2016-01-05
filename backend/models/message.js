@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 
 module.exports = function(conn) {
     var Message = new mongoose.Schema({
-	id : String,
+	message_id : String,
 	type : Number,
 	content : String,
 	sender_id : mongoose.Schema.Types.ObjectId,
