@@ -258,6 +258,7 @@ public class WebsocketConnectionService extends Service {
             long syncTimestmap = mWSSHelper.getTimestampFromResponse(jsonResponse);
             if (syncTimestmap != -1) {
                 mSyncTimestamp = syncTimestmap;
+                mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
             }
 
             int requestType = mWSSHelper.getRequestType(jsonResponse);

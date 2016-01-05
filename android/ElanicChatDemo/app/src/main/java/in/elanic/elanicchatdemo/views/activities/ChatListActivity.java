@@ -176,9 +176,9 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     @Override
-    public void openChat(String userId) {
+    public void openChat(String userId, String productId) {
         if (userId != null && !userId.isEmpty()) {
-            Intent intent = ChatActivity.getActivityIntent(this, userId);
+            Intent intent = ChatActivity.getActivityIntent(this, userId, productId);
             if (intent == null) {
                 Log.e(TAG, "intent is null");
                 return;

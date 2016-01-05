@@ -16,6 +16,6 @@ public interface ChatListView {
     void setData(List<ChatItem> data);
     void showProgressBar(boolean show);
 
-    void openChat(String userId);
+    void openChat(String userId, String productId);
 
 }

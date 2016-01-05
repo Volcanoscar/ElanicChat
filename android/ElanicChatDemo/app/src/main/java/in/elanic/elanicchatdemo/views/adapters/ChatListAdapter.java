@@ -13,6 +13,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
 
 /**
@@ -39,11 +40,12 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ChatItemViewHolder viewHolder = (ChatItemViewHolder)holder;
         ChatItem item = mItems.get(position);
-        User user = item.getUser();
-        if (user != null) {
-            viewHolder.mTextView.setText(user.getUsername());
+        Product product = item.getProduct();
+
+        if (product != null) {
+            viewHolder.mTextView.setText(product.getTitle());
         } else {
-            viewHolder.mTextView.setText(item.getId());
+            viewHolder.mTextView.setText(item.getId() + " product is null");
         }
     }
 

@@ -17,9 +17,12 @@ import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
+import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
+import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 import in.elanic.elanicchatdemo.views.interfaces.ChatView;
@@ -35,12 +38,15 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     private UserProvider mUserProvider;
     private MessageProvider mMessageProvider;
+    private ProductProvider mProductProvider;
 
     private String mSenderId;
     private String mReceiverId;
+    private String mProductId;
 
     private User mSender;
     private User mReceiver;
+    private Product mProduct;
 
     private List<Message> mMessages;
 
@@ -54,6 +60,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         mUserProvider = new UserProviderImpl(this.mDaoSession.getUserDao());
         mMessageProvider = new MessageProviderImpl(this.mDaoSession.getMessageDao());
+        mProductProvider = new ProductProviderImpl(this.mDaoSession.getProductDao());
     }
 
     @Override
@@ -61,12 +68,18 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         mSenderId = extras.getString(ChatView.EXTRA_SENDER_ID);
         mReceiverId = extras.getString(ChatView.EXTRA_RECEIVER_ID);
+        mProductId = extras.getString(ChatView.EXTRA_PRODUCT_ID);
 
         mSender = mUserProvider.getUser(mSenderId);
         mReceiver = mUserProvider.getUser(mReceiverId);
+        mProduct = mProductProvider.getProduct(mProductId);
 
         if (mReceiver == null) {
             Log.e(TAG, "receiver is not available");
+        }
+
+        if (mProduct == null) {
+            Log.e(TAG, "product is not available in db");
         }
     }
 
@@ -92,7 +105,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     @Override
     public void loadData() {
-        mMessages = mMessageProvider.getAllMessages(mSenderId, mReceiverId);
+        mMessages = mMessageProvider.getAllMessages(mSenderId, mReceiverId, mProductId);
         mChatView.setData(mMessages);
     }
 
@@ -100,12 +113,11 @@ public class ChatPresenterImpl implements ChatPresenter {
     @Override
     public void sendMessage(String content) {
 
-        if (mReceiver == null) {
-            Log.e(TAG, "receiver data is not present");
+        if (!areDetailsAvailable()) {
             return;
         }
 
-        Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver);
+        Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver, mProduct);
 
         if (DEBUG) {
             Log.i(TAG, "receiver_id: " + message.getReceiver_id());
@@ -123,6 +135,59 @@ public class ChatPresenterImpl implements ChatPresenter {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void sendOffer(CharSequence price) {
+        if (price == null || price.length() == 0) {
+            Log.e(TAG, "offer price is invalid");
+            return;
+        }
+
+        if (!areDetailsAvailable()) {
+            return;
+        }
+
+        int mPrice = 0;
+        try {
+            mPrice = Integer.valueOf(String.valueOf(price));
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        Message message = mMessageProvider.createNewOffer(mPrice, mSender, mReceiver, mProduct);
+
+        if (DEBUG) {
+            Log.i(TAG, "receiver_id: " + message.getReceiver_id());
+        }
+
+        addMessageToChat(0, message);
+
+        try {
+
+            // TODO move this to WSService
+            JSONObject jsonRequest = new JSONObject();
+            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
+            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
+            sendMessageToWSService(jsonRequest.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean areDetailsAvailable() {
+        if (mReceiver == null) {
+            Log.e(TAG, "receiver data is not present");
+            return false;
+        }
+
+        if (mProduct == null) {
+            Log.e(TAG, "product data is not present");
+            return false;
+        }
+
+        return true;
     }
 
     private void addMessageToChat(int position, Message message) {
@@ -146,12 +211,12 @@ public class ChatPresenterImpl implements ChatPresenter {
         List<Message> data;
         if (mMessages != null && !mMessages.isEmpty()) {
             Log.i(TAG, "timestamp: " + mMessages.get(0).getCreated_at());
-             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), mSenderId, mReceiverId);
+             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), mSenderId, mReceiverId, mProductId);
         } else {
             if (DEBUG) {
                 Log.e(TAG, "messages is null. fetch all");
             }
-            data = mMessageProvider.getAllMessages(mSenderId, mReceiverId);
+            data = mMessageProvider.getAllMessages(mSenderId, mReceiverId, mProductId);
         }
 
         if (data != null && !data.isEmpty()) {

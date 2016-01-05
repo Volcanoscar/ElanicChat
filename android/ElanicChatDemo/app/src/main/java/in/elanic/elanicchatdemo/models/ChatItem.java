@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.models;
 import android.support.annotation.NonNull;
 
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
 
 /**
@@ -17,14 +18,17 @@ public class ChatItem {
 
     private User mUser;
     private Message mLastMessage;
+    private Product mProduct;
 
-    public ChatItem(@NonNull String id, String title, String description, int totalMessages, User mUser, Message mLastMessage) {
+    public ChatItem(@NonNull String id, String title, String description, int totalMessages,
+                    User mUser, Message mLastMessage, Product mProduct) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.totalMessages = totalMessages;
         this.mUser = mUser;
         this.mLastMessage = mLastMessage;
+        this.mProduct = mProduct;
     }
 
     public String getId() {
@@ -49,5 +53,9 @@ public class ChatItem {
 
     public Message getLastMessage() {
         return mLastMessage;
+    }
+
+    public Product getProduct() {
+        return mProduct;
     }
 }
