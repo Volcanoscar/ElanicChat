@@ -14,6 +14,7 @@ public class Message {
     private String content;
     private String receiver_id;
     private String sender_id;
+    private Integer offer_price;
     private java.util.Date created_at;
     private java.util.Date updated_at;
     private Boolean is_deleted;
@@ -38,12 +39,13 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted) {
+    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, Integer offer_price, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted) {
         this.message_id = message_id;
         this.type = type;
         this.content = content;
         this.receiver_id = receiver_id;
         this.sender_id = sender_id;
+        this.offer_price = offer_price;
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.is_deleted = is_deleted;
@@ -93,6 +95,14 @@ public class Message {
 
     public void setSender_id(String sender_id) {
         this.sender_id = sender_id;
+    }
+
+    public Integer getOffer_price() {
+        return offer_price;
+    }
+
+    public void setOffer_price(Integer offer_price) {
+        this.offer_price = offer_price;
     }
 
     public java.util.Date getCreated_at() {

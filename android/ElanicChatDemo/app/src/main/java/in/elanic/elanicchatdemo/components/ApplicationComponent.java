@@ -8,7 +8,7 @@ import dagger.Component;
 import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.modules.ApplicationModule;
-import in.elanic.elanicchatdemo.modules.DevDaoSessionModule;
+import in.elanic.elanicchatdemo.modules.DaoSessionModule;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -18,7 +18,7 @@ import in.elanic.elanicchatdemo.modules.DevDaoSessionModule;
 @Component(
         modules =  {
                 ApplicationModule.class,
-                DevDaoSessionModule.class
+                DaoSessionModule.class
         }
 )
 

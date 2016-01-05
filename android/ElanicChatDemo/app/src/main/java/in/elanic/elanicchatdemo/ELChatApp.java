@@ -9,7 +9,7 @@ import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerApplicationComponent;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.modules.ApplicationModule;
-import in.elanic.elanicchatdemo.modules.DevDaoSessionModule;
+import in.elanic.elanicchatdemo.modules.DaoSessionModule;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -46,7 +46,7 @@ public class ELChatApp extends Application {
     protected ApplicationComponent createComponent() {
         return DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this))
-                .devDaoSessionModule(new DevDaoSessionModule(this))
+                .devDaoSessionModule(new DaoSessionModule(this))
                 .build();
     }
 

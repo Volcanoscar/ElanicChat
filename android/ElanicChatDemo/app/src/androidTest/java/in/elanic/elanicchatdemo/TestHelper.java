@@ -4,14 +4,9 @@ import android.app.Application;
 
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerApplicationComponent;
-import in.elanic.elanicchatdemo.dagger.DaggerMockLoginViewComponent;
 import in.elanic.elanicchatdemo.dagger.MockLoginViewComponent;
-import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
 import in.elanic.elanicchatdemo.modules.ApplicationModule;
-import in.elanic.elanicchatdemo.modules.DevDaoSessionModule;
-import in.elanic.elanicchatdemo.modules.LoginProviderModule;
-import in.elanic.elanicchatdemo.modules.LoginViewModule;
-import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+import in.elanic.elanicchatdemo.modules.DaoSessionModule;
 
 /**
  * Created by Jay Rambhia on 02/01/16.
@@ -28,7 +23,7 @@ public class TestHelper {
         if (sApplicationComponent == null) {
             sApplicationComponent = DaggerApplicationComponent.builder()
                     .applicationModule(new ApplicationModule(app))
-                    .devDaoSessionModule(new DevDaoSessionModule(app))
+                    .devDaoSessionModule(new DaoSessionModule(app))
                     .build();
         }
 
