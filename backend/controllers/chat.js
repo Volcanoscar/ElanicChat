@@ -2,6 +2,7 @@
 Database backend. Interface is likely to remain the same.
 */
 var mongoose = require('mongoose');
+var util = require('./util.js');
 
 module.exports = function(conn){
     var User = require('../models/user.js')(conn);
@@ -17,32 +18,42 @@ module.exports = function(conn){
     }
 
     return {
-	get_unread_messages : function(data, next) {
+	get_unread_messages : function(id, data, next) {
 	    //check for all messages greater than given timestamp 
 	    //and return
-	    if (!data.time)
-		next(new Error("Timestamp missing"));
-	    var objId = mongoose.Types.ObjectId(data.id);
+	    if (!data || !data.sync_timestamp)
+		next("Invalid Parameters");
+	    var time = Date.parse(data.sync_timestamp);
+	    var objId = mongoose.Types.ObjectId(id);
 	    Message.find({ $or: [{'sender_id' : objId}, 
 				 {'receiver_id' : objId}]
-			 }).where('updated_at').gt( data.time ).lean().
+			 }).where('updated_at').gt( time ).lean().
 		exec(next);
+	},
+
+	get_users: function(data, next) {
+	    if (!data || !data.ids || data.ids.constructor != Array)
+		return next("Invalid Parameters");
+	    var ids = data.ids.map(function(id) {
+		return mongoose.Types.ObjectId(id);
+	    });
+	    return User.find({_id : { $in : ids }}).lean().exec(next);
 	},
 
 	save_messages : function(msg, next) {
 	    // Later: Move validation to model
 	    if (!msg.receiver_id)
-		return next(new Error("No receiver_id specified"));
+		return next("Invalid parameters");
 	    if (msg.receiver_id == msg.sender_id)
-		return next(new Error("Can't send mesage to yourself"));
-	    var id = mongoose.Types.ObjectId(msg.receiver_id);
-	    User.findOne({_id : id}).lean().
+		return next("receiver_id and sender_id can't be equal");
+	    var id = mongoose.Types.ObjectId(msg.receiver_id + '');
+	    return User.findOne({_id : id}).lean().
 		exec(function(err, user) {
 		    // Later: If user is msg.sender_id, throw error
 		    if (err)
 			return next(err);
 		    if (!user)
-			return next(new Error("No such user"));
+			return next("No such user");
 		    var message = new Message(msg);
 		    // if for group, try adding array of receivers
 		    // Later: Add validation in models end
@@ -63,9 +74,9 @@ module.exports = function(conn){
 
 	authenticate : function(data, next) {
 	    if (!data || !data.user_id)
-		return next(false);
-            var id = mongoose.Types.ObjectId(data.user_id);
-	    return User.findOne({_id : id}).select({'username' : 1, '_id' : 1}).lean().exec(next);
+		return next("Invalid parameters");
+	    var id = util.toObjId(data.user_id);
+	    return User.findOne({_id : id}).lean().exec(next);
 	}
     };
     
