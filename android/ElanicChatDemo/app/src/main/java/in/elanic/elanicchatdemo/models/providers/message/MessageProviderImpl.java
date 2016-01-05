@@ -1,7 +1,5 @@
 package in.elanic.elanicchatdemo.models.providers.message;
 
-import android.util.Log;
-
 import java.util.Date;
 import java.util.List;
 
@@ -9,6 +7,7 @@ import de.greenrobot.dao.query.QueryBuilder;
 import de.greenrobot.dao.query.WhereCondition;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.MessageDao;
+import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
 
 /**
@@ -26,12 +25,10 @@ public class MessageProviderImpl implements MessageProvider {
     private static final boolean DEBUG = true;
 
     @Override
-    public List<Message> getAllMessages(String user1, String user2) {
-        if (DEBUG) {
-            Log.i(TAG, "ids: " + user1 + " " + user2);
-        }
+    public List<Message> getAllMessages(String user1, String user2, String productId) {
+        return getMessages(null, user1, user2, productId);
 
-        WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
+        /*WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
         WhereCondition c2 = MessageDao.Properties.Sender_id.eq(user2);
         WhereCondition c3 = MessageDao.Properties.Sender_id.eq(user1);
         WhereCondition c4 = MessageDao.Properties.Receiver_id.eq(user2);
@@ -39,38 +36,33 @@ public class MessageProviderImpl implements MessageProvider {
         QueryBuilder<Message> qb = mDao.queryBuilder();
         qb.whereOr(qb.and(c1, c2), qb.and(c3, c4));
 
-        return qb.orderDesc(MessageDao.Properties.Created_at).list();
+        return qb.orderDesc(MessageDao.Properties.Created_at).list();*/
     }
 
     @Override
-    public List<Message> getMessages(Date timestamp, String user1, String user2) {
+    public List<Message> getMessages(Date timestamp, String user1, String user2, String productId) {
 
         WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
         WhereCondition c2 = MessageDao.Properties.Sender_id.eq(user2);
         WhereCondition c3 = MessageDao.Properties.Sender_id.eq(user1);
         WhereCondition c4 = MessageDao.Properties.Receiver_id.eq(user2);
+        WhereCondition c5 = MessageDao.Properties.Product_id.eq(productId);
 
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-        WhereCondition c5 = qb.or(qb.and(c1, c2), qb.and(c3,c4));
+        WhereCondition c6 = qb.or(qb.and(c1, c2), qb.and(c3, c4));
 
-        qb.where(MessageDao.Properties.Created_at.gt(timestamp), c5);
-
-        return qb.orderAsc(MessageDao.Properties.Created_at).list();
-    }
-
-    @Override
-    public Message getLatestMessage(String user1, String user2) {
-        List<Message> messages = getAllMessages(user1, user2);
-        if (messages != null && !messages.isEmpty()) {
-            return messages.get(0);
+        if (timestamp != null) {
+            qb.where(MessageDao.Properties.Created_at.gt(timestamp), c5, c6);
+        } else {
+            qb.where(c5, c6);
         }
 
-        return null;
+        return qb.orderDesc(MessageDao.Properties.Created_at).list();
     }
 
     @Override
-    public Message createNewMessage(String content, User sender, User receiver) {
+    public Message createNewMessage(String content, User sender, User receiver, Product product) {
         Message message = new Message();
 
         Date date = new Date();
@@ -83,6 +75,31 @@ public class MessageProviderImpl implements MessageProvider {
         message.setCreated_at(date);
         message.setUpdated_at(date);
         message.setType(1);
+        message.setProduct(product);
+        message.setOffer_price(0);
+
+        mDao.insert(message);
+        return message;
+    }
+
+    @Override
+    public Message createNewOffer(int price, User sender, User receiver, Product product) {
+        Message message = new Message();
+
+        Date date = new Date();
+
+        String content = sender.getUsername() + " made an offer";
+
+        message.setMessage_id(String.valueOf(date.getTime()));
+        message.setContent(content);
+        message.setSender(sender);
+        message.setReceiver(receiver);
+        message.setIs_deleted(false);
+        message.setCreated_at(date);
+        message.setUpdated_at(date);
+        message.setType(2);
+        message.setProduct(product);
+        message.setOffer_price(price);
 
         mDao.insert(message);
         return message;

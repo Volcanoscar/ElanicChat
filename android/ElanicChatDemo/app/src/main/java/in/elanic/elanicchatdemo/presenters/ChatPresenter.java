@@ -15,4 +15,5 @@ public interface ChatPresenter {
 
     void loadData();
     void sendMessage(String content);
+    void sendOffer(CharSequence price);
 }

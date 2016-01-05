@@ -104,11 +104,11 @@ public class ChatListPresenterImpl implements ChatListPresenter {
         Message message = item.getLastMessage();
         if (mUserId.equals(message.getReceiver_id())) {
             // open with sender id
-            mChatListView.openChat(message.getSender_id());
+            mChatListView.openChat(message.getSender_id(), message.getProduct_id());
 
         } else {
             // open with receiver id
-            mChatListView.openChat(message.getReceiver_id());
+            mChatListView.openChat(message.getReceiver_id(), message.getProduct_id());
         }
     }
 
