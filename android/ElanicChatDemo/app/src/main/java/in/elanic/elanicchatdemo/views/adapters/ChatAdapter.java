@@ -46,7 +46,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
 
             mHolder.mTextView.setText(TextUtils.concat(sender_text, ": ", mItems.get(position).getContent(), " -> ",
-                    String.valueOf(mItems.get(position).getOffer_price())));
+                    String.valueOf(mItems.get(position).getOffer_price()), " -> ",
+                    String.valueOf(mItems.get(position).getProduct_id())));
         }
     }
 

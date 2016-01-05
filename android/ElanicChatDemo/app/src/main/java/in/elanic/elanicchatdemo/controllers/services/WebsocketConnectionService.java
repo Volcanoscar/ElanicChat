@@ -116,9 +116,12 @@ public class WebsocketConnectionService extends Service {
 
     @Override
     public void onDestroy() {
-        mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
+        if (mPreferenceProvider.getSyncTimestamp() != -1) {
+            mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
+        }
         disconnectWSConnectionRequested();
         unregisterForEvents();
+        Log.i(TAG, "onDestroy");
         super.onDestroy();
     }
 
@@ -267,6 +270,10 @@ public class WebsocketConnectionService extends Service {
             } else if (requestType == Constants.REQUEST_GET_USER) {
                 onUserDataFetched(jsonResponse);
                 return;
+            } else if (requestType == Constants.REQUEST_GET_PRODUCTS) {
+                onProductsDataFetched(jsonResponse);
+            } else if (requestType == Constants.REQUEST_GET_USERS_AND_PRODUCTS) {
+                onUsersAndPrdouctsDataFetched(jsonResponse);
             }
 
             int responseType = mWSSHelper.getResponseType(jsonResponse);
@@ -320,21 +327,32 @@ public class WebsocketConnectionService extends Service {
         }
 
         List<String> newUserIds = mWSSHelper.getUnknownUserIds(mUserId, newMessages);
+        List<String> newProductIds = mWSSHelper.getUnknownProductIds(newMessages);
 
-        if (newUserIds != null && !newUserIds.isEmpty()) {
-            if (DEBUG) {
-                Log.i(TAG, "new users found: " + newUserIds.size());
-                Log.i(TAG, "fetch new users");
-            }
+        boolean fetchNewUsers = (newUserIds != null && !newUserIds.isEmpty());
+        boolean fetchNewProducts = (newProductIds != null && !newProductIds.isEmpty());
+
+        if (fetchNewUsers && fetchNewProducts) {
+            fetchUsersAndProductsData(newUserIds, newProductIds);
+        } else if (fetchNewUsers) {
             fetchUsersData(newUserIds);
-            return;
+        } else if (fetchNewProducts) {
+            fetchProductsData(newProductIds);
+        } else {
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
         }
-
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
 
     private void fetchUsersData(@NonNull List<String> userIds) {
         sendDataRequested(mWSSHelper.createFetchUsersDataRequest(userIds));
+    }
+
+    private void fetchProductsData(@NonNull List<String> productIds) {
+        sendDataRequested(mWSSHelper.createFetchProductsDataRequest(productIds));
+    }
+
+    private void fetchUsersAndProductsData(@NonNull List<String> userIds, @NonNull List<String> productIds) {
+        sendDataRequested(mWSSHelper.createFetchUsersAndProductsDataRequest(userIds, productIds));
     }
 
     private void onUserDataFetched(JSONObject jsonResponse) throws JSONException {
@@ -348,6 +366,43 @@ public class WebsocketConnectionService extends Service {
         mWSSHelper.saveUsersToDB(mWSSHelper.parseNewUsers(users));
         // send event to ui
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+    }
+
+    private void onProductsDataFetched(JSONObject jsonResponse) throws JSONException {
+        JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
+        if (products.length() == 0) {
+            if (DEBUG) {
+                Log.e(TAG, "empty products array");
+            }
+            return;
+        }
+        mWSSHelper.saveProductsToDB(mWSSHelper.parseNewProducts(products));
+        // send event to ui
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+    }
+
+    private void onUsersAndPrdouctsDataFetched(JSONObject jsonResponse) throws JSONException {
+        JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_PRODUCTS);
+        JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_USERS);
+        if (products.length() != 0) {
+            mWSSHelper.saveProductsToDB(mWSSHelper.parseNewProducts(products));
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "empty products array");
+            }
+        }
+
+        if (users.length() != 0) {
+            mWSSHelper.saveUsersToDB(mWSSHelper.parseNewUsers(users));
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "empty users array");
+            }
+        }
+
+        if (users.length() > 0 || products.length() > 0) {
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+        }
     }
 
     private void syncData() {

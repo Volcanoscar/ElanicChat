@@ -12,6 +12,8 @@ public class Constants {
     public static final int REQUEST_SEND_MESSAGE = 1;
     public static final int REQUEST_GET_USER = 2;
     public static final int REQUEST_GET_ALL_MESSAGES = 5;
+    public static final int REQUEST_GET_PRODUCTS = 6;
+    public static final int REQUEST_GET_USERS_AND_PRODUCTS = 7;
 
     public static final int RESPONSE_NEW_MESSAGE = 3;
     public static final int RESPONSE_USER_DATA = 4;

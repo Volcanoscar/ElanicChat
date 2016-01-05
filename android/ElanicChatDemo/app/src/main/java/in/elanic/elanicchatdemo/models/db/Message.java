@@ -18,6 +18,7 @@ public class Message {
     private java.util.Date created_at;
     private java.util.Date updated_at;
     private Boolean is_deleted;
+    private String product_id;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -31,6 +32,9 @@ public class Message {
     private User sender;
     private String sender__resolvedKey;
 
+    private Product product;
+    private String product__resolvedKey;
+
 
     public Message() {
     }
@@ -39,7 +43,7 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, Integer offer_price, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted) {
+    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, Integer offer_price, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, String product_id) {
         this.message_id = message_id;
         this.type = type;
         this.content = content;
@@ -49,6 +53,7 @@ public class Message {
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.is_deleted = is_deleted;
+        this.product_id = product_id;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -129,6 +134,14 @@ public class Message {
         this.is_deleted = is_deleted;
     }
 
+    public String getProduct_id() {
+        return product_id;
+    }
+
+    public void setProduct_id(String product_id) {
+        this.product_id = product_id;
+    }
+
     /** To-one relationship, resolved on first access. */
     public User getReceiver() {
         String __key = this.receiver_id;
@@ -176,6 +189,31 @@ public class Message {
             this.sender = sender;
             sender_id = sender == null ? null : sender.getUser_id();
             sender__resolvedKey = sender_id;
+        }
+    }
+
+    /** To-one relationship, resolved on first access. */
+    public Product getProduct() {
+        String __key = this.product_id;
+        if (product__resolvedKey == null || product__resolvedKey != __key) {
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            ProductDao targetDao = daoSession.getProductDao();
+            Product productNew = targetDao.load(__key);
+            synchronized (this) {
+                product = productNew;
+            	product__resolvedKey = __key;
+            }
+        }
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        synchronized (this) {
+            this.product = product;
+            product_id = product == null ? null : product.getProduct_id();
+            product__resolvedKey = product_id;
         }
     }
 

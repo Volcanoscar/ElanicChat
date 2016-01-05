@@ -1,6 +1,5 @@
 package in.elanic.elanicchatdemo.models.db;
 
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,6 +26,20 @@ public class JSONUtils {
     public static final String KEY_GRAPHIC = "graphic";
     public static final String KEY_NAME = "name";
     public static final String KEY_OFFER_PRICE = "offer_price";
+    public static final String KEY_PRODUCT_ID = "product_id";
+    public static final String KEY_TITLE = "title";
+    public static final String KEY_DESCRIPTION = "description";
+    public static final String KEY_SELLING_PRICE = "selling_price";
+    public static final String KEY_PURCHASE_PRICE = "purchase_price";
+    public static final String KEY_VIEWS = "views";
+    public static final String KEY_LIKES = "likes";
+    public static final String KEY_IS_AVAILABLE = "is_available";
+    public static final String KEY_IS_NWT = "is_nwt";
+    public static final String KEY_CATEGORY = "category";
+    public static final String KEY_SIZE = "size";
+    public static final String KEY_COLOR = "color";
+    public static final String KEY_BRAND = "brand";
+    public static final String KEY_STATUS = "status";
 
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_RESPONSE_TYPE = "response_type";
@@ -36,6 +49,7 @@ public class JSONUtils {
     public static final String KEY_USER = "user";
     public static final String KEY_USERS = "users";
     public static final String KEY_SYNC_TIMESTAMP = "sync_timestamp";
+    public static final String KEY_PRODUCTS = "products";
 
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -65,6 +79,7 @@ public class JSONUtils {
         message.setReceiver_id(jsonObject.getString(KEY_RECEIVER_ID));
         message.setSender_id(jsonObject.getString(KEY_SENDER_ID));
         message.setOffer_price(jsonObject.getInt(KEY_OFFER_PRICE));
+        message.setProduct_id(jsonObject.getString(KEY_PRODUCT_ID));
 
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
         message.setCreated_at(df.parse(jsonObject.getString(KEY_CREATED_AT)));
@@ -87,6 +102,32 @@ public class JSONUtils {
         user.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
 
         return user;
+    }
+
+    public static Product getProductFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
+        Product product = new Product();
+        product.setProduct_id(jsonObject.getString(KEY_PRODUCT_ID));
+        product.setTitle(jsonObject.getString(KEY_TITLE));
+        product.setDescription(jsonObject.getString(KEY_DESCRIPTION));
+        product.setUser_id(jsonObject.getString(KEY_USER_ID));
+        product.setSelling_price(jsonObject.getInt(KEY_SELLING_PRICE));
+        product.setPurchase_price(jsonObject.getInt(KEY_PURCHASE_PRICE));
+        product.setViews(jsonObject.getInt(KEY_VIEWS));
+        product.setLikes(jsonObject.getInt(KEY_LIKES));
+        product.setIs_available(jsonObject.getBoolean(KEY_IS_AVAILABLE));
+        product.setIs_nwt(jsonObject.getBoolean(KEY_IS_NWT));
+        product.setCategory(jsonObject.getString(KEY_CATEGORY));
+        product.setSize(jsonObject.getString(KEY_SIZE));
+        product.setColor(jsonObject.getString(KEY_COLOR));
+        product.setBrand(jsonObject.getString(KEY_BRAND));
+        product.setStatus(jsonObject.getString(KEY_STATUS));
+
+        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        product.setCreated_at(df.parse(jsonObject.getString(KEY_CREATED_AT)));
+        product.setUpdated_at(df.parse(jsonObject.getString(KEY_UPDATED_AT)));
+        product.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
+
+        return product;
     }
 
     public static String convertDateToString(Date date) {

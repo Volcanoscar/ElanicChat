@@ -21,5 +21,13 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
             db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_price.columnName + " INTEGER;");
             Log.i(TAG, "added offer_price to Message Table");
         }
+
+        if (oldVersion < 3) {
+            Log.i(TAG, "upgrading version 2 to 3");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Product_id.columnName + " TEXT;");
+            Log.i(TAG, "added product_id column to Message database");
+            ProductDao.createTable(db, true);
+            Log.i(TAG, "added product table to database");
+        }
     }
 }

@@ -43,6 +43,8 @@ public class PreferenceProvider {
 
     public void clear() {
         Log.i(TAG, "clear data");
-        mPref.edit().clear().apply();
+        SharedPreferences.Editor editor = mPref.edit();
+        editor.clear();
+        editor.commit();
     }
 }
