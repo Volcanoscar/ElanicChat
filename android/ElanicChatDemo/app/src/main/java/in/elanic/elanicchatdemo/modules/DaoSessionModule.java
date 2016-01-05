@@ -19,18 +19,20 @@ import in.elanic.elanicchatdemo.models.db.ProdOpenHelper;
 public class DaoSessionModule {
 
     private Application app;
+    private boolean isDev = true;
 
-    public DaoSessionModule(Application app) {
+    public DaoSessionModule(Application app, boolean isDev) {
         this.app = app;
+        this.isDev = isDev;
     }
 
     @Singleton
     @Provides
-    public DaoSession provideDaoSession(boolean dev) {
+    public DaoSession provideDaoSession() {
 
         DaoMaster.OpenHelper helper;
 
-        if (dev) {
+        if (isDev) {
             helper = new DaoMaster.DevOpenHelper(app.getApplicationContext(),
                     "elchat-db", null);
         } else {

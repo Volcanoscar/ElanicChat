@@ -21,6 +21,7 @@ public class ELChatApp extends Application {
     @Inject
     DaoSession mDaoSession;
 
+    private boolean useDevDb = false;
     private ApplicationComponent applicationComponent;
 
     @Override
@@ -46,7 +47,7 @@ public class ELChatApp extends Application {
     protected ApplicationComponent createComponent() {
         return DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this))
-                .devDaoSessionModule(new DaoSessionModule(this))
+                .daoSessionModule(new DaoSessionModule(this, useDevDb))
                 .build();
     }
 

@@ -23,7 +23,7 @@ public class TestHelper {
         if (sApplicationComponent == null) {
             sApplicationComponent = DaggerApplicationComponent.builder()
                     .applicationModule(new ApplicationModule(app))
-                    .devDaoSessionModule(new DaoSessionModule(app))
+                    .daoSessionModule(new DaoSessionModule(app, true))
                     .build();
         }
 

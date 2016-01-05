@@ -18,7 +18,7 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(TAG, "onUpgrade: Upgrading schema version from " + oldVersion + " to " + newVersion);
         if (oldVersion < 2) {
-            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + "ADD COLUMN " + MessageDao.Properties.Offer_price.columnName + " INTEGER;");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_price.columnName + " INTEGER;");
             Log.i(TAG, "added offer_price to Message Table");
         }
     }
