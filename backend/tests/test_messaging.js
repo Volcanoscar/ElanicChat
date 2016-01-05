@@ -32,7 +32,7 @@ module.exports = function(data) {
 	    });
 	});
 	
-	it("should retrieve past messages", function(done){
+	it("should retrieve past messages", function(done) {
 	    var user1 = data.users[0],
 	        user2 = data.users[1];
 	    
@@ -41,13 +41,30 @@ module.exports = function(data) {
 		    content : "You missed this message",
 		    receiver_id : data.users[1]._id
 		};
+		var msg2 = { 
+		    content : "You missed this message too",
+		    receiver_id : data.users[1]._id
+		};
 		user1.send(msg, function() {
-		    user2.connect(function() {
-			user2.get(Date.now()-10000, function() {
-			    _.size(user2.messages).should.equal(1);
-			    done(); 
+		    user1.send(msg2, function() {
+			user2.connect(function() {
+			    user2.get((new Date).getFullYear(), function() {
+				_.size(user2.messages).should.equal(2);
+				done(); 
+			    });
 			});
 		    });
+		});
+	    });
+	});
+
+	it("should retrieve a list of users", function(done) {
+	    var user1 = data.users[0],
+	        id = data.users[1]._id;
+	    user1.connect(function() {
+		user1.get_users([id, user1._id], function() {
+		    _.size(user1.users).should.equal(2);
+		    done();
 		});
 	    });
 	});

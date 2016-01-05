@@ -6,38 +6,64 @@ var callbacks = []; // callback stack. For testing purposes only.
 var sockets = {}; // socket handler
 
 module.exports = function(user, data) {
-    var messages = {}, id = user._id;
+    var messages = {}, id = user._id, user_info = {};
     var url = data.url + "?user_id=" + id;
     function add_message(msg) {
+	var status = msg.success;
+	var sent = msg.sent;
+	if (msg.message) msg = msg.message;
+	else if (msg.data) msg = msg.data;
 	var arr = (msg.constructor == Array)? msg : [msg];
 	arr.forEach(function(elem) {
-	    messages[elem.id] = elem;
+	    messages[elem.message_id] = elem;
 	});
-	if (msg.success === API.SUCCESS) {
+	if (status === API.SUCCESS) {
 	    if (id.equals(msg.sender_id)) {
 		// temp remove later
-		if (msg.delayed === API.SUCCESS)
+		if (sent === API.FAIL)
 		    callbacks.pop()();
 		return;
 	    }
 	    callbacks.pop()();
 	}
-	else if (msg.success === API.FAIL)
+	else if (status === API.FAIL)
 	    throw new Error("Message send failed");
 	else if (msg.constructor == Array)
 	    callbacks.pop()();
     }
     function send_message(msg, done) {
 	_.extend(msg, {
-	    id: ''+counter++
+	    message_id: ''+counter++
 	});
 	callbacks.push(done);
 	add_message(msg);
-	sockets[id].emit(API.SEND, msg);
+	emit(sockets[id], API.SEND, { message: msg });
     }
     function get_messages(time, done) {
 	callbacks.push(done);
-	sockets[id].emit(API.GET, time);
+	emit(sockets[id], API.GET, {sync_timestamp : time+''});
+    }
+    function get_users(ids, done) {
+	callbacks.push(done);
+	emit(sockets[id], API.USERS, {ids : ids});
+    }
+    function add_users(users) {
+	users = users.data;
+	users.forEach(function(user) {
+	    user_info[user._id] = user;
+	});
+	callbacks.pop()();
+    }
+    function emit(socket, event, data) {
+	socket.emit("message", _.extend({request_type : event}, data));
+//	socket.emit(event, data);
+    }
+    function on(socket, event, done) {
+	socket.on("message", function(data) {
+	    if (data.request_type == event)
+		done(data);
+	});
+//	socket.on(event, done);
     }
     function connect(done) {
 	disconnect();
@@ -48,9 +74,10 @@ module.exports = function(user, data) {
 	sockets[id].on('connect_failed', function() {
 	    throw new Error("Connection to server failed.");
 	});
-	sockets[id].on(API.SEND, add_message);
-	sockets[id].on(API.GET, add_message);
-	sockets[id].on(API.ERROR, function(err) {
+	on(sockets[id], API.SEND, add_message);
+	on(sockets[id], API.GET, add_message);
+	on(sockets[id], API.USERS, add_users);
+	on(sockets[id], API.ERROR, function(err) {
 	    throw err;
 	});
 
@@ -72,6 +99,8 @@ module.exports = function(user, data) {
 	send : send_message,
 	get : get_messages,
 	_id : id,
-	username : user.username
+	username : user.username,
+	get_users : get_users,
+	users : user_info
     };
 };
