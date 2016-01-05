@@ -26,6 +26,7 @@ public class JSONUtils {
     public static final String KEY_USERNAME = "username";
     public static final String KEY_GRAPHIC = "graphic";
     public static final String KEY_NAME = "name";
+    public static final String KEY_OFFER_PRICE = "offer_price";
 
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_RESPONSE_TYPE = "response_type";
@@ -63,6 +64,7 @@ public class JSONUtils {
         message.setContent(jsonObject.getString(KEY_CONTENT));
         message.setReceiver_id(jsonObject.getString(KEY_RECEIVER_ID));
         message.setSender_id(jsonObject.getString(KEY_SENDER_ID));
+        message.setOffer_price(jsonObject.getInt(KEY_OFFER_PRICE));
 
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
         message.setCreated_at(df.parse(jsonObject.getString(KEY_CREATED_AT)));

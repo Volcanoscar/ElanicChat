@@ -45,7 +45,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 sender_text = sender.getUsername();
             }
 
-            mHolder.mTextView.setText(TextUtils.concat(sender_text, ": ", mItems.get(position).getContent()));
+            mHolder.mTextView.setText(TextUtils.concat(sender_text, ": ", mItems.get(position).getContent(), " -> ",
+                    String.valueOf(mItems.get(position).getOffer_price())));
         }
     }
 

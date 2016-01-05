@@ -22,6 +22,7 @@ class ModelsProvider:
 		message['created_at'] = date
 		message['updated_at'] = date
 		message['is_deleted'] = False
+		message['offer_price'] = 100
 		message_id = messages_collection.insert_one(message).inserted_id
 		message['_id'] = message_id
 		return message
