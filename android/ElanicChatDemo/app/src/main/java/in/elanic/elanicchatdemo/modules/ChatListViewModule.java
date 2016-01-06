@@ -33,7 +33,6 @@ public class ChatListViewModule {
     public ChatListPresenter providePresenter(ChatListView view, DaoSession daoSession,
                                               ChatApiProvider mChatApiProvider) {
         return new ChatListPresenterImpl(view,
-                new ChatProviderImpl(daoSession),
                 new ProductProviderImpl(daoSession.getProductDao()),
                 new UserProviderImpl(daoSession.getUserDao()),
                 mChatApiProvider);

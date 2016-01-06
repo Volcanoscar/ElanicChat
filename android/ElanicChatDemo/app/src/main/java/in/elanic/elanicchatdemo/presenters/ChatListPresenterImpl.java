@@ -37,14 +37,12 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     private static final String TAG = "ChatListPresenter";
 
     private ChatListView mChatListView;
-    private ChatProvider mChatProvider;
+
     private ChatApiProvider mChatApiProvider;
     private ProductProvider mProductProvider;
     private UserProvider mUserProvider;
 
     private EventBus mEventBus;
-
-    private List<ChatItem> mItems;
     private String mUserId;
 
     private Handler mHandler;
@@ -54,13 +52,11 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     private CompositeSubscription _subscription;
 
     public ChatListPresenterImpl(ChatListView mChatListView,
-                                 ChatProvider mChatProvider,
                                  ProductProvider mProductProvider,
                                  UserProvider mUserProvider,
                                  ChatApiProvider mChatApiProvider) {
 
         this.mChatListView = mChatListView;
-        this.mChatProvider = mChatProvider;
         this.mChatApiProvider = mChatApiProvider;
         this.mProductProvider = mProductProvider;
         this.mUserProvider = mUserProvider;
@@ -115,29 +111,6 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
     }
 
-    @Override
-    public void openChat(int position) {
-        if (position < 0 || mItems == null || mItems.size() <= position) {
-            return;
-        }
-
-        ChatItem item = mItems.get(position);
-        if (item == null) {
-            return;
-        }
-
-        // TODO -> Change this. Product is available in ChatItem itself
-        Message message = item.getLastMessage();
-        if (mUserId.equals(message.getReceiver_id())) {
-            // open with sender id
-            mChatListView.openChat(message.getSender_id(), message.getProduct_id());
-
-        } else {
-            // open with receiver id
-            mChatListView.openChat(message.getReceiver_id(), message.getProduct_id());
-        }
-    }
-
     private void openNewChat(ChatItem chatItem) {
         mChatListView.openChat(chatItem.getUser().getUser_id(), chatItem.getProduct().getProduct_id());
     }
@@ -151,19 +124,10 @@ public class ChatListPresenterImpl implements ChatListPresenter {
             return;
         }
 
-        // Check in already loaded chats
-        for(int i=0; i<mItems.size(); i++) {
-            ChatItem item = mItems.get(i);
-            Product product = item.getProduct();
-            if (product != null && product.getProduct_id().equals(productId)) {
-                // open this chat
-                openChat(i);
-                return;
-            }
+        if (!mChatListView.openIfChatExists(String.valueOf(productId))) {
+            // Chat is not available. Call API
+            sendRequestToInitializeChat(String.valueOf(productId));
         }
-
-        // Chat is not available. Call API
-        sendRequestToInitializeChat(String.valueOf(productId));
     }
 
     @Override
@@ -172,13 +136,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     }
 
     private void loadChatList() {
-        mItems = mChatProvider.getActiveChats(mUserId);
-        if (mItems == null || mItems.isEmpty()) {
-            mChatListView.showError("No Chats Found");
-            return;
-        }
-
-        mChatListView.setData(mItems);
+        mChatListView.loadChatSections(mUserId);
     }
 
     private void fetchAllDataFromServer() {

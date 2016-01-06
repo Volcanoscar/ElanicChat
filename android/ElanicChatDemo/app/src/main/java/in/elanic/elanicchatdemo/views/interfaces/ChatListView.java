@@ -12,11 +12,11 @@ public interface ChatListView {
     String EXTRA_USER_ID = "user_id";
     String EXTRA_JUST_LOGGED_IN = "just_logged_in";
 
-    void showError(CharSequence text);
-    void setData(List<ChatItem> data);
-    void showProgressBar(boolean show);
     void showSnackbar(CharSequence text);
     void showProgressDialog(boolean show);
     void openChat(String userId, String productId);
+    void showProgressBar(boolean show);
 
+    boolean openIfChatExists(String productId);
+    void loadChatSections(String userId);
 }

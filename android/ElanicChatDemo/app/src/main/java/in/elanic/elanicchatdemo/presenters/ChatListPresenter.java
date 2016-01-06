@@ -15,7 +15,6 @@ public interface ChatListPresenter {
 
     void reloadData();
 
-    void openChat(int position);
     void initiateNewChat(CharSequence productId);
 
     void clearDB();

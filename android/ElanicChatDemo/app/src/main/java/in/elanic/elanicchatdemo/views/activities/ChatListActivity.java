@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -38,7 +40,9 @@ import in.elanic.elanicchatdemo.models.ChatItem;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.modules.ChatListViewModule;
 import in.elanic.elanicchatdemo.presenters.ChatListPresenter;
+import in.elanic.elanicchatdemo.views.adapters.BasicFragmentStatePagerAdapter;
 import in.elanic.elanicchatdemo.views.adapters.ChatListAdapter;
+import in.elanic.elanicchatdemo.views.fragments.ChatListSectionFragment;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
 
 public class ChatListActivity extends AppCompatActivity implements ChatListView {
@@ -46,18 +50,20 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     private static final String TAG = "ChatListActivity";
 
     @Bind(R.id.root) CoordinatorLayout mRootView;
-    @Bind(R.id.recyclerview) RecyclerView mRecyclerView;
-    @Bind(R.id.progress_bar) ProgressBar mProgressBar;
-    @Bind(R.id.error_view) TextView mErrorView;
     @Bind(R.id.toolbar) Toolbar mToolbar;
+    @Bind(R.id.tabs) TabLayout mTabLayout;
+    @Bind(R.id.viewpager) ViewPager mViewPager;
     @Bind(R.id.fab) FloatingActionButton mFAB;
+    @Bind(R.id.progress_bar) ProgressBar mProgressBar;
 
     private MaterialDialog mProgressDialog;
 
+    private BasicFragmentStatePagerAdapter mAdapter;
+    private ChatListSectionFragment mBuyFragment;
+    private ChatListSectionFragment mSellFragment;
+
     @Inject
     ChatListPresenter mPresenter;
-
-    private ChatListAdapter mAdapter;
 
     private Intent mServiceIntent;
 
@@ -77,21 +83,6 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
         setContentView(R.layout.activity_chat_list);
         ButterKnife.bind(this);
         setupToolbar();
-
-        mAdapter = new ChatListAdapter(this);
-        mAdapter.setHasStableIds(true);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerView.setAdapter(mAdapter);
-
-        mAdapter.setCallback(new ChatListAdapter.Callback() {
-            @Override
-            public void onItemClicked(int position) {
-                mPresenter.openChat(position);
-            }
-        });
-
-        mRecyclerView.setVisibility(View.GONE);
-        mErrorView.setVisibility(View.GONE);
 
         mServiceIntent = new Intent(this, WebsocketConnectionService.class);
         startService(mServiceIntent);
@@ -153,41 +144,6 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     @Override
-    public void showError(CharSequence text) {
-        mRecyclerView.setVisibility(View.GONE);
-        mErrorView.setVisibility(View.VISIBLE);
-        mErrorView.setText(text);
-        mProgressBar.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void setData(List<ChatItem> data) {
-        if (mAdapter != null) {
-            mAdapter.setItems(data);
-            mAdapter.notifyDataSetChanged();
-
-            mRecyclerView.setVisibility(View.VISIBLE);
-            mErrorView.setVisibility(View.GONE);
-            mProgressBar.setVisibility(View.GONE);
-
-            return;
-        }
-
-        showError("Unable to show data");
-    }
-
-    @Override
-    public void showProgressBar(boolean show) {
-        if (show) {
-            mRecyclerView.setVisibility(View.GONE);
-            mErrorView.setVisibility(View.GONE);
-            mProgressBar.setVisibility(View.VISIBLE);
-        } else {
-            mProgressBar.setVisibility(View.GONE);
-        }
-    }
-
-    @Override
     public void showSnackbar(CharSequence text) {
         Snackbar.make(mRootView, text, Snackbar.LENGTH_SHORT).show();
     }
@@ -219,6 +175,64 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
             }
 
             startActivity(intent);
+        }
+    }
+
+    @Override
+    public void showProgressBar(boolean show) {
+        mViewPager.setVisibility(show ? View.GONE : View.VISIBLE);
+        mProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public boolean openIfChatExists(String productId) {
+        // Check Sell Fragment
+        if (mSellFragment != null) {
+            if (mSellFragment.openChatIfExists(productId)) {
+                return true;
+            }
+        }
+
+        if (mBuyFragment != null) {
+            if (mBuyFragment.openChatIfExists(productId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public void loadChatSections(String userId) {
+
+        mProgressBar.setVisibility(View.GONE);
+        mViewPager.setVisibility(View.VISIBLE);
+
+        if (mAdapter == null) {
+            mAdapter = new BasicFragmentStatePagerAdapter(getSupportFragmentManager());
+
+            if (mSellFragment == null) {
+                mSellFragment = ChatListSectionFragment.newInstace(userId);
+            }
+
+            if (mBuyFragment == null) {
+                mBuyFragment = ChatListSectionFragment.newInstace(userId);
+            }
+
+            mAdapter.addFragment(mBuyFragment, "BUY");
+            mAdapter.addFragment(mSellFragment, "SELL");
+
+            mViewPager.setAdapter(mAdapter);
+            mTabLayout.setupWithViewPager(mViewPager);
+            return;
+        }
+
+        if (mSellFragment != null) {
+            mSellFragment.loadChats();
+        }
+
+        if (mBuyFragment != null) {
+            mBuyFragment.loadChats();
         }
     }
 
