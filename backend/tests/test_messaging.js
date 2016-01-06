@@ -16,7 +16,7 @@ module.exports = function(data) {
 		    user2.connect(function() {
 			var msg = {
 			    content : "Haha wasapi",
-			    receiver_id : user2._id
+			    receiver_id : user2.user_id
 			};
 			user1.send(msg, function() {
 			    data.Message.count({}).should.eventually.equal(1);
@@ -39,11 +39,11 @@ module.exports = function(data) {
 	    user1.connect(function() {
 		var msg = { 
 		    content : "You missed this message",
-		    receiver_id : data.users[1]._id
+		    receiver_id : data.users[1].user_id
 		};
 		var msg2 = { 
 		    content : "You missed this message too",
-		    receiver_id : data.users[1]._id
+		    receiver_id : data.users[1].user_id
 		};
 		user1.send(msg, function() {
 		    user1.send(msg2, function() {
@@ -60,9 +60,9 @@ module.exports = function(data) {
 
 	it("should retrieve a list of users", function(done) {
 	    var user1 = data.users[0],
-	        id = data.users[1]._id;
+	        id = data.users[1].user_id;
 	    user1.connect(function() {
-		user1.get_users([id, user1._id], function() {
+		user1.get_users([id, user1.user_id], function() {
 		    _.size(user1.users).should.equal(2);
 		    done();
 		});

@@ -6,7 +6,7 @@ var callbacks = []; // callback stack. For testing purposes only.
 var sockets = {}; // socket handler
 
 module.exports = function(user, data) {
-    var messages = {}, id = user._id, user_info = {};
+    var messages = {}, id = user.user_id, user_info = {};
     var url = data.url + "?user_id=" + id;
     function add_message(msg) {
 	var status = msg.success;
@@ -18,9 +18,9 @@ module.exports = function(user, data) {
 	    messages[elem.message_id] = elem;
 	});
 	if (status === API.SUCCESS) {
-	    if (id.equals(msg.sender_id)) {
+	    if (id == msg.sender_id) {
 		// temp remove later
-		if (sent === API.FAIL)
+		if (sent === API.FAIL) // reaches here if message was successful but not sent, hence GCM
 		    callbacks.pop()();
 		return;
 	    }
@@ -98,7 +98,7 @@ module.exports = function(user, data) {
 	messages : messages,
 	send : send_message,
 	get : get_messages,
-	_id : id,
+	user_id : id,
 	username : user.username,
 	get_users : get_users,
 	users : user_info

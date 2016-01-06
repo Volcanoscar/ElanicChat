@@ -24,7 +24,7 @@ module.exports = function(conn){
 	    if (!data || !data.sync_timestamp)
 		next("Invalid Parameters");
 	    var time = Date.parse(data.sync_timestamp);
-	    var objId = mongoose.Types.ObjectId(id);
+	    var objId = id;//mongoose.Types.ObjectId(id);
 	    Message.find({ $or: [{'sender_id' : objId}, 
 				 {'receiver_id' : objId}]
 			 }).where('updated_at').gt( time ).lean().
@@ -34,10 +34,10 @@ module.exports = function(conn){
 	get_users: function(data, next) {
 	    if (!data || !data.ids || data.ids.constructor != Array)
 		return next("Invalid Parameters");
-	    var ids = data.ids.map(function(id) {
+	    var ids = data.ids;/*.map(function(id) {
 		return mongoose.Types.ObjectId(id);
-	    });
-	    return User.find({_id : { $in : ids }}).lean().exec(next);
+	    });*/
+	    return User.find({user_id : { $in : ids }}).lean().exec(next);
 	},
 
 	save_messages : function(msg, next) {
@@ -46,8 +46,8 @@ module.exports = function(conn){
 		return next("Invalid parameters");
 	    if (msg.receiver_id == msg.sender_id)
 		return next("receiver_id and sender_id can't be equal");
-	    var id = mongoose.Types.ObjectId(msg.receiver_id + '');
-	    return User.findOne({_id : id}).lean().
+	    var id = msg.receiver_id;//mongoose.Types.ObjectId(msg.receiver_id + '');
+	    return User.findOne({user_id : id}).lean().
 		exec(function(err, user) {
 		    // Later: If user is msg.sender_id, throw error
 		    if (err)
@@ -75,8 +75,8 @@ module.exports = function(conn){
 	authenticate : function(data, next) {
 	    if (!data || !data.user_id)
 		return next("Invalid parameters");
-	    var id = util.toObjId(data.user_id);
-	    return User.findOne({_id : id}).lean().exec(next);
+	    var id = data.user_id;//util.toObjId(data.user_id);
+	    return User.findOne({user_id : id}).lean().exec(next);
 	}
     };
     

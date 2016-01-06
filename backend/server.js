@@ -45,20 +45,21 @@ io.use(function(socket, next) {
 	    util.log(auth);
 	    return next(new Error('Authentication error'));
 	}
-	socks.add(socket, auth._id);
+	var user_id = auth.user_id;
+	socks.add(socket, user_id);
 	
 	function send(data) {
 	    var msg = data.message;
 	    _.extend(msg, {
 		username: auth.username,
-		sender_id: auth._id,
+		sender_id: user_id,
 		created_at: Date.now(),
 		updated_at: Date.now()
 	    });
 	    chat.save_messages(msg, function(err, msg) {
 		msg = msg.toObject();
 		if (err)
-		    return socks.error(auth._id, API.SEND, err, msg);
+		    return socks.error(user_id, API.SEND, err, msg);
 		var request = {
 		    success : API.SUCCESS,
 		    sent : API.SUCCESS,
@@ -70,35 +71,35 @@ io.use(function(socket, next) {
 			// uncomment this later
 			//return gcm.send(request, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
 			    request.sent = API.FAIL;
-			    return socks.emit(auth._id, API.SEND, request);
+			    return socks.emit(user_id, API.SEND, request);
 			//});
 		    }
-		    return socks.emit(auth._id, API.SEND, request);
+		    return socks.emit(user_id, API.SEND, request);
 		});
 	    });
 	}
 	
 	function get_messages(data) {
 	    _.extend(data, { success : API.SUCCESS });
-	    chat.get_unread_messages(auth._id, data, function(err, msgs) {
+	    chat.get_unread_messages(user_id, data, function(err, msgs) {
 		if (!err)
-		    socks.emit(auth._id, API.GET, _.extend(data, { data : msgs }));
+		    socks.emit(user_id, API.GET, _.extend(data, { data : msgs }));
 		else
-		    socks.error(auth._id, API.GET, err, []);
+		    socks.error(user_id, API.GET, err, []);
 	    });
 	}
 
 	function get_users(data) {
 	    chat.get_users(data, function(err, users) {
 		if (err)
-		    socks.error(auth._id, API.USERS, err, []);
+		    socks.error(user_id, API.USERS, err, []);
 		else
-		    socks.emit(auth._id, API.USERS, _.extend(data, { data : users }));
+		    socks.emit(user_id, API.USERS, _.extend(data, { data : users }));
 	    });
 	}
 	
 	function disconnect() {
-	    socks.remove(auth._id);
+	    socks.remove(user_id);
 	}
 	
 	// API
