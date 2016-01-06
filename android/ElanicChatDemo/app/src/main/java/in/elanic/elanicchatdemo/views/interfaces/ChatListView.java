@@ -15,7 +15,8 @@ public interface ChatListView {
     void showError(CharSequence text);
     void setData(List<ChatItem> data);
     void showProgressBar(boolean show);
-
+    void showSnackbar(CharSequence text);
+    void showProgressDialog(boolean show);
     void openChat(String userId, String productId);
 
 }

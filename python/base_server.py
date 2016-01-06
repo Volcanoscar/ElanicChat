@@ -61,7 +61,7 @@ class StartChatApiHandler(tornado.web.RequestHandler):
 
 	@tornado.web.asynchronous
 	def get(self):
-		userId = self.get_argument('user_id', default=None, strip=false)
+		userId = self.get_argument('user_id', default=None, strip=False)
 		print "userId", userId
 		if not userId:
 			response = {"success" : False, "code" : 422}
@@ -78,9 +78,9 @@ class StartChatApiHandler(tornado.web.RequestHandler):
 			self.finish()
 			return
 
-		productId = self.get_argument('product_id', default=None, strip=false)
+		productId = self.get_argument('product_id', default=None, strip=False)
 		if not productId:
-			response = {"success" : False, "code" : 404}
+			response = {"success" : False, "code" : 422}
 			print "response", response
 			self.write(json.dumps(response))
 			self.finish()
@@ -315,7 +315,7 @@ db_provider = ModelsProvider()
 
 app = tornado.web.Application([
 	url(r'/ws', WebSocketHandler, dict(db_provider=db_provider), name="ws"),
-	url(r'/api/login', LoginApiHandler, dict(db_provider=db_provider), name="login")
+	url(r'/api/login', LoginApiHandler, dict(db_provider=db_provider), name="login"),
 	url(r'/api/start_chat', StartChatApiHandler, dict(db_provider=db_provider), name='start_chat')
 	])
 

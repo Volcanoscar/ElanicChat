@@ -24,7 +24,11 @@ import rx.functions.Func1;
 /**
  * Created by Jay Rambhia on 05/01/16.
  */
-public class TestLoginProviderImpl extends RetrofitLoginProvider implements LoginProvider {
+public class TestLoginProviderImpl implements LoginProvider {
+
+    private static final boolean DEBUG = true;
+    private static final String TAG = "TestLoginProvider";
+    private RetrofitApi mService;
 
     public TestLoginProviderImpl() {
 
