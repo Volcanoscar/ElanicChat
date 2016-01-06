@@ -18,5 +18,5 @@ public interface MessageProvider {
     Message createNewOffer(int price, User sender, User receiver, Product product);
     boolean updateMessage(Message message);
     boolean addNewMessage(Message message);
-    int addNewMessages(List<Message> messages);
+    int addOrUpdateMessages(List<Message> messages);
 }

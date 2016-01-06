@@ -31,11 +31,15 @@ public class MessageDao extends AbstractDao<Message, String> {
         public final static Property Content = new Property(2, String.class, "content", false, "CONTENT");
         public final static Property Receiver_id = new Property(3, String.class, "receiver_id", false, "RECEIVER_ID");
         public final static Property Sender_id = new Property(4, String.class, "sender_id", false, "SENDER_ID");
-        public final static Property Offer_price = new Property(5, Integer.class, "offer_price", false, "OFFER_PRICE");
-        public final static Property Created_at = new Property(6, java.util.Date.class, "created_at", false, "CREATED_AT");
-        public final static Property Updated_at = new Property(7, java.util.Date.class, "updated_at", false, "UPDATED_AT");
-        public final static Property Is_deleted = new Property(8, Boolean.class, "is_deleted", false, "IS_DELETED");
+        public final static Property Created_at = new Property(5, java.util.Date.class, "created_at", false, "CREATED_AT");
+        public final static Property Updated_at = new Property(6, java.util.Date.class, "updated_at", false, "UPDATED_AT");
+        public final static Property Is_deleted = new Property(7, Boolean.class, "is_deleted", false, "IS_DELETED");
+        public final static Property Offer_price = new Property(8, Integer.class, "offer_price", false, "OFFER_PRICE");
         public final static Property Product_id = new Property(9, String.class, "product_id", false, "PRODUCT_ID");
+        public final static Property Offer_response = new Property(10, Integer.class, "offer_response", false, "OFFER_RESPONSE");
+        public final static Property Delivered_at = new Property(11, java.util.Date.class, "delivered_at", false, "DELIVERED_AT");
+        public final static Property Read_at = new Property(12, java.util.Date.class, "read_at", false, "READ_AT");
+        public final static Property Offer_expiry = new Property(13, java.util.Date.class, "offer_expiry", false, "OFFER_EXPIRY");
     };
 
     private DaoSession daoSession;
@@ -59,11 +63,15 @@ public class MessageDao extends AbstractDao<Message, String> {
                 "\"CONTENT\" TEXT," + // 2: content
                 "\"RECEIVER_ID\" TEXT," + // 3: receiver_id
                 "\"SENDER_ID\" TEXT," + // 4: sender_id
-                "\"OFFER_PRICE\" INTEGER," + // 5: offer_price
-                "\"CREATED_AT\" INTEGER," + // 6: created_at
-                "\"UPDATED_AT\" INTEGER," + // 7: updated_at
-                "\"IS_DELETED\" INTEGER," + // 8: is_deleted
-                "\"PRODUCT_ID\" TEXT);"); // 9: product_id
+                "\"CREATED_AT\" INTEGER," + // 5: created_at
+                "\"UPDATED_AT\" INTEGER," + // 6: updated_at
+                "\"IS_DELETED\" INTEGER," + // 7: is_deleted
+                "\"OFFER_PRICE\" INTEGER," + // 8: offer_price
+                "\"PRODUCT_ID\" TEXT," + // 9: product_id
+                "\"OFFER_RESPONSE\" INTEGER," + // 10: offer_response
+                "\"DELIVERED_AT\" INTEGER," + // 11: delivered_at
+                "\"READ_AT\" INTEGER," + // 12: read_at
+                "\"OFFER_EXPIRY\" INTEGER);"); // 13: offer_expiry
     }
 
     /** Drops the underlying database table. */
@@ -102,29 +110,49 @@ public class MessageDao extends AbstractDao<Message, String> {
             stmt.bindString(5, sender_id);
         }
  
-        Integer offer_price = entity.getOffer_price();
-        if (offer_price != null) {
-            stmt.bindLong(6, offer_price);
-        }
- 
         java.util.Date created_at = entity.getCreated_at();
         if (created_at != null) {
-            stmt.bindLong(7, created_at.getTime());
+            stmt.bindLong(6, created_at.getTime());
         }
  
         java.util.Date updated_at = entity.getUpdated_at();
         if (updated_at != null) {
-            stmt.bindLong(8, updated_at.getTime());
+            stmt.bindLong(7, updated_at.getTime());
         }
  
         Boolean is_deleted = entity.getIs_deleted();
         if (is_deleted != null) {
-            stmt.bindLong(9, is_deleted ? 1L: 0L);
+            stmt.bindLong(8, is_deleted ? 1L: 0L);
+        }
+ 
+        Integer offer_price = entity.getOffer_price();
+        if (offer_price != null) {
+            stmt.bindLong(9, offer_price);
         }
  
         String product_id = entity.getProduct_id();
         if (product_id != null) {
             stmt.bindString(10, product_id);
+        }
+ 
+        Integer offer_response = entity.getOffer_response();
+        if (offer_response != null) {
+            stmt.bindLong(11, offer_response);
+        }
+ 
+        java.util.Date delivered_at = entity.getDelivered_at();
+        if (delivered_at != null) {
+            stmt.bindLong(12, delivered_at.getTime());
+        }
+ 
+        java.util.Date read_at = entity.getRead_at();
+        if (read_at != null) {
+            stmt.bindLong(13, read_at.getTime());
+        }
+ 
+        java.util.Date offer_expiry = entity.getOffer_expiry();
+        if (offer_expiry != null) {
+            stmt.bindLong(14, offer_expiry.getTime());
         }
     }
 
@@ -149,11 +177,15 @@ public class MessageDao extends AbstractDao<Message, String> {
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // content
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // receiver_id
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // sender_id
-            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // offer_price
-            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // created_at
-            cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // updated_at
-            cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0, // is_deleted
-            cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9) // product_id
+            cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // created_at
+            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // updated_at
+            cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0, // is_deleted
+            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // offer_price
+            cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9), // product_id
+            cursor.isNull(offset + 10) ? null : cursor.getInt(offset + 10), // offer_response
+            cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)), // delivered_at
+            cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)), // read_at
+            cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)) // offer_expiry
         );
         return entity;
     }
@@ -166,11 +198,15 @@ public class MessageDao extends AbstractDao<Message, String> {
         entity.setContent(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setReceiver_id(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
         entity.setSender_id(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setOffer_price(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
-        entity.setCreated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
-        entity.setUpdated_at(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
-        entity.setIs_deleted(cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0);
+        entity.setCreated_at(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
+        entity.setUpdated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
+        entity.setIs_deleted(cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0);
+        entity.setOffer_price(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
         entity.setProduct_id(cursor.isNull(offset + 9) ? null : cursor.getString(offset + 9));
+        entity.setOffer_response(cursor.isNull(offset + 10) ? null : cursor.getInt(offset + 10));
+        entity.setDelivered_at(cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)));
+        entity.setRead_at(cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)));
+        entity.setOffer_expiry(cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)));
      }
     
     /** @inheritdoc */

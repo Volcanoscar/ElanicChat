@@ -29,5 +29,16 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
             ProductDao.createTable(db, true);
             Log.i(TAG, "added product table to database");
         }
+
+        if (oldVersion < 4) {
+            Log.i(TAG, "upgrading version 3 to 4");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_response.columnName + " INTEGER;");
+
+            // GreenDAO uses integer for saving dates
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Delivered_at.columnName + " INTEGER;");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Read_at.columnName + " INTEGER;");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_expiry.columnName + " INTEGER;");
+
+        }
     }
 }

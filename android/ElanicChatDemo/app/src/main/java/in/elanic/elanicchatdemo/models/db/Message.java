@@ -14,11 +14,15 @@ public class Message {
     private String content;
     private String receiver_id;
     private String sender_id;
-    private Integer offer_price;
     private java.util.Date created_at;
     private java.util.Date updated_at;
     private Boolean is_deleted;
+    private Integer offer_price;
     private String product_id;
+    private Integer offer_response;
+    private java.util.Date delivered_at;
+    private java.util.Date read_at;
+    private java.util.Date offer_expiry;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -43,17 +47,21 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, Integer offer_price, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, String product_id) {
+    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, Integer offer_price, String product_id, Integer offer_response, java.util.Date delivered_at, java.util.Date read_at, java.util.Date offer_expiry) {
         this.message_id = message_id;
         this.type = type;
         this.content = content;
         this.receiver_id = receiver_id;
         this.sender_id = sender_id;
-        this.offer_price = offer_price;
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.is_deleted = is_deleted;
+        this.offer_price = offer_price;
         this.product_id = product_id;
+        this.offer_response = offer_response;
+        this.delivered_at = delivered_at;
+        this.read_at = read_at;
+        this.offer_expiry = offer_expiry;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -102,14 +110,6 @@ public class Message {
         this.sender_id = sender_id;
     }
 
-    public Integer getOffer_price() {
-        return offer_price;
-    }
-
-    public void setOffer_price(Integer offer_price) {
-        this.offer_price = offer_price;
-    }
-
     public java.util.Date getCreated_at() {
         return created_at;
     }
@@ -134,12 +134,52 @@ public class Message {
         this.is_deleted = is_deleted;
     }
 
+    public Integer getOffer_price() {
+        return offer_price;
+    }
+
+    public void setOffer_price(Integer offer_price) {
+        this.offer_price = offer_price;
+    }
+
     public String getProduct_id() {
         return product_id;
     }
 
     public void setProduct_id(String product_id) {
         this.product_id = product_id;
+    }
+
+    public Integer getOffer_response() {
+        return offer_response;
+    }
+
+    public void setOffer_response(Integer offer_response) {
+        this.offer_response = offer_response;
+    }
+
+    public java.util.Date getDelivered_at() {
+        return delivered_at;
+    }
+
+    public void setDelivered_at(java.util.Date delivered_at) {
+        this.delivered_at = delivered_at;
+    }
+
+    public java.util.Date getRead_at() {
+        return read_at;
+    }
+
+    public void setRead_at(java.util.Date read_at) {
+        this.read_at = read_at;
+    }
+
+    public java.util.Date getOffer_expiry() {
+        return offer_expiry;
+    }
+
+    public void setOffer_expiry(java.util.Date offer_expiry) {
+        this.offer_expiry = offer_expiry;
     }
 
     /** To-one relationship, resolved on first access. */

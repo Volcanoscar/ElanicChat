@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import datetime
 import pymongo
+import copy
 
 date_format = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -29,6 +30,13 @@ class ModelsProvider:
 		message['_id'] = message_id
 		return message
 
+	def updateMessageField(self, message_id, data):
+		print "type of data", type(data)
+		data['updated_at'] = datetime.datetime.now()
+		self.db.messages.update_one({'_id' : message_id}, { "$set" : data })
+
+		print 'updated message: ', data
+
 	def addUser(self, user):
 		user_collection = self.db.users
 		if not user_collection.find_one({"user_id" : user['user_id']}):
@@ -41,11 +49,25 @@ class ModelsProvider:
 		user_collection = self.db.users
 		return user_collection.find_one({"user_id" : user_id})
 
-	def sanitizeEntity(self, user):
+	def sanitizeEntity(self, user_orig):
+
+		user = copy.deepcopy(user_orig)
+
 		user['_id'] = str(user['_id'])
 		user['id'] = user['_id']
 		user['created_at'] = datetime.datetime.strftime(user['created_at'], date_format)[:-3]
 		user['updated_at'] = datetime.datetime.strftime(user['updated_at'], date_format)[:-3]
+
+		if user.has_key('delivered_at'):
+			delivered_at = user['delivered_at']
+			if delivered_at:
+				user['delivered_at'] = datetime.datetime.strftime(user['delivered_at'], date_format)[:-3]
+
+		if user.has_key('read_at'):
+			read_at = user['read_at']
+			if read_at:
+				user['read_at'] = datetime.datetime.strftime(user['read_at'], date_format)[:-3]
+
 		return user
 
 	@staticmethod
@@ -70,7 +92,7 @@ class ModelsProvider:
 		print date
 		return list(messages_collection.find({
 				'$and' : [
-					{ 'created_at' : {'$gt' : date} },
+					{ 'updated_at' : {'$gt' : date} },
 					{ '$or' : [ {'sender_id' : userId}, {'receiver_id': userId} ] }
 				]
 			}, limit=limit).sort('created_at', pymongo.DESCENDING))
