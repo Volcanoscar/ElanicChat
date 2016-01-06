@@ -8,13 +8,14 @@ var app = require("express")(),
     util = require('./controllers/util.js'),
     socks = require('./controllers/sockets.js'),
     gcm = require('./controllers/gcm.js'),
+    dateformat = require('date-format'),
     chat;
 
 var API = util.API;
 process.env.PWD = process.cwd();
-var port = process.env.PORT || 8888;
+var port = process.env.PORT || 9999;
 
-app.get('/login', function(req, res) {
+app.get('/api/login', function(req, res) {
     if (req.query.user_id) {
 	chat.authenticate(req.query, function(err, user) {
 	    console.log(err);
@@ -23,6 +24,10 @@ app.get('/login', function(req, res) {
 		res.send({ "success" : false, "code" : 404, "message" : "User not found" });
 	    else {
 		// log session here
+		
+		user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		
 		user.user_id = user._id;
 		res.send({
 		    success : true,
