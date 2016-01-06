@@ -22,9 +22,9 @@ import rx.functions.Func1;
  */
 public class RetrofitLoginProvider implements LoginProvider {
 
-    protected static final String TAG = "RetrofitLoginProvider";
-    protected RetrofitApi mService;
-    protected static final boolean DEBUG = true;
+    private static final String TAG = "RetrofitLoginProvider";
+    private RetrofitApi mService;
+    private static final boolean DEBUG = true;
 
     public RetrofitLoginProvider() {
 

@@ -2,18 +2,25 @@ package in.elanic.elanicchatdemo.views.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.util.List;
 
@@ -21,6 +28,7 @@ import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
@@ -37,10 +45,14 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
 
     private static final String TAG = "ChatListActivity";
 
+    @Bind(R.id.root) CoordinatorLayout mRootView;
     @Bind(R.id.recyclerview) RecyclerView mRecyclerView;
     @Bind(R.id.progress_bar) ProgressBar mProgressBar;
     @Bind(R.id.error_view) TextView mErrorView;
     @Bind(R.id.toolbar) Toolbar mToolbar;
+    @Bind(R.id.fab) FloatingActionButton mFAB;
+
+    private MaterialDialog mProgressDialog;
 
     @Inject
     ChatListPresenter mPresenter;
@@ -176,6 +188,28 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     @Override
+    public void showSnackbar(CharSequence text) {
+        Snackbar.make(mRootView, text, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showProgressDialog(boolean show) {
+        if (show) {
+            showProgressDialog(false);
+            mProgressDialog = new MaterialDialog.Builder(this)
+                    .title("Please Wait")
+                    .progress(true, 60)
+                    .show();
+            mProgressDialog.setCancelable(false);
+        } else {
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+                mProgressDialog = null;
+            }
+        }
+    }
+
+    @Override
     public void openChat(String userId, String productId) {
         if (userId != null && !userId.isEmpty()) {
             Intent intent = ChatActivity.getActivityIntent(this, userId, productId);
@@ -186,6 +220,33 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
 
             startActivity(intent);
         }
+    }
+
+    @OnClick(R.id.fab)
+    public void onFABClicked() {
+        onNewChatRequested();
+    }
+
+    private void onNewChatRequested() {
+        MaterialDialog.InputCallback callback = new MaterialDialog.InputCallback() {
+            @Override
+            public void onInput(MaterialDialog dialog, CharSequence input) {
+                mPresenter.initiateNewChat(input);
+            }
+        };
+
+        showNewChatDialog(callback);
+    }
+
+    private void showNewChatDialog(MaterialDialog.InputCallback callback) {
+        new MaterialDialog.Builder(this)
+                .title("Start New Chat")
+                .content("Start Chat")
+                .inputType(InputType.TYPE_CLASS_NUMBER)
+                .input("Product Id", "", false, callback)
+                .positiveText("Start Chat")
+                .negativeText("Cancel")
+                .show();
     }
 
     private void logOut() {
