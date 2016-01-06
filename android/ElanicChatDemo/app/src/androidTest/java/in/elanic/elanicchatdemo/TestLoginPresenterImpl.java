@@ -55,12 +55,16 @@ public class TestLoginPresenterImpl implements LoginPresenter {
             User user = bObservable.first();
             Log.i(TAG, "where is my user?");
             if (user == null) {
-                Log.e(TAG, "null user");
-                return;
+                throw new RuntimeException("User is null");
             }
+
+            assertEquals("User id match", userId, user.getUser_id());
 
             Log.i(TAG, "user id: " + user.getUser_id());
         } catch (RuntimeException e) {
+
+            e.printStackTrace();
+
             if (userId.equals("7461")) {
                 Log.i(TAG, "assert false");
                 assertEquals("UserId should not be 7461", true, false);
