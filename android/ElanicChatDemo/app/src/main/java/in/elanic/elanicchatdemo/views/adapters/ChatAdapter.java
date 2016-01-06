@@ -39,15 +39,38 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof MessageHolder) {
             MessageHolder mHolder = (MessageHolder)holder;
-            User sender = mItems.get(position).getSender();
-            String sender_text = mItems.get(position).getSender_id();
+
+            Message message = mItems.get(position);
+
+            User sender = message.getSender();
+            String sender_text = message.getSender_id();
             if (sender != null) {
                 sender_text = sender.getUsername();
             }
 
-            mHolder.mTextView.setText(TextUtils.concat(sender_text, ": ", mItems.get(position).getContent(), " -> ",
-                    String.valueOf(mItems.get(position).getOffer_price()), " -> ",
-                    String.valueOf(mItems.get(position).getProduct_id())));
+            StringBuilder sb = new StringBuilder();
+            sb.append(sender_text);
+            sb.append("\n");
+            sb.append("Message: ");
+            sb.append(message.getContent());
+            sb.append("\n");
+            sb.append("Offer Price: ");
+            sb.append(String.valueOf(message.getOffer_price()));
+            sb.append("\n");
+            sb.append("Product Id: ");
+            sb.append(message.getProduct_id());
+            sb.append("\n");
+            sb.append("Created At: ");
+            sb.append(message.getCreated_at());
+            sb.append("\n");
+            sb.append("Delivered At: ");
+            sb.append(message.getDelivered_at());
+            sb.append("\n");
+            sb.append("Read At: ");
+            sb.append(message.getRead_at());
+            sb.append("\n");
+
+            mHolder.mTextView.setText(sb.toString());
         }
     }
 

@@ -40,6 +40,10 @@ public class JSONUtils {
     public static final String KEY_COLOR = "color";
     public static final String KEY_BRAND = "brand";
     public static final String KEY_STATUS = "status";
+    public static final String KEY_DELIVERED_AT = "delivered_at";
+    public static final String KEY_READ_AT = "read_at";
+    public static final String KEY_OFFER_EXPIRY = "offer_expiry";
+    public static final String KEY_OFFER_RESPONSE = "offer_response";
 
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_RESPONSE_TYPE = "response_type";
@@ -87,6 +91,20 @@ public class JSONUtils {
         message.setCreated_at(df.parse(jsonObject.getString(KEY_CREATED_AT)));
         message.setUpdated_at(df.parse(jsonObject.getString(KEY_UPDATED_AT)));
         message.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
+
+        if (jsonObject.has(KEY_DELIVERED_AT)) {
+            message.setDelivered_at(df.parse(jsonObject.getString(KEY_DELIVERED_AT)));
+        }
+
+        if (jsonObject.has(KEY_READ_AT)) {
+            message.setRead_at(df.parse(jsonObject.getString(KEY_READ_AT)));
+        }
+
+        if (jsonObject.has(KEY_OFFER_EXPIRY)) {
+            message.setOffer_expiry(df.parse(jsonObject.getString(KEY_OFFER_EXPIRY)));
+        }
+
+        message.setOffer_response(jsonObject.optInt(KEY_OFFER_RESPONSE, -1));
 
         return message;
     }

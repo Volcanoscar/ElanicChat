@@ -120,7 +120,7 @@ public class WSSHelper {
             return 0;
         }
 
-        return mMessageProvider.addNewMessages(messages);
+        return mMessageProvider.addOrUpdateMessages(messages);
     }
 
     public List<Message> parseMessagesFromResponse(JSONObject jsonResponse) throws JSONException {

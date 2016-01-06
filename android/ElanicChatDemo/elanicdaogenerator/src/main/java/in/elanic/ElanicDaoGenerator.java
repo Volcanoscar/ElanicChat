@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
@@ -20,6 +20,8 @@ public class ElanicDaoGenerator {
     // If adding new items in entity's schema, add it at the bottom
     // as when running sql upgrade, columns are added at the end
     private static void addEntities(Schema schema) {
+
+        // Added in Version 1
         Entity user = schema.addEntity("User");
         user.addStringProperty("user_id").primaryKey();
         user.addStringProperty("username").notNull();
@@ -29,6 +31,8 @@ public class ElanicDaoGenerator {
         user.addDateProperty("updated_at");
         user.addBooleanProperty("is_deleted");
 
+
+        // Added in Version 3
         Entity product = schema.addEntity("Product");
         product.addStringProperty("product_id").primaryKey();
 
@@ -52,6 +56,7 @@ public class ElanicDaoGenerator {
         product.addDateProperty("updated_at");
         product.addBooleanProperty("is_deleted");
 
+        // Added in Version 1
         Entity message = schema.addEntity("Message");
         message.addStringProperty("message_id").primaryKey();
         message.addIntProperty("type");
@@ -62,14 +67,21 @@ public class ElanicDaoGenerator {
         Property senderId = message.addStringProperty("sender_id").getProperty();
         message.addToOne(user, senderId, "sender");
 
-        message.addIntProperty("offer_price");
-
         message.addDateProperty("created_at");
         message.addDateProperty("updated_at");
         message.addBooleanProperty("is_deleted");
 
+        // Added in Version 2
+        message.addIntProperty("offer_price");
+
+        // Added in Version 3
         Property productId = message.addStringProperty("product_id").getProperty();
         message.addToOne(product, productId, "product");
+
+        message.addIntProperty("offer_response");
+        message.addDateProperty("delivered_at");
+        message.addDateProperty("read_at");
+        message.addDateProperty("offer_expiry");
     }
 
 }

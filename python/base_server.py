@@ -24,7 +24,7 @@ RESPONSE_NEW_MESSAGE = 3
 RESPONSE_USER = 4
 
 
-class ApiHandler(tornado.web.RequestHandler):
+class LoginApiHandler(tornado.web.RequestHandler):
 
 	def initialize(self, db_provider):
 		self.db_provider = db_provider
@@ -54,6 +54,69 @@ class ApiHandler(tornado.web.RequestHandler):
 			
 		self.write(json.dumps(response))
 		self.finish()
+
+class StartChatApiHandler(tornado.web.RequestHandler):
+	def initialize(self, db_provider):
+		self.db_provider = db_provider
+
+	@tornado.web.asynchronous
+	def get(self):
+		userId = self.get_argument('user_id', default=None, strip=false)
+		print "userId", userId
+		if not userId:
+			response = {"success" : False, "code" : 422}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		user = self.db_provider.getUser(userId)
+		if not user:
+			response = {"success" : False, "code" : 404}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		productId = self.get_argument('product_id', default=None, strip=false)
+		if not productId:
+			response = {"success" : False, "code" : 404}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		product = self.db_provider.getProduct(productId)
+		if not product:
+			response = {"success" : False, "code" : 404}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		if product['user_id'] == userId:
+			print "user is the owner of the product"
+			response = {"success" : False, "code" : 403}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		receiver = self.db_provider.getUser(product['user_id'])
+		if not receiver:
+			print "Receiver is not in db"
+			response = {"success" : False, "code" : 501}
+			print "response", response
+			self.write(json.dumps(response))
+			self.finish()
+			return	
+
+		response = {'success' : True, 'product' : self.db_provider.sanitizeEntity(product),
+					'receiver' : self.db_provider.sanitizeEntity(receiver)}
+		print "response", response
+		self.write(json.dumps(response))
+		self.finish()
+
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
@@ -138,12 +201,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			return
 
 		new_message = self.db_provider.createNewMessage(data)
-		new_message = self.db_provider.sanitizeEntity(new_message)
+		sanitizedMessage = self.db_provider.sanitizeEntity(new_message)
 		
 		# print new_message
-		sent = self.sendMessage(new_message, receiver_id)
+		sent = self.sendMessage(sanitizedMessage, receiver_id)
+		if sent:
+			params = dict()
+			params['delivered_at'] = datetime.datetime.now()
+			self.db_provider.updateMessageField(new_message['_id'], params)
+			new_message['delivered_at'] = datetime.datetime.now()
+
+		print new_message
+		sanitizedMessage = self.db_provider.sanitizeEntity(new_message)
+
 		self.write_message(json.dumps({'success' : True, "sent" : sent, 
-			"message" : new_message, "request_type" : REQUEST_SEND_MESSAGE,
+			"message" : sanitizedMessage, "request_type" : REQUEST_SEND_MESSAGE,
 			"sync_timestamp" : ModelsProvider.getSyncTime()}))
 
 	def onGetAllMessgesRequested(self, data):
@@ -164,6 +236,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		 	'request_type' : REQUEST_GET_ALL_MESSAGES,
 					'success' : True}
 		self.write_message(json.dumps(response))
+
+		# update delivered timestamp in database
+		for message in messages:
+			if not message.get('delivered_at'):
+				update_params = dict()
+				update_params['delivered_at'] = datetime.datetime.now()
+				self.db_provider.updateMessageField(message['_id'], update_params)
 
 	def onGetUsersRequested(self, data):
 		userIds = data['users']
@@ -236,7 +315,8 @@ db_provider = ModelsProvider()
 
 app = tornado.web.Application([
 	url(r'/ws', WebSocketHandler, dict(db_provider=db_provider), name="ws"),
-	url(r'/api/login', ApiHandler, dict(db_provider=db_provider), name="login")
+	url(r'/api/login', LoginApiHandler, dict(db_provider=db_provider), name="login")
+	url(r'/api/start_chat', StartChatApiHandler, dict(db_provider=db_provider), name='start_chat')
 	])
 
 if __name__ == "__main__":
