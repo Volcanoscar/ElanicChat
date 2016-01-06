@@ -37,6 +37,7 @@ app.get('/login', function(req, res) {
     }
 });
 
+io.set('transports', ['websocket']);
 io.use(function(socket, next) {
     var query = socket.request._query;
     chat.authenticate(query, function(err, auth) {
