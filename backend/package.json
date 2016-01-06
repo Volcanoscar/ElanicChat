@@ -4,6 +4,7 @@
   "description": "A tool to learn node",
   "main": "server.js",
   "dependencies": {
+    "date-format": "0.0.2",
     "express": "^4.13.3",
     "lodash": "^3.10.1",
     "mocha": "^2.3.4",

@@ -4,26 +4,32 @@ var app = require("express")(),
     url = require("url"),
     _ = require("lodash"),
     mongoose = require('mongoose'),
-    conn = mongoose.createConnection(),
+    conn = mongoose.createConnection('mongodb://localhost/elchat_v1'),
     util = require('./controllers/util.js'),
     socks = require('./controllers/sockets.js'),
     gcm = require('./controllers/gcm.js'),
+    dateformat = require('date-format'),
     chat;
 
 var API = util.API;
 process.env.PWD = process.cwd();
-var port = process.env.PORT || 8888;
+var port = process.env.PORT || 9999;
 
-app.get('/login', function(req, res) {
+app.get('/api/login', function(req, res) {
     if (req.query.user_id) {
+    	console.log("user_id : %s", req.query.user_id);
 	chat.authenticate(req.query, function(err, user) {
 	    console.log(err);
-	    console.log(user);
+	    
 	    if (err || !user)
 		res.send({ "success" : false, "code" : 404, "message" : "User not found" });
 	    else {
 		// log session here
-		user.user_id = user._id;
+		// user.user_id = user._id;
+
+		user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+
 		res.send({
 		    success : true,
 		    code : 200,
@@ -38,6 +44,9 @@ app.get('/login', function(req, res) {
 });
 
 io.use(function(socket, next) {
+
+	console.log('Attempting to create a new connection');
+
     var query = socket.request._query;
     chat.authenticate(query, function(err, auth) {
 	if (err || !auth) {
@@ -119,7 +128,7 @@ conn.on('open', function() {
     });
 });
 if (require.main === module)
-    conn.open('mongodb://localhost:27017/mydb');
+    conn.open('mongodb://localhost:27017/elchat_v1');
 else
     module.exports = function(host, db, pt) {
 	port = pt || port;

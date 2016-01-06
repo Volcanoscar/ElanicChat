@@ -75,8 +75,8 @@ module.exports = function(conn){
 	authenticate : function(data, next) {
 	    if (!data || !data.user_id)
 		return next("Invalid parameters");
-	    var id = util.toObjId(data.user_id);
-	    return User.findOne({_id : id}).lean().exec(next);
+	    // var id = util.toObjId(data.user_id);
+	    return User.findOne({"user_id" : data.user_id}).lean().exec(next);
 	}
     };
     
