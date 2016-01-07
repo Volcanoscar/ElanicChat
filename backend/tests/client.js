@@ -134,6 +134,9 @@ module.exports = function(user, data) {
 	user_id : id,
 	username : user.username,
 	get_users : get_users,
-	users : user_info
+	get_products : get_products,
+	get_use_prod : get_users_and_products,
+	users : user_info,
+	products : prod_info
     };
 };
