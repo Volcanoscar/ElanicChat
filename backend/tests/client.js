@@ -1,4 +1,4 @@
-var io = require('socket.io-client');
+var wsClient = require('websocket').client;
 var API = require('../controllers/util.js').API;
 var _ = require('lodash');
 var counter = 1;
@@ -6,7 +6,9 @@ var callbacks = []; // callback stack. For testing purposes only.
 var sockets = {}; // socket handler
 
 module.exports = function(user, data) {
+    var io = new wsClient();
     var messages = {}, id = user.user_id, user_info = {};
+    var nextfunc = {};
     var url = data.url + "?user_id=" + id;
     function add_message(msg) {
 	var status = msg.success;
@@ -55,41 +57,47 @@ module.exports = function(user, data) {
 	callbacks.pop()();
     }
     function emit(socket, event, data) {
-	socket.emit("message", _.extend({request_type : event}, data));
+	socket.sendUTF(JSON.stringify(_.extend({request_type : event}, data)));
 //	socket.emit(event, data);
     }
-    function on(socket, event, done) {
-	socket.on("message", function(data) {
-	    if (data.request_type == event)
-		done(data);
+    function on(socket, events) {
+	socket.on("message", function(message) {
+	    if (message.type == 'utf8') {
+		var data = JSON.parse(message.utf8Data);
+		events[data.request_type](data);
+	    }
 	});
 //	socket.on(event, done);
     }
     function connect(done) {
 	disconnect();
-	sockets[id] = io.connect(url, _.extend({
-	    user_id : id
-	}, data.options));
-
-	sockets[id].on('connect_failed', function() {
-	    throw new Error("Connection to server failed.");
-	});
-	on(sockets[id], API.SEND, add_message);
-	on(sockets[id], API.GET, add_message);
-	on(sockets[id], API.USERS, add_users);
-	on(sockets[id], API.ERROR, function(err) {
-	    throw err;
+	io.on('connectFailed', function(err) {
 	});
 
-	sockets[id].on('connect', done);
+	io.once('connect', function(connection) {
+	    sockets[id] = connection;
+	    var events = {};
+	    events[API.SEND] = add_message;
+	    events[API.GET] = add_message;
+	    events[API.USERS] = add_users;
+	    events[API.ERROR] = function(err) { throw err; };
+	    events.close = function() { delete sockets[id]; };
+	    on(sockets[id], events);
+	    done();
+	});
+	io.connect(url, data.options);
     }
     function disconnect() {
+	// disconnect io
 	if (sockets[id]) {
-	    sockets[id].disconnect();
+	    sockets[id].socket.end();
+	    io.removeAllListeners();
 	    delete sockets[id];
 	}
 	for(var key in messages)
 	    delete messages[key];
+	for(var user in user_info)
+	    delete user_info[user];
     }
 
     return {

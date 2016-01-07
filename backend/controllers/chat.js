@@ -43,9 +43,9 @@ module.exports = function(conn){
 	save_messages : function(msg, next) {
 	    // Later: Move validation to model
 	    if (!msg.receiver_id)
-		return next("Invalid parameters");
+		return next("Invalid parameters", msg);
 	    if (msg.receiver_id == msg.sender_id)
-		return next("receiver_id and sender_id can't be equal");
+		return next("receiver_id and sender_id can't be equal", msg);
 	    var id = msg.receiver_id;//mongoose.Types.ObjectId(msg.receiver_id + '');
 	    return User.findOne({user_id : id}).lean().
 		exec(function(err, user) {

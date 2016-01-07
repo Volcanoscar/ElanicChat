@@ -1,6 +1,6 @@
 var app = require("express")(),
-    http = require("http").Server(app),
-    io = require("socket.io")(http),
+    http = require("http"),
+    wsServer = require("websocket").server,
     url = require("url"),
     _ = require("lodash"),
     mongoose = require('mongoose'),
@@ -18,8 +18,6 @@ var port = process.env.PORT || 9999;
 app.get('/api/login', function(req, res) {
     if (req.query.user_id) {
 	chat.authenticate(req.query, function(err, user) {
-	    console.log(err);
-	    console.log(user);
 	    if (err || !user)
 		res.send({ "success" : false, "code" : 404, "message" : "User not found" });
 	    else {
@@ -42,78 +40,90 @@ app.get('/api/login', function(req, res) {
     }
 });
 
-io.set('transports', ['websocket']);
-io.use(function(socket, next) {
-    var query = socket.request._query;
+var server = http.createServer();
+
+var io = new wsServer({
+    httpServer : server,
+    autoAcceptConnections: false
+});
+
+io.on('request', function(req) {
+    var res = req.resource;
+    var query = { user_id : res.substr(res.indexOf('=')+1) };
     chat.authenticate(query, function(err, auth) {
 	if (err || !auth) {
 	    util.log(auth);
-	    return next(new Error('Authentication error'));
+	    req.reject();
+	    return;
 	}
-	var user_id = auth.user_id;
-	socks.add(socket, user_id);
-	
-	function send(data) {
-	    var msg = data.message;
-	    _.extend(msg, {
-		username: auth.username,
-		sender_id: user_id,
-		created_at: Date.now(),
-		updated_at: Date.now()
-	    });
-	    chat.save_messages(msg, function(err, msg) {
-		msg = msg.toObject();
-		if (err)
-		    return socks.error(user_id, API.SEND, err, msg);
-		var request = {
-		    success : API.SUCCESS,
-		    sent : API.SUCCESS,
-		    message : msg
-		};
-		return socks.emit(msg.receiver_id, API.SEND, request, function(err){
-		    if (err) {
-			// gcm details here. Change registration token/ device id to suit your needs.
-			// uncomment this later
-			//return gcm.send(request, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
+	(function() {
+	    var socket = req.accept('echo-protocol', req.origin);
+	    var user_id = auth.user_id;
+	    socks.add(socket, user_id);
+	    
+	    function send(data) {
+		var msg = data.message;
+		_.extend(msg, {
+		    username: auth.username,
+		    sender_id: user_id,
+		    created_at: Date.now(),
+		    updated_at: Date.now()
+		});
+		chat.save_messages(msg, function(err, msg) {
+		    if (err)
+			return socks.error(user_id, API.SEND, err, msg);
+		    var request = {
+			success : API.SUCCESS,
+			sent : API.SUCCESS,
+			message : msg
+		    };
+		    return socks.emit(msg.receiver_id, API.SEND, request, function(err){
+			if (err) {
+			    // gcm details here. Change registration token/ device id to suit your needs.
+			    // uncomment this later
+			    //return gcm.send(request, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
 			    request.sent = API.FAIL;
 			    return socks.emit(user_id, API.SEND, request);
-			//});
-		    }
-		    return socks.emit(user_id, API.SEND, request);
+			    //});
+			}
+			return socks.emit(user_id, API.SEND, request);
+		    });
 		});
-	    });
-	}
-	
-	function get_messages(data) {
-	    _.extend(data, { success : API.SUCCESS });
-	    chat.get_unread_messages(user_id, data, function(err, msgs) {
-		if (!err)
-		    socks.emit(user_id, API.GET, _.extend(data, { data : msgs }));
-		else
-		    socks.error(user_id, API.GET, err, []);
-	    });
-	}
+	    }
+	    
+	    function get_messages(data) {
+		_.extend(data, { success : API.SUCCESS });
+		chat.get_unread_messages(user_id, data, function(err, msgs) {
+		    if (!err)
+			socks.emit(user_id, API.GET, _.extend(data, { data : msgs }));
+		    else
+			socks.error(user_id, API.GET, err, []);
+		});
+	    }
 
-	function get_users(data) {
-	    chat.get_users(data, function(err, users) {
-		if (err)
-		    socks.error(user_id, API.USERS, err, []);
-		else
-		    socks.emit(user_id, API.USERS, _.extend(data, { data : users }));
-	    });
-	}
-	
-	function disconnect() {
-	    socks.remove(user_id);
-	}
-	
-	// API
-	socks.on(socket, API.SEND, send);
-	socks.on(socket, API.GET, get_messages);
-	socks.on(socket, API.USERS, get_users);
-	socks.on(socket, "disconnection", disconnect);
-	
-	return next();
+	    function get_users(data) {
+		chat.get_users(data, function(err, users) {
+		    if (err)
+			socks.error(user_id, API.USERS, err, []);
+		    else
+			socks.emit(user_id, API.USERS, _.extend(data, { data : users }));
+		});
+	    }
+	    
+	    function disconnect() {
+		socks.remove(user_id);
+	    }
+	    
+	    // API
+	    (function() {
+		var events = {};
+		events[API.SEND] = send;
+		events[API.GET] = get_messages;
+		events[API.USERS] = get_users;
+		socks.on(socket, events);
+	    }());
+
+	}());
     });
     
 });
@@ -121,7 +131,7 @@ io.use(function(socket, next) {
 conn.on('error', util.log);
 conn.on('open', function() {
     chat = require("./controllers/chat.js")(conn);
-    http.listen( port, function() {
+    server.listen( port, function() {
 	util.log("Listening");
     });
 });

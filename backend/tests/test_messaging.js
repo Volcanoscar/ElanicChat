@@ -31,7 +31,7 @@ module.exports = function(data) {
 		});
 	    });
 	});
-	
+
 	it("should retrieve past messages", function(done) {
 	    var user1 = data.users[0],
 	        user2 = data.users[1];

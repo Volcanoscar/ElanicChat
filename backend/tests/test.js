@@ -12,10 +12,7 @@ var client = require('./client.js');
 
 var data = { 
     url : 'http://localhost:' + port,
-    options : {
-	'forceNew' : true,
-	transports: ['websocket']
-    }
+    options : 'echo-protocol'
 };
 
 //Set up server
