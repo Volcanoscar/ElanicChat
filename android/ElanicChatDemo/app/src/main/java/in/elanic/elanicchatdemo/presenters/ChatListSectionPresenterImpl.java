@@ -14,7 +14,7 @@ import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
 /**
  * Created by Jay Rambhia on 06/01/16.
  */
-public class ChatListSectionPresenterImpl implements ChatListSectionPresenter {
+public abstract class ChatListSectionPresenterImpl implements ChatListSectionPresenter {
 
     private static final boolean DEBUG = true;
 
@@ -42,7 +42,10 @@ public class ChatListSectionPresenterImpl implements ChatListSectionPresenter {
 
     @Override
     public void loadData() {
-        mItems = mChatProvider.getActiveChats(mUserId);
+
+        mItems = loadChats(mUserId, mChatProvider);
+
+//        mItems = mChatProvider.getActiveChats(mUserId);
         if (mItems == null || mItems.isEmpty()) {
             mChatListSectionView.showError("No Chats Found");
             return;
@@ -89,4 +92,6 @@ public class ChatListSectionPresenterImpl implements ChatListSectionPresenter {
 
         return false;
     }
+
+    public abstract List<ChatItem> loadChats(String userId, ChatProvider provider);
 }

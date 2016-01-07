@@ -10,5 +10,7 @@ import in.elanic.elanicchatdemo.models.ChatItem;
 public interface ChatProvider {
 
     List<ChatItem> getActiveChats(String userId);
+    List<ChatItem> getActiveSellChats(String userId);
+    List<ChatItem> getActiveBuyChats(String userId);
 
 }

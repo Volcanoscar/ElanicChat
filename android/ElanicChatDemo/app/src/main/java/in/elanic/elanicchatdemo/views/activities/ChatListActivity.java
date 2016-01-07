@@ -7,11 +7,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
@@ -19,12 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -36,13 +29,13 @@ import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListViewComponent;
 import in.elanic.elanicchatdemo.controllers.services.WebsocketConnectionService;
-import in.elanic.elanicchatdemo.models.ChatItem;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.modules.ChatListViewModule;
 import in.elanic.elanicchatdemo.presenters.ChatListPresenter;
 import in.elanic.elanicchatdemo.views.adapters.BasicFragmentStatePagerAdapter;
-import in.elanic.elanicchatdemo.views.adapters.ChatListAdapter;
+import in.elanic.elanicchatdemo.views.fragments.ChatListBuySectionFragment;
 import in.elanic.elanicchatdemo.views.fragments.ChatListSectionFragment;
+import in.elanic.elanicchatdemo.views.fragments.ChatListSellSectionFragment;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
 
 public class ChatListActivity extends AppCompatActivity implements ChatListView {
@@ -212,11 +205,11 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
             mAdapter = new BasicFragmentStatePagerAdapter(getSupportFragmentManager());
 
             if (mSellFragment == null) {
-                mSellFragment = ChatListSectionFragment.newInstace(userId);
+                mSellFragment = ChatListSellSectionFragment.newInstance(userId);
             }
 
             if (mBuyFragment == null) {
-                mBuyFragment = ChatListSectionFragment.newInstace(userId);
+                mBuyFragment = ChatListBuySectionFragment.newInstance(userId);
             }
 
             mAdapter.addFragment(mBuyFragment, "BUY");

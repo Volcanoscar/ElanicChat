@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import in.elanic.elanicchatdemo.models.ChatItem;
@@ -108,5 +109,43 @@ public class ChatProviderImpl implements ChatProvider {
         }
 
         return null;
+    }
+
+    @Override
+    public List<ChatItem> getActiveBuyChats(String userId) {
+        // TODO Make this faster by getting Product->user_id from somewhere.
+
+        List<ChatItem> mItems = getActiveChats(userId);
+        if (mItems == null) {
+            return null;
+        }
+
+        Iterator<ChatItem> iterator = mItems.iterator();
+        while(iterator.hasNext()) {
+            ChatItem item = iterator.next();
+            if (item.getProduct() == null || item.getProduct().getUser_id().equals(userId)) {
+                iterator.remove();
+            }
+        }
+
+        return mItems;
+    }
+
+    @Override
+    public List<ChatItem> getActiveSellChats(String userId) {
+        List<ChatItem> mItems = getActiveChats(userId);
+        if (mItems == null) {
+            return null;
+        }
+
+        Iterator<ChatItem> iterator = mItems.iterator();
+        while(iterator.hasNext()) {
+            ChatItem item = iterator.next();
+            if (item.getProduct() == null || !item.getProduct().getUser_id().equals(userId)) {
+                iterator.remove();
+            }
+        }
+
+        return mItems;
     }
 }
