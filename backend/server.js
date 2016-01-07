@@ -8,6 +8,7 @@ var app = require("express")(),
     socks = require('./controllers/sockets.js'),
     dateformat = require('date-format'),
     add_api = require('./controllers/events.js'),
+    DATABASE_NAME = "testdb",
     db;
 
 process.env.PWD = process.cwd();
@@ -15,22 +16,28 @@ var port = process.env.PORT || 9999;
 
 app.get('/api/start_chat', function(req, res) {
     console.log(req.query);
-    if (req.query.user_id) {
-	db.authenticate(req.query, function(err, user) {
-	    if (err || !user)
-		res.send({ "success" : false, "code" : 404, "message" : "User not found" });
+    if (req.query.user_id && req.query.product_id) {
+	db.http_authenticate(req.query, function(err, user, product) {
+	    if (err || !user || !product)
+		res.send({ "success" : false, "code" : 404, "message" : "User or product not found" });
 	    else {
 		// log session here
-		
-		user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
-		user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
-		
-		user.user_id = user._id;
-		res.send({
-		    success : true,
-		    code : 200,
-		    user : user
-		});
+		if (user.user_id == product.user_id)
+		    res.send({success : false, code : 403});
+		else if (!product.user_id)
+		    res.send({success : false, code : 501});
+		else {
+		    user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		    user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		    
+		    user.user_id = user._id;
+		    res.send({
+			success : true,
+			code : 200,
+			receiver : user,
+			product : product
+		    });
+		}
 	    }
 	});
     }
@@ -39,7 +46,7 @@ app.get('/api/start_chat', function(req, res) {
     }
 });
 
-var server = http.createServer();
+var server = http.createServer(app);
 
 // Websocket details below
 
@@ -71,11 +78,11 @@ conn.on('error', util.log);
 conn.on('open', function() {
     db = require("./controllers/db.js")(conn);
     server.listen( port, function() {
-	util.log("Listening");
+	util.log("Listening on " + port);
     });
 });
 if (require.main === module)
-    conn.open('mongodb://localhost:27017/mydb');
+    conn.open('mongodb://localhost:27017/'+DATABASE_NAME);
 else
     module.exports = function(host, db, pt) {
 	port = pt || port;

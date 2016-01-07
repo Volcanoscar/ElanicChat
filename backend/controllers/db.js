@@ -102,8 +102,19 @@ module.exports = function(conn){
 	authenticate : function(data, next) {
 	    if (!data || !data.user_id)
 		return next("Invalid parameters");
-	    var id = data.user_id;//util.toObjId(data.user_id);
-	    return User.findOne({user_id : id}).lean().exec(next);
+	    return User.findOne({user_id : data.user_id}).lean().exec(next);
+	},
+
+	http_authenticate : function(data, next) {
+	    if (!data || !data.user_id || !data.product_id)
+		return next("Invalid parameters");
+	    return this.authenticate(data, function(err, user) {
+		if (err)
+		    return next(false);
+		return Product.findOne({product_id : data.product_id}).lean().exec(function(err, product) {
+		    return next(err, user, product);
+		});
+	    });
 	}
     };
     
