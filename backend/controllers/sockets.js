@@ -31,7 +31,8 @@ module.exports = {
 	this.emit(id, event, new_data, next);
     },
 
-    on : function(socket, events) {
+    on : function(id, events) {
+	var socket = active_socks[id];
 	socket.on("message", function(message) {
 	    if (message.type == 'utf8') {
 		var data = JSON.parse(message.utf8Data);
