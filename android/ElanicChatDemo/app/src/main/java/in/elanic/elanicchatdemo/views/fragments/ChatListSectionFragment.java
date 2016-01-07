@@ -123,8 +123,5 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
         return mPresenter != null && mPresenter.openIfChatExists(productId);
     }
 
-    @Override
-    public abstract void openChat(String userId, String productId);
-
     protected abstract void setupComponent(ApplicationComponent applicationComponent);
 }

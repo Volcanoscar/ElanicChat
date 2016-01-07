@@ -41,9 +41,10 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         ChatItemViewHolder viewHolder = (ChatItemViewHolder)holder;
         ChatItem item = mItems.get(position);
         Product product = item.getProduct();
+        User receiver = item.getUser();
 
         if (product != null) {
-            viewHolder.mTextView.setText(product.getTitle());
+            viewHolder.mTextView.setText(product.getTitle() + " <-> " + receiver.getUser_id());
         } else {
             viewHolder.mTextView.setText(item.getId() + " product is null");
         }

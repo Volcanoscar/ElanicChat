@@ -9,9 +9,6 @@ import in.elanic.elanicchatdemo.models.ChatItem;
  */
 public interface ChatListView {
 
-    String EXTRA_USER_ID = "user_id";
-    String EXTRA_JUST_LOGGED_IN = "just_logged_in";
-
     void showSnackbar(CharSequence text);
     void showProgressDialog(boolean show);
     void openChat(String userId, String productId);

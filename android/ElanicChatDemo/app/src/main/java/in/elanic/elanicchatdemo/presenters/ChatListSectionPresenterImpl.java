@@ -5,11 +5,11 @@ import android.os.Bundle;
 import java.util.List;
 
 import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
-import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
 
 /**
  * Created by Jay Rambhia on 06/01/16.
@@ -31,7 +31,7 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
 
     @Override
     public void attachView(Bundle extras) {
-        mUserId = extras.getString(ChatListView.EXTRA_USER_ID);
+        mUserId = extras.getString(Constants.EXTRA_USER_ID);
         loadData();
     }
 
@@ -69,11 +69,11 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         Message message = item.getLastMessage();
         if (mUserId.equals(message.getReceiver_id())) {
             // open with sender id
-            mChatListSectionView.openChat(message.getSender_id(), message.getProduct_id());
+            mChatListSectionView.openChat(mUserId, message.getSender_id(), message.getProduct_id());
 
         } else {
             // open with receiver id
-            mChatListSectionView.openChat(message.getReceiver_id(), message.getProduct_id());
+            mChatListSectionView.openChat(mUserId, message.getReceiver_id(), message.getProduct_id());
         }
     }
 

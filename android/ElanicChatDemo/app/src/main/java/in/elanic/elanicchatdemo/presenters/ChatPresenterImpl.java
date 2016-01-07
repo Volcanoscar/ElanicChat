@@ -66,9 +66,9 @@ public class ChatPresenterImpl implements ChatPresenter {
     @Override
     public void attachView(Bundle extras) {
 
-        mSenderId = extras.getString(ChatView.EXTRA_SENDER_ID);
-        mReceiverId = extras.getString(ChatView.EXTRA_RECEIVER_ID);
-        mProductId = extras.getString(ChatView.EXTRA_PRODUCT_ID);
+        mSenderId = extras.getString(Constants.EXTRA_SENDER_ID);
+        mReceiverId = extras.getString(Constants.EXTRA_RECEIVER_ID);
+        mProductId = extras.getString(Constants.EXTRA_PRODUCT_ID);
 
         mSender = mUserProvider.getUser(mSenderId);
         mReceiver = mUserProvider.getUser(mReceiverId);

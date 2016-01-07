@@ -9,9 +9,5 @@ import in.elanic.elanicchatdemo.models.db.Message;
  */
 public interface ChatView {
 
-    String EXTRA_SENDER_ID = "sender_id";
-    String EXTRA_RECEIVER_ID = "receiver_id";
-    String EXTRA_PRODUCT_ID = "product_id";
-
     void setData(List<Message> data);
 }

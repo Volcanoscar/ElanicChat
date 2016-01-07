@@ -29,6 +29,7 @@ import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListViewComponent;
 import in.elanic.elanicchatdemo.controllers.services.WebsocketConnectionService;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.modules.ChatListViewModule;
 import in.elanic.elanicchatdemo.presenters.ChatListPresenter;
@@ -62,8 +63,8 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
 
     public static Intent getActivityIntent(Context context, String userId, boolean newUser) {
         Intent intent = new Intent(context, ChatListActivity.class);
-        intent.putExtra(ChatListView.EXTRA_USER_ID, userId);
-        intent.putExtra(ChatListView.EXTRA_JUST_LOGGED_IN, newUser);
+        intent.putExtra(Constants.EXTRA_USER_ID, userId);
+        intent.putExtra(Constants.EXTRA_JUST_LOGGED_IN, newUser);
         return intent;
     }
 

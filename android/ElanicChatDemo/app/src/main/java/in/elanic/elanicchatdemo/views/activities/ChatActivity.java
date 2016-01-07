@@ -28,6 +28,7 @@ import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatViewComponent;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.modules.ChatViewModule;
@@ -59,9 +60,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             return null;
         }
 
-        intent.putExtra(ChatView.EXTRA_SENDER_ID, loggedInUserId);
-        intent.putExtra(ChatView.EXTRA_RECEIVER_ID, userId);
-        intent.putExtra(ChatView.EXTRA_PRODUCT_ID, productId);
+        intent.putExtra(Constants.EXTRA_SENDER_ID, loggedInUserId);
+        intent.putExtra(Constants.EXTRA_RECEIVER_ID, userId);
+        intent.putExtra(Constants.EXTRA_PRODUCT_ID, productId);
         return intent;
     }
 
@@ -113,8 +114,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     }
 
     private void setupToolbar() {
-        setSupportActionBar(mToolbar);
         mToolbar.setTitle("Chat");
+        setSupportActionBar(mToolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);

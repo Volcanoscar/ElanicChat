@@ -7,6 +7,7 @@ import in.elanic.elanicchatdemo.models.providers.chat.ChatProviderImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListBuySectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenter;
 import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenterImpl;
+import in.elanic.elanicchatdemo.presenters.ChatListSellProductSectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSellSectionPresenterImpl;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 
@@ -22,6 +23,7 @@ public class ChatListSectionViewModule {
 
     public static final int TYPE_SELL = 1;
     public static final int TYPE_BUY = 2;
+    public static final int TYPE_SELL_PRODUCT = 3;
 
     public ChatListSectionViewModule(ChatListSectionView view, int type) {
         this.view = view;
@@ -39,6 +41,8 @@ public class ChatListSectionViewModule {
             return new ChatListSellSectionPresenterImpl(view, new ChatProviderImpl(daoSession));
         } else if (mSectionType == TYPE_BUY) {
             return new ChatListBuySectionPresenterImpl(view, new ChatProviderImpl(daoSession));
+        } else if (mSectionType == TYPE_SELL_PRODUCT) {
+            return new ChatListSellProductSectionPresenterImpl(view, new ChatProviderImpl(daoSession));
         }
 
         throw new RuntimeException("Invalid section type: " + mSectionType);

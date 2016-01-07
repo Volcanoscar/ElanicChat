@@ -7,18 +7,13 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
-
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
-import in.elanic.elanicchatdemo.models.db.Message;
-import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatApiProvider;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
@@ -66,8 +61,8 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
     @Override
     public void attachView(Bundle extras) {
-        mUserId = extras.getString(ChatListView.EXTRA_USER_ID);
-        boolean newLogin = extras.getBoolean(ChatListView.EXTRA_JUST_LOGGED_IN, true);
+        mUserId = extras.getString(Constants.EXTRA_USER_ID);
+        boolean newLogin = extras.getBoolean(Constants.EXTRA_JUST_LOGGED_IN, true);
         mEventBus = EventBus.getDefault();
 
         _subscription = new CompositeSubscription();

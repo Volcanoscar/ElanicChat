@@ -7,30 +7,29 @@ import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListSectionViewComponent;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.modules.ChatListSectionViewModule;
-import in.elanic.elanicchatdemo.views.activities.ProductListContainerActivity;
+import in.elanic.elanicchatdemo.views.activities.ChatActivity;
 
 /**
  * Created by Jay Rambhia on 07/01/16.
  */
-public class ChatListSellSectionFragment extends ChatListSectionFragment {
+public class ChatListSellProductSectionFragment extends ChatListSectionFragment {
 
-    public static ChatListSellSectionFragment newInstance(String userId) {
+    public static ChatListSellProductSectionFragment newInstance(String userId, String productId) {
+        ChatListSellProductSectionFragment fragment = new ChatListSellProductSectionFragment();
         Bundle extras = new Bundle();
         extras.putString(Constants.EXTRA_USER_ID, userId);
-
-        ChatListSellSectionFragment fragment = new ChatListSellSectionFragment();
+        extras.putString(Constants.EXTRA_PRODUCT_ID, productId);
         fragment.setArguments(extras);
         return fragment;
     }
 
     @Override
     public void openChat(String myUserId, String otherUserId, String productId) {
-
         if (getActivity() == null) {
             return;
         }
 
-        Intent intent = ProductListContainerActivity.getActivityIntent(getActivity(), myUserId, productId);
+        Intent intent = ChatActivity.getActivityIntent(getActivity(), otherUserId, productId);
         startActivity(intent);
     }
 
@@ -39,7 +38,7 @@ public class ChatListSellSectionFragment extends ChatListSectionFragment {
         DaggerChatListSectionViewComponent.builder()
                 .applicationComponent(applicationComponent)
                 .chatListSectionViewModule(new ChatListSectionViewModule(this,
-                        ChatListSectionViewModule.TYPE_SELL))
+                        ChatListSectionViewModule.TYPE_SELL_PRODUCT))
                 .build()
                 .inject(this);
     }
