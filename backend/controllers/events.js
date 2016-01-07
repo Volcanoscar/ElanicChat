@@ -2,6 +2,7 @@ var socks = require('./sockets.js'),
     util = require('./util.js'),
     gcm = require('./gcm.js'),
     _ = require("lodash"),
+    dateformat = require('date-format'),
     API = util.API;
 
 module.exports = function(user_id, db) {
@@ -29,6 +30,7 @@ module.exports = function(user_id, db) {
 		    return socks.emit(user_id, API.SEND, request);
 		    //});
 		}
+		request.message.delivered_at = dateformat(new Date(), 'yyyy-mm-dd hh:MM:SS.sss');
 		return socks.emit(user_id, API.SEND, request);
 	    });
 	});

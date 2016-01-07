@@ -13,7 +13,8 @@ var app = require("express")(),
 process.env.PWD = process.cwd();
 var port = process.env.PORT || 9999;
 
-app.get('/api/login', function(req, res) {
+app.get('/api/start_chat', function(req, res) {
+    console.log(req.query);
     if (req.query.user_id) {
 	db.authenticate(req.query, function(err, user) {
 	    if (err || !user)
@@ -39,6 +40,8 @@ app.get('/api/login', function(req, res) {
 });
 
 var server = http.createServer();
+
+// Websocket details below
 
 var io = new wsServer({
     httpServer : server,

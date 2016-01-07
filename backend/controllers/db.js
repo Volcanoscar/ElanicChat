@@ -25,11 +25,21 @@ module.exports = function(conn){
 	    if (!data || !data.sync_timestamp)
 		next("Invalid Parameters");
 	    var time = Date.parse(data.sync_timestamp);
-	    var objId = id;//mongoose.Types.ObjectId(id);
-	    Message.find({ $or: [{'sender_id' : objId}, 
-				 {'receiver_id' : objId}]
+	    Message.find({ $or: [{'sender_id' : id}, 
+				 {'receiver_id' : id}]
 			 }).where('updated_at').gt( time ).lean().
-		exec(next);
+		exec(function(err, msgs) {
+		    var updates = [];
+		    msgs = msgs.map(function(msg) {
+			if (!msg.delivered_at) {
+			    msg.updated_at = msg.delivered_at = new Date();
+			    updates.push(msg);
+			}
+			return msg;
+		    });
+		    Message.update(updates);
+		    return next(err, msgs);
+		});
 	},
 
 	get_users: function(data, next) {
