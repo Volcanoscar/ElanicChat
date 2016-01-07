@@ -7,16 +7,17 @@ var util = require('./util.js');
 module.exports = function(conn){
     var User = require('../models/user.js')(conn);
     var Message = require('../models/message.js')(conn);
+    var Product = require('../models/product.js')(conn);
 
     function get_owner(prod_no, then) {
 	return then(prod_no);
     }
-
+/*
     function get_users(msg) {
 	// in case of group, get users from msg.prod_no
 	return [msg.receiver_id];
     }
-
+*/
     return {
 	get_unread_messages : function(id, data, next) {
 	    //check for all messages greater than given timestamp 
@@ -32,12 +33,28 @@ module.exports = function(conn){
 	},
 
 	get_users: function(data, next) {
-	    if (!data || !data.ids || data.ids.constructor != Array)
+	    if (!data || !data.users || data.users.constructor != Array)
 		return next("Invalid Parameters");
-	    var ids = data.ids;/*.map(function(id) {
-		return mongoose.Types.ObjectId(id);
-	    });*/
-	    return User.find({user_id : { $in : ids }}).lean().exec(next);
+	    return User.find({user_id : { $in : data.users }}).lean().exec(next);
+	},
+
+	get_products: function(data, next) {
+	    if (!data || !data.products || data.products.constructor != Array)
+		return next("Invalid Paramaters");
+	    return Product.find({product_id : { $in : data.products }}).lean().exec(next);
+	},
+
+	get_products_users: function(data, next) {
+	    var that = this;
+	    return that.get_products(data, function(err, products){
+		if (err)
+		    return next(err);
+		return that.get_users(data, function(err2, users) {
+		    if (err2)
+			return next(err2);
+		    return next(false, products, users);
+		});
+	    });
 	},
 
 	save_messages : function(msg, next) {

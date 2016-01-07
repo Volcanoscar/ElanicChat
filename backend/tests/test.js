@@ -54,3 +54,4 @@ after(function(done) {
 // Import different tests here
 
 require('./test_messaging.js').call(this, data);
+require('./test_retrieve.js').call(this, data);

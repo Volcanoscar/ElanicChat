@@ -7,7 +7,7 @@ var sockets = {}; // socket handler
 
 module.exports = function(user, data) {
     var io = new wsClient();
-    var messages = {}, id = user.user_id, user_info = {};
+    var messages = {}, id = user.user_id, user_info = {}, prod_info = {};
     var nextfunc = {};
     var url = data.url + "?user_id=" + id;
     function add_message(msg) {
@@ -47,7 +47,18 @@ module.exports = function(user, data) {
     }
     function get_users(ids, done) {
 	callbacks.push(done);
-	emit(sockets[id], API.USERS, {ids : ids});
+	emit(sockets[id], API.USERS, {users : ids});
+    }
+    function get_products(ids, done) {
+	callbacks.push(done);
+	emit(sockets[id], API.PRODUCTS, {products : ids});
+    }
+    function get_users_and_products(user_ids, prod_ids, done) {
+	callbacks.push(done);
+	emit(sockets[id], API.USERS_PROD, {
+	    users : user_ids,
+	    products : prod_ids
+	});
     }
     function add_users(users) {
 	users = users.data;
@@ -55,6 +66,18 @@ module.exports = function(user, data) {
 	    user_info[user._id] = user;
 	});
 	callbacks.pop()();
+    }
+    function add_products(products) {
+	products = products.data;
+	products.forEach(function(prod) {
+	    prod_info[prod._id] = prod;
+	});
+	callbacks.pop()();
+    }
+    function add_users_and_products(data) {
+	callbacks.push(function() {});
+	add_users({data : data.users});
+	add_products({data : data.products});
     }
     function emit(socket, event, data) {
 	socket.sendUTF(JSON.stringify(_.extend({request_type : event}, data)));
@@ -80,6 +103,8 @@ module.exports = function(user, data) {
 	    events[API.SEND] = add_message;
 	    events[API.GET] = add_message;
 	    events[API.USERS] = add_users;
+	    events[API.PRODUCTS] = add_products;
+	    events[API.USERS_PROD] = add_users_and_products;
 	    events[API.ERROR] = function(err) { throw err; };
 	    events.close = function() { delete sockets[id]; };
 	    on(sockets[id], events);

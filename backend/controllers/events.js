@@ -49,12 +49,27 @@ module.exports = function(user_id, db) {
 	    if (err)
 		socks.error(user_id, API.USERS, err, []);
 	    else
-		socks.emit(user_id, API.USERS, _.extend(data, { data : users }));
+		socks.emit(user_id, API.USERS, _.extend(data, { data : users, success : true }));
 	});
     }
 
     function get_products(data) {
-	var ids = data.products;
+	db.get_products(data, function(err, products) {
+	    if (err)
+		socks.error(user_id, API.PRODUCTS, err, []);
+	    else
+		socks.emit(user_id, API.PRODUCTS, _.extend(data, { data : products, success : true }));
+	});
+    }
+
+    function get_users_and_products(data) {
+	// get users and products and message user
+	db.get_products_users(data, function(err, products, users) {
+	    if (err)
+		socks.error(user_id, API.USERS_PROD, err, []);
+	    else
+		socks.emit(user_id, API.USERS_PROD, _.extend(data, { users : users, products : products, success : true }));
+	});
     }
 
     function disconnect() {
@@ -68,6 +83,7 @@ module.exports = function(user_id, db) {
 	events[API.GET] = get_messages;
 	events[API.USERS] = get_users;
 	events[API.PRODUCTS] = get_products;
+	events[API.USERS_PROD] = get_users_and_products;
 	socks.on(user_id, events);
     }());
 

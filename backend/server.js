@@ -7,7 +7,7 @@ var app = require("express")(),
     conn = mongoose.createConnection(),
     socks = require('./controllers/sockets.js'),
     dateformat = require('date-format'),
-    add_events = require('./controllers/events.js'),
+    add_api = require('./controllers/events.js'),
     db;
 
 process.env.PWD = process.cwd();
@@ -58,7 +58,7 @@ io.on('request', function(req) {
 	    var socket = req.accept('echo-protocol', req.origin);
 	    var user_id = auth.user_id;
 	    socks.add(socket, user_id);
-	    add_events(user_id, db);
+	    add_api(user_id, db);
 	}());
     });
     
