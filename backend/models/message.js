@@ -7,6 +7,12 @@ module.exports = function(conn) {
 	content : String,
 	sender_id : String,//mongoose.Schema.Types.ObjectId,
 	receiver_id : String,//mongoose.Schema.Types.ObjectId,
+	product_id : String,
+	offer_price : Number,
+	user_response : Number,
+	delivered_at : Date,
+	read_at : Date,
+	offer_expiry : Date,
 	created_at : { type : Date, default : Date.now},
 	updated_at : { type : Date, default : Date.now},
 	is_deleted : { type: Boolean, default: false}
