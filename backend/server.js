@@ -8,7 +8,8 @@ var app = require("express")(),
     socks = require('./controllers/sockets.js'),
     dateformat = require('date-format'),
     add_api = require('./controllers/events.js'),
-    DATABASE_NAME = "testdb",
+    DATABASE_NAME = "elchat_v1",
+    DATE_FORMAT = 'yyyy-mm-dd hh:MM:SS.sss',
     db;
 
 process.env.PWD = process.cwd();
@@ -27,8 +28,11 @@ app.get('/api/start_chat', function(req, res) {
 		else if (!product.user_id)
 		    res.send({success : false, code : 501});
 		else {
-		    user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
-		    user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		    user.created_at = dateformat(user.created_at, DATE_FORMAT);
+		    user.updated_at = dateformat(user.updated_at, DATE_FORMAT);
+
+		    product.created_at = dateformat(product.created_at, DATE_FORMAT);
+		    product.updated_at = dateformat(product.updated_at, DATE_FORMAT);
 		    
 		    user.user_id = user._id;
 		    res.send({

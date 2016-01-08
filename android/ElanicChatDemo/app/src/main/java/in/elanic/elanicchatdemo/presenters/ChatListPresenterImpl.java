@@ -61,6 +61,11 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
     @Override
     public void attachView(Bundle extras) {
+
+        if (DEBUG) {
+            Log.i(TAG, "attach view: " + extras);
+        }
+
         mUserId = extras.getString(Constants.EXTRA_USER_ID);
         boolean newLogin = extras.getBoolean(Constants.EXTRA_JUST_LOGGED_IN, true);
         mEventBus = EventBus.getDefault();

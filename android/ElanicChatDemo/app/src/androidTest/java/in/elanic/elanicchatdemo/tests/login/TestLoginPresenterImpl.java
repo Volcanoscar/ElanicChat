@@ -1,4 +1,4 @@
-package in.elanic.elanicchatdemo;
+package in.elanic.elanicchatdemo.tests.login;
 
 import android.util.Log;
 

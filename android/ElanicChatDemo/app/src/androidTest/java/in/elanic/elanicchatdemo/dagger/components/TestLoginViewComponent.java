@@ -1,11 +1,10 @@
-package in.elanic.elanicchatdemo.dagger;
+package in.elanic.elanicchatdemo.dagger.components;
 
 import dagger.Component;
-import in.elanic.elanicchatdemo.LoginActivityTest;
-import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
+import in.elanic.elanicchatdemo.tests.login.LoginActivityTest;
+import in.elanic.elanicchatdemo.dagger.modules.TestLoginViewModule;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
-import in.elanic.elanicchatdemo.modules.LoginProviderModule;
 import in.elanic.elanicchatdemo.presenters.LoginPresenter;
 import in.elanic.elanicchatdemo.scopes.ActivityScope;
 
@@ -19,9 +18,9 @@ import in.elanic.elanicchatdemo.scopes.ActivityScope;
                 ApplicationComponent.class,
                 TestLoginProviderModule.class
         },
-        modules = MockLoginViewModule.class
+        modules = TestLoginViewModule.class
 )
-public interface MockLoginViewComponent {
+public interface TestLoginViewComponent {
     void inject(LoginActivityTest view);
     LoginPresenter getPresenter();
 }

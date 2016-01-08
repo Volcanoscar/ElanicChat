@@ -1,27 +1,22 @@
-package in.elanic.elanicchatdemo;
+package in.elanic.elanicchatdemo.tests.login;
 
 import android.app.Instrumentation;
-import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
 import android.test.ActivityInstrumentationTestCase2;
-import android.util.Log;
 import android.widget.EditText;
 
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import javax.inject.Inject;
 
-import in.elanic.elanicchatdemo.components.DaggerLoginViewComponent;
-import in.elanic.elanicchatdemo.dagger.DaggerMockLoginViewComponent;
-import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
+import in.elanic.elanicchatdemo.ELChatApp;
+import in.elanic.elanicchatdemo.R;
+import in.elanic.elanicchatdemo.dagger.components.DaggerTestLoginViewComponent;
+import in.elanic.elanicchatdemo.dagger.modules.TestLoginViewModule;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.modules.LoginProviderModule;
 import in.elanic.elanicchatdemo.presenters.LoginPresenter;
 import in.elanic.elanicchatdemo.views.activities.LoginActivity;
 import in.elanic.elanicchatdemo.views.interfaces.LoginView;
@@ -52,10 +47,10 @@ public class LoginActivityTest extends ActivityInstrumentationTestCase2<LoginAct
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         ELChatApp app = (ELChatApp) instrumentation.getTargetContext().getApplicationContext();
 
-        DaggerMockLoginViewComponent.builder()
+        DaggerTestLoginViewComponent.builder()
                 .applicationComponent(app.component())
                 .testLoginProviderModule(new TestLoginProviderModule())
-                .mockLoginViewModule(new MockLoginViewModule(this))
+                .testLoginViewModule(new TestLoginViewModule(this))
                 .build()
                 .inject(this);
 
