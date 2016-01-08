@@ -1,134 +1,88 @@
 var app = require("express")(),
-    http = require("http").Server(app),
-    io = require("socket.io")(http),
-    url = require("url"),
-    _ = require("lodash"),
-    mongoose = require('mongoose'),
-    conn = mongoose.createConnection('mongodb://localhost/elchat_v1'),
+    http = require("http"),
+    wsServer = require("websocket").server,
     util = require('./controllers/util.js'),
+    url = require("url"),
+    mongoose = require('mongoose'),
+    conn = mongoose.createConnection(),
     socks = require('./controllers/sockets.js'),
-    gcm = require('./controllers/gcm.js'),
     dateformat = require('date-format'),
-    chat;
+    add_api = require('./controllers/events.js'),
+    DATABASE_NAME = "testdb",
+    db;
 
-var API = util.API;
 process.env.PWD = process.cwd();
 var port = process.env.PORT || 9999;
 
-app.get('/api/login', function(req, res) {
-    if (req.query.user_id) {
-    	console.log("user_id : %s", req.query.user_id);
-	chat.authenticate(req.query, function(err, user) {
-	    console.log(err);
-	    
-	    if (err || !user)
-		res.send({ "success" : false, "code" : 404, "message" : "User not found" });
+app.get('/api/start_chat', function(req, res) {
+    console.log(req.query);
+    if (req.query.user_id && req.query.product_id) {
+	db.http_authenticate(req.query, function(err, user, product) {
+	    if (err || !user || !product)
+		res.send({ "success" : false, "code" : 404, "message" : "User or product not found" });
 	    else {
 		// log session here
-		// user.user_id = user._id;
-
-		user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
-		user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
-
-		res.send({
-		    success : true,
-		    code : 200,
-		    user : user
-		});
+		if (user.user_id == product.user_id)
+		    res.send({success : false, code : 403});
+		else if (!product.user_id)
+		    res.send({success : false, code : 501});
+		else {
+		    user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		    user.updated_at = dateformat(user.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		    
+		    user.user_id = user._id;
+		    res.send({
+			success : true,
+			code : 200,
+			receiver : user,
+			product : product
+		    });
+		}
 	    }
 	});
     }
     else {
-	res.send({ "success" : API.FAIL, "code" : 422, "message" : "Invalid parameters" });
+	res.send({ "success" : false, "code" : 422, "message" : "Invalid parameters" });
     }
 });
 
-io.use(function(socket, next) {
+var server = http.createServer(app);
 
-	console.log('Attempting to create a new connection');
+// Websocket details below
 
-    var query = socket.request._query;
-    chat.authenticate(query, function(err, auth) {
+var io = new wsServer({
+    httpServer : server,
+    autoAcceptConnections: false
+});
+
+io.on('request', function(req) {
+    var res = req.resource;
+    var query = { user_id : res.substr(res.indexOf('=')+1) };
+    db.authenticate(query, function(err, auth) {
 	if (err || !auth) {
 	    util.log(auth);
-	    return next(new Error('Authentication error'));
+	    req.reject();
+	    return;
 	}
-	socks.add(socket, auth._id);
-	
-	function send(data) {
-	    var msg = data.message;
-	    _.extend(msg, {
-		username: auth.username,
-		sender_id: auth._id,
-		created_at: Date.now(),
-		updated_at: Date.now()
-	    });
-	    chat.save_messages(msg, function(err, msg) {
-		msg = msg.toObject();
-		if (err)
-		    return socks.error(auth._id, API.SEND, err, msg);
-		var request = {
-		    success : API.SUCCESS,
-		    sent : API.SUCCESS,
-		    message : msg
-		};
-		return socks.emit(msg.receiver_id, API.SEND, request, function(err){
-		    if (err) {
-			// gcm details here. Change registration token/ device id to suit your needs.
-			// uncomment this later
-			//return gcm.send(request, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
-			    request.sent = API.FAIL;
-			    return socks.emit(auth._id, API.SEND, request);
-			//});
-		    }
-		    return socks.emit(auth._id, API.SEND, request);
-		});
-	    });
-	}
-	
-	function get_messages(data) {
-	    _.extend(data, { success : API.SUCCESS });
-	    chat.get_unread_messages(auth._id, data, function(err, msgs) {
-		if (!err)
-		    socks.emit(auth._id, API.GET, _.extend(data, { data : msgs }));
-		else
-		    socks.error(auth._id, API.GET, err, []);
-	    });
-	}
-
-	function get_users(data) {
-	    chat.get_users(data, function(err, users) {
-		if (err)
-		    socks.error(auth._id, API.USERS, err, []);
-		else
-		    socks.emit(auth._id, API.USERS, _.extend(data, { data : users }));
-	    });
-	}
-	
-	function disconnect() {
-	    socks.remove(auth._id);
-	}
-	
-	// API
-	socks.on(socket, API.SEND, send);
-	socks.on(socket, API.GET, get_messages);
-	socks.on(socket, API.USERS, get_users);
-	socks.on(socket, "disconnection", disconnect);
-	
-	return next();
+	(function() {
+	    var socket = req.accept('echo-protocol', req.origin);
+	    var user_id = auth.user_id;
+	    socks.add(socket, user_id);
+	    add_api(user_id, db);
+	}());
     });
     
 });
 
 conn.on('error', util.log);
 conn.on('open', function() {
-    chat = require("./controllers/chat.js")(conn);
-    http.listen( port, function() {
-	util.log("Listening");
+    db = require("./controllers/db.js")(conn);
+    server.listen( port, function() {
+	util.log("Listening on " + port);
     });
 });
 if (require.main === module)
-    conn.open('mongodb://localhost:27017/elchat_v1');
+    conn.open('mongodb://localhost:27017/'+DATABASE_NAME);
 else
     module.exports = function(host, db, pt) {
 	port = pt || port;

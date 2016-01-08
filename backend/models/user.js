@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 
 module.exports = function(conn) {
     var User = new mongoose.Schema({
+	user_id: String,
 	username: String,
 	user_id: String,
 	name : String,

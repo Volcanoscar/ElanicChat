@@ -1,4 +1,4 @@
-var io = require('socket.io-client');
+var wsClient = require('websocket').client;
 var API = require('../controllers/util.js').API;
 var _ = require('lodash');
 var counter = 1;
@@ -6,7 +6,9 @@ var callbacks = []; // callback stack. For testing purposes only.
 var sockets = {}; // socket handler
 
 module.exports = function(user, data) {
-    var messages = {}, id = user._id, user_info = {};
+    var io = new wsClient();
+    var messages = {}, id = user.user_id, user_info = {}, prod_info = {};
+    var nextfunc = {};
     var url = data.url + "?user_id=" + id;
     function add_message(msg) {
 	var status = msg.success;
@@ -18,9 +20,9 @@ module.exports = function(user, data) {
 	    messages[elem.message_id] = elem;
 	});
 	if (status === API.SUCCESS) {
-	    if (id.equals(msg.sender_id)) {
+	    if (id == msg.sender_id) {
 		// temp remove later
-		if (sent === API.FAIL)
+		if (sent === API.FAIL) // reaches here if message was successful but not sent, hence GCM
 		    callbacks.pop()();
 		return;
 	    }
@@ -45,7 +47,18 @@ module.exports = function(user, data) {
     }
     function get_users(ids, done) {
 	callbacks.push(done);
-	emit(sockets[id], API.USERS, {ids : ids});
+	emit(sockets[id], API.USERS, {users : ids});
+    }
+    function get_products(ids, done) {
+	callbacks.push(done);
+	emit(sockets[id], API.PRODUCTS, {products : ids});
+    }
+    function get_users_and_products(user_ids, prod_ids, done) {
+	callbacks.push(done);
+	emit(sockets[id], API.USERS_PROD, {
+	    users : user_ids,
+	    products : prod_ids
+	});
     }
     function add_users(users) {
 	users = users.data;
@@ -54,42 +67,62 @@ module.exports = function(user, data) {
 	});
 	callbacks.pop()();
     }
+    function add_products(products) {
+	products = products.data;
+	products.forEach(function(prod) {
+	    prod_info[prod._id] = prod;
+	});
+	callbacks.pop()();
+    }
+    function add_users_and_products(data) {
+	callbacks.push(function() {});
+	add_users({data : data.users});
+	add_products({data : data.products});
+    }
     function emit(socket, event, data) {
-	socket.emit("message", _.extend({request_type : event}, data));
+	socket.sendUTF(JSON.stringify(_.extend({request_type : event}, data)));
 //	socket.emit(event, data);
     }
-    function on(socket, event, done) {
-	socket.on("message", function(data) {
-	    if (data.request_type == event)
-		done(data);
+    function on(socket, events) {
+	socket.on("message", function(message) {
+	    if (message.type == 'utf8') {
+		var data = JSON.parse(message.utf8Data);
+		events[data.request_type](data);
+	    }
 	});
 //	socket.on(event, done);
     }
     function connect(done) {
 	disconnect();
-	sockets[id] = io.connect(url, _.extend({
-	    user_id : id
-	}, data.options));
-
-	sockets[id].on('connect_failed', function() {
-	    throw new Error("Connection to server failed.");
-	});
-	on(sockets[id], API.SEND, add_message);
-	on(sockets[id], API.GET, add_message);
-	on(sockets[id], API.USERS, add_users);
-	on(sockets[id], API.ERROR, function(err) {
-	    throw err;
+	io.on('connectFailed', function(err) {
 	});
 
-	sockets[id].on('connect', done);
+	io.once('connect', function(connection) {
+	    sockets[id] = connection;
+	    var events = {};
+	    events[API.SEND] = add_message;
+	    events[API.GET] = add_message;
+	    events[API.USERS] = add_users;
+	    events[API.PRODUCTS] = add_products;
+	    events[API.USERS_PROD] = add_users_and_products;
+	    events[API.ERROR] = function(err) { throw err; };
+	    events.close = function() { delete sockets[id]; };
+	    on(sockets[id], events);
+	    done();
+	});
+	io.connect(url, data.options);
     }
     function disconnect() {
+	// disconnect io
 	if (sockets[id]) {
-	    sockets[id].disconnect();
+	    sockets[id].socket.end();
+	    io.removeAllListeners();
 	    delete sockets[id];
 	}
 	for(var key in messages)
 	    delete messages[key];
+	for(var user in user_info)
+	    delete user_info[user];
     }
 
     return {
@@ -98,9 +131,12 @@ module.exports = function(user, data) {
 	messages : messages,
 	send : send_message,
 	get : get_messages,
-	_id : id,
+	user_id : id,
 	username : user.username,
 	get_users : get_users,
-	users : user_info
+	get_products : get_products,
+	get_use_prod : get_users_and_products,
+	users : user_info,
+	products : prod_info
     };
 };

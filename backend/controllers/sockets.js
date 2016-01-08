@@ -7,9 +7,9 @@ var _ = require('lodash');
 module.exports = {
 
     add : function(socket, id) {
-	if (active_socks[id])
-	    active_socks[id].disconnect();
-	socket.join(id);
+//	if (active_socks[id])
+//	    active_socks[id].disconnect();
+//	socket.join(id);
 	active_socks[id] = socket;
     },
 
@@ -31,10 +31,13 @@ module.exports = {
 	this.emit(id, event, new_data, next);
     },
 
-    on : function(socket, event, next) {
-	socket.on("message", function(data) {
-	    if (data.request_type == event)
-		next(data);
+    on : function(id, events) {
+	var socket = active_socks[id];
+	socket.on("message", function(message) {
+	    if (message.type == 'utf8') {
+		var data = JSON.parse(message.utf8Data);
+		events[data.request_type](data);
+	    }
 	});
 //	socket.on(event, next);
     },
@@ -42,7 +45,7 @@ module.exports = {
     emit : function(id, event, msg, next) {
 	next = next || function() {};
 	if (this.is_connected(id))
-	    return active_socks[id].emit("message", _.extend({request_type : event}, msg), next);
+	    return active_socks[id].sendUTF( JSON.stringify(_.extend({request_type : event}, msg)), next);
 //	    return active_socks[id].emit(event, msg, next);
 	else
 	    return next("User disconnected");

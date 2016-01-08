@@ -7,16 +7,17 @@ var util = require('./util.js');
 module.exports = function(conn){
     var User = require('../models/user.js')(conn);
     var Message = require('../models/message.js')(conn);
+    var Product = require('../models/product.js')(conn);
 
     function get_owner(prod_no, then) {
 	return then(prod_no);
     }
-
+/*
     function get_users(msg) {
 	// in case of group, get users from msg.prod_no
 	return [msg.receiver_id];
     }
-
+*/
     return {
 	get_unread_messages : function(id, data, next) {
 	    //check for all messages greater than given timestamp 
@@ -24,30 +25,56 @@ module.exports = function(conn){
 	    if (!data || !data.sync_timestamp)
 		next("Invalid Parameters");
 	    var time = Date.parse(data.sync_timestamp);
-	    var objId = mongoose.Types.ObjectId(id);
-	    Message.find({ $or: [{'sender_id' : objId}, 
-				 {'receiver_id' : objId}]
+	    Message.find({ $or: [{'sender_id' : id}, 
+				 {'receiver_id' : id}]
 			 }).where('updated_at').gt( time ).lean().
-		exec(next);
+		exec(function(err, msgs) {
+		    var updates = [];
+		    msgs = msgs.map(function(msg) {
+			if (!msg.delivered_at) {
+			    msg.updated_at = msg.delivered_at = new Date();
+			    updates.push(msg);
+			}
+			return msg;
+		    });
+		    Message.update(updates);
+		    return next(err, msgs);
+		});
 	},
 
 	get_users: function(data, next) {
-	    if (!data || !data.ids || data.ids.constructor != Array)
+	    if (!data || !data.users || data.users.constructor != Array)
 		return next("Invalid Parameters");
-	    var ids = data.ids.map(function(id) {
-		return mongoose.Types.ObjectId(id);
+	    return User.find({user_id : { $in : data.users }}).lean().exec(next);
+	},
+
+	get_products: function(data, next) {
+	    if (!data || !data.products || data.products.constructor != Array)
+		return next("Invalid Paramaters");
+	    return Product.find({product_id : { $in : data.products }}).lean().exec(next);
+	},
+
+	get_products_users: function(data, next) {
+	    var that = this;
+	    return that.get_products(data, function(err, products){
+		if (err)
+		    return next(err);
+		return that.get_users(data, function(err2, users) {
+		    if (err2)
+			return next(err2);
+		    return next(false, products, users);
+		});
 	    });
-	    return User.find({_id : { $in : ids }}).lean().exec(next);
 	},
 
 	save_messages : function(msg, next) {
 	    // Later: Move validation to model
 	    if (!msg.receiver_id)
-		return next("Invalid parameters");
+		return next("Invalid parameters", msg);
 	    if (msg.receiver_id == msg.sender_id)
-		return next("receiver_id and sender_id can't be equal");
-	    var id = mongoose.Types.ObjectId(msg.receiver_id + '');
-	    return User.findOne({_id : id}).lean().
+		return next("receiver_id and sender_id can't be equal", msg);
+	    var id = msg.receiver_id;//mongoose.Types.ObjectId(msg.receiver_id + '');
+	    return User.findOne({user_id : id}).lean().
 		exec(function(err, user) {
 		    // Later: If user is msg.sender_id, throw error
 		    if (err)
@@ -75,8 +102,19 @@ module.exports = function(conn){
 	authenticate : function(data, next) {
 	    if (!data || !data.user_id)
 		return next("Invalid parameters");
-	    // var id = util.toObjId(data.user_id);
-	    return User.findOne({"user_id" : data.user_id}).lean().exec(next);
+	    return User.findOne({user_id : data.user_id}).lean().exec(next);
+	},
+
+	http_authenticate : function(data, next) {
+	    if (!data || !data.user_id || !data.product_id)
+		return next("Invalid parameters");
+	    return this.authenticate(data, function(err, user) {
+		if (err)
+		    return next(false);
+		return Product.findOne({product_id : data.product_id}).lean().exec(function(err, product) {
+		    return next(err, user, product);
+		});
+	    });
 	}
     };
     

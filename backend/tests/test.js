@@ -5,6 +5,7 @@
 var should = require('should');
 var mongoose = require('mongoose');
 var user_data = require('./user_data.js');
+var prod_data = require('./product_data.js');
 var host = 'localhost', db = 'testdb', port = 8000;
 var conn = mongoose.createConnection();
 var client = require('./client.js');
@@ -12,10 +13,7 @@ var client = require('./client.js');
 
 var data = { 
     url : 'http://localhost:' + port,
-    options : {
-	'forceNew' : true,
-	transports: ['websocket']
-    }
+    options : 'echo-protocol'
 };
 
 //Set up server
@@ -33,7 +31,13 @@ before(function(done) {
 		return client(elem, data);
 	    });
 	    data.users.should.have.length(user_data.length);
-	    done();
+	    data.Product = require("../models/product.js")(conn);
+	    data.Product.create(prod_data, function(err, prods) {
+		if (err)
+		    throw err;
+		data.products = prods;
+		done();
+	    });
 	});
     });
     conn.open(host, db);
@@ -51,9 +55,12 @@ afterEach(function(done) {
 });
 
 after(function(done) {
-    data.User.remove({}, done);
+    data.User.remove({}, function() {
+	data.Product.remove({}, done);
+    });
 });
 
 // Import different tests here
 
 require('./test_messaging.js').call(this, data);
+require('./test_retrieve.js').call(this, data);
