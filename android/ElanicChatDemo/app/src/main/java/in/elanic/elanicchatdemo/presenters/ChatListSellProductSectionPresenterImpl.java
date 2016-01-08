@@ -33,7 +33,7 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     @Override
     public List<ChatItem> loadChats(String userId, ChatItemProvider provider) {
         Log.i(TAG, "load chats");
-        return null;
-//        return provider.getActiveBuyChatsForProduct(userId, mProductId);
+//        return null;
+        return provider.getActiveBuyChatsForProduct(userId, mProductId);
     }
 }

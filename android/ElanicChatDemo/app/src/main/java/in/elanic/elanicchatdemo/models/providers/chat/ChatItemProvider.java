@@ -17,4 +17,5 @@ public interface ChatItemProvider {
 
     List<ChatItem> getActiveSellChats(String userId);
     List<ChatItem> getActiveBuyChats(String userId);
+    List<ChatItem> getActiveBuyChatsForProduct(String userId, String producId);
 }
