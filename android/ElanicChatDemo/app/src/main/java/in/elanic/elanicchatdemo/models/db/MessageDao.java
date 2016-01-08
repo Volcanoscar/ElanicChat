@@ -40,6 +40,8 @@ public class MessageDao extends AbstractDao<Message, String> {
         public final static Property Delivered_at = new Property(11, java.util.Date.class, "delivered_at", false, "DELIVERED_AT");
         public final static Property Read_at = new Property(12, java.util.Date.class, "read_at", false, "READ_AT");
         public final static Property Offer_expiry = new Property(13, java.util.Date.class, "offer_expiry", false, "OFFER_EXPIRY");
+        public final static Property Is_read = new Property(14, Boolean.class, "is_read", false, "IS_READ");
+        public final static Property Seller_id = new Property(15, String.class, "seller_id", false, "SELLER_ID");
     };
 
     private DaoSession daoSession;
@@ -71,7 +73,9 @@ public class MessageDao extends AbstractDao<Message, String> {
                 "\"OFFER_RESPONSE\" INTEGER," + // 10: offer_response
                 "\"DELIVERED_AT\" INTEGER," + // 11: delivered_at
                 "\"READ_AT\" INTEGER," + // 12: read_at
-                "\"OFFER_EXPIRY\" INTEGER);"); // 13: offer_expiry
+                "\"OFFER_EXPIRY\" INTEGER," + // 13: offer_expiry
+                "\"IS_READ\" INTEGER," + // 14: is_read
+                "\"SELLER_ID\" TEXT);"); // 15: seller_id
     }
 
     /** Drops the underlying database table. */
@@ -154,6 +158,16 @@ public class MessageDao extends AbstractDao<Message, String> {
         if (offer_expiry != null) {
             stmt.bindLong(14, offer_expiry.getTime());
         }
+ 
+        Boolean is_read = entity.getIs_read();
+        if (is_read != null) {
+            stmt.bindLong(15, is_read ? 1L: 0L);
+        }
+ 
+        String seller_id = entity.getSeller_id();
+        if (seller_id != null) {
+            stmt.bindString(16, seller_id);
+        }
     }
 
     @Override
@@ -185,7 +199,9 @@ public class MessageDao extends AbstractDao<Message, String> {
             cursor.isNull(offset + 10) ? null : cursor.getInt(offset + 10), // offer_response
             cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)), // delivered_at
             cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)), // read_at
-            cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)) // offer_expiry
+            cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)), // offer_expiry
+            cursor.isNull(offset + 14) ? null : cursor.getShort(offset + 14) != 0, // is_read
+            cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15) // seller_id
         );
         return entity;
     }
@@ -207,6 +223,8 @@ public class MessageDao extends AbstractDao<Message, String> {
         entity.setDelivered_at(cursor.isNull(offset + 11) ? null : new java.util.Date(cursor.getLong(offset + 11)));
         entity.setRead_at(cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)));
         entity.setOffer_expiry(cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)));
+        entity.setIs_read(cursor.isNull(offset + 14) ? null : cursor.getShort(offset + 14) != 0);
+        entity.setSeller_id(cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15));
      }
     
     /** @inheritdoc */
@@ -243,10 +261,13 @@ public class MessageDao extends AbstractDao<Message, String> {
             SqlUtils.appendColumns(builder, "T1", daoSession.getUserDao().getAllColumns());
             builder.append(',');
             SqlUtils.appendColumns(builder, "T2", daoSession.getProductDao().getAllColumns());
+            builder.append(',');
+            SqlUtils.appendColumns(builder, "T3", daoSession.getUserDao().getAllColumns());
             builder.append(" FROM MESSAGE T");
             builder.append(" LEFT JOIN USER T0 ON T.\"RECEIVER_ID\"=T0.\"USER_ID\"");
             builder.append(" LEFT JOIN USER T1 ON T.\"SENDER_ID\"=T1.\"USER_ID\"");
             builder.append(" LEFT JOIN PRODUCT T2 ON T.\"PRODUCT_ID\"=T2.\"PRODUCT_ID\"");
+            builder.append(" LEFT JOIN USER T3 ON T.\"SELLER_ID\"=T3.\"USER_ID\"");
             builder.append(' ');
             selectDeep = builder.toString();
         }
@@ -267,6 +288,10 @@ public class MessageDao extends AbstractDao<Message, String> {
 
         Product product = loadCurrentOther(daoSession.getProductDao(), cursor, offset);
         entity.setProduct(product);
+        offset += daoSession.getProductDao().getAllColumns().length;
+
+        User seller = loadCurrentOther(daoSession.getUserDao(), cursor, offset);
+        entity.setSeller(seller);
 
         return entity;    
     }

@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 4;
+    public static final int DB_VERSION = 5;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
@@ -78,10 +78,31 @@ public class ElanicDaoGenerator {
         Property productId = message.addStringProperty("product_id").getProperty();
         message.addToOne(product, productId, "product");
 
+        // Added in Version 4
         message.addIntProperty("offer_response");
         message.addDateProperty("delivered_at");
         message.addDateProperty("read_at");
         message.addDateProperty("offer_expiry");
+
+        // Added in Version 5
+        message.addBooleanProperty("is_read");
+        message.addToOne(user, message.addStringProperty("seller_id").getProperty(), "seller");
+
+        // Added in Version 5
+        Entity chatItem = schema.addEntity("ChatItem");
+        chatItem.addStringProperty("chat_id").primaryKey();
+
+        Property buyerId = chatItem.addStringProperty("buyer_id").getProperty();
+        chatItem.addToOne(user, buyerId, "buyer");
+        Property sellerId = chatItem.addStringProperty("seller_id").getProperty();
+        chatItem.addToOne(user, sellerId, "seller");
+        chatItem.addToOne(product, chatItem.addStringProperty("product_id").getProperty(), "product");
+
+        chatItem.addIntProperty("status");
+        chatItem.addDateProperty("created_at");
+        chatItem.addDateProperty("updated_at");
+        chatItem.addBooleanProperty("is_deleted");
+
     }
 
 }

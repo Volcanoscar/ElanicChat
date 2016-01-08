@@ -299,6 +299,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         Message message = mWSSHelper.saveMessageToDB(jsonResponse);
+        mWSSHelper.createChatItem(message);
         if (message == null) {
             Log.e(TAG, "unable to save message to db");
             return;
@@ -322,6 +323,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         mWSSHelper.saveMessagesToDB(newMessages);
+        mWSSHelper.createChatItems(newMessages);
 
         if (DEBUG) {
             Log.i(TAG, "check for users which are not in db");

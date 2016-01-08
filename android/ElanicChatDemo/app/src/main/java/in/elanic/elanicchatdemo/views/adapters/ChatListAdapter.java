@@ -12,7 +12,7 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
-import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
 
@@ -41,12 +41,12 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         ChatItemViewHolder viewHolder = (ChatItemViewHolder)holder;
         ChatItem item = mItems.get(position);
         Product product = item.getProduct();
-        User receiver = item.getUser();
+        User receiver = item.getBuyer();
 
         if (product != null) {
             viewHolder.mTextView.setText(product.getTitle() + " <-> " + receiver.getUser_id());
         } else {
-            viewHolder.mTextView.setText(item.getId() + " product is null");
+            viewHolder.mTextView.setText(item.getChat_id() + " product is null");
         }
     }
 
@@ -57,7 +57,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public long getItemId(int position) {
-        return mItems.get(position).getId().hashCode();
+        return mItems.get(position).getChat_id().hashCode();
     }
 
     public void setItems(List<ChatItem> mItems) {

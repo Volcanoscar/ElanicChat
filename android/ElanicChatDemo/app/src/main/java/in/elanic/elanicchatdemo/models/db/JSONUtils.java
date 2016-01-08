@@ -44,6 +44,8 @@ public class JSONUtils {
     public static final String KEY_READ_AT = "read_at";
     public static final String KEY_OFFER_EXPIRY = "offer_expiry";
     public static final String KEY_OFFER_RESPONSE = "offer_response";
+    public static final String KEY_IS_READ = "is_read";
+    public static final String KEY_SELLER_ID = "seller_id";
 
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_RESPONSE_TYPE = "response_type";
@@ -94,6 +96,9 @@ public class JSONUtils {
         message.setUpdated_at(df.parse(jsonObject.getString(KEY_UPDATED_AT)));
         message.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
 
+        message.setSeller_id(jsonObject.getString(KEY_SELLER_ID));
+
+
         if (jsonObject.has(KEY_DELIVERED_AT)) {
             message.setDelivered_at(df.parse(jsonObject.getString(KEY_DELIVERED_AT)));
         }
@@ -104,6 +109,10 @@ public class JSONUtils {
 
         if (jsonObject.has(KEY_OFFER_EXPIRY)) {
             message.setOffer_expiry(df.parse(jsonObject.getString(KEY_OFFER_EXPIRY)));
+        }
+
+        if (jsonObject.has(KEY_IS_READ)) {
+            message.setIs_read(jsonObject.getBoolean(KEY_IS_READ));
         }
 
         message.setOffer_response(jsonObject.optInt(KEY_OFFER_RESPONSE, -1));

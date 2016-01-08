@@ -23,6 +23,8 @@ public class Message {
     private java.util.Date delivered_at;
     private java.util.Date read_at;
     private java.util.Date offer_expiry;
+    private Boolean is_read;
+    private String seller_id;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -39,6 +41,9 @@ public class Message {
     private Product product;
     private String product__resolvedKey;
 
+    private User seller;
+    private String seller__resolvedKey;
+
 
     public Message() {
     }
@@ -47,7 +52,7 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, Integer offer_price, String product_id, Integer offer_response, java.util.Date delivered_at, java.util.Date read_at, java.util.Date offer_expiry) {
+    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, Integer offer_price, String product_id, Integer offer_response, java.util.Date delivered_at, java.util.Date read_at, java.util.Date offer_expiry, Boolean is_read, String seller_id) {
         this.message_id = message_id;
         this.type = type;
         this.content = content;
@@ -62,6 +67,8 @@ public class Message {
         this.delivered_at = delivered_at;
         this.read_at = read_at;
         this.offer_expiry = offer_expiry;
+        this.is_read = is_read;
+        this.seller_id = seller_id;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -182,6 +189,22 @@ public class Message {
         this.offer_expiry = offer_expiry;
     }
 
+    public Boolean getIs_read() {
+        return is_read;
+    }
+
+    public void setIs_read(Boolean is_read) {
+        this.is_read = is_read;
+    }
+
+    public String getSeller_id() {
+        return seller_id;
+    }
+
+    public void setSeller_id(String seller_id) {
+        this.seller_id = seller_id;
+    }
+
     /** To-one relationship, resolved on first access. */
     public User getReceiver() {
         String __key = this.receiver_id;
@@ -254,6 +277,31 @@ public class Message {
             this.product = product;
             product_id = product == null ? null : product.getProduct_id();
             product__resolvedKey = product_id;
+        }
+    }
+
+    /** To-one relationship, resolved on first access. */
+    public User getSeller() {
+        String __key = this.seller_id;
+        if (seller__resolvedKey == null || seller__resolvedKey != __key) {
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            UserDao targetDao = daoSession.getUserDao();
+            User sellerNew = targetDao.load(__key);
+            synchronized (this) {
+                seller = sellerNew;
+            	seller__resolvedKey = __key;
+            }
+        }
+        return seller;
+    }
+
+    public void setSeller(User seller) {
+        synchronized (this) {
+            this.seller = seller;
+            seller_id = seller == null ? null : seller.getUser_id();
+            seller__resolvedKey = seller_id;
         }
     }
 

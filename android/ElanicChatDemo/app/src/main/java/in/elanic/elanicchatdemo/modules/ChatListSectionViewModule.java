@@ -3,10 +3,10 @@ package in.elanic.elanicchatdemo.modules;
 import dagger.Module;
 import dagger.Provides;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatProviderImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListBuySectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenter;
-import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSellProductSectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSellSectionPresenterImpl;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
@@ -38,11 +38,11 @@ public class ChatListSectionViewModule {
     @Provides
     public ChatListSectionPresenter providePresenter(ChatListSectionView view, DaoSession daoSession) {
         if (mSectionType == TYPE_SELL) {
-            return new ChatListSellSectionPresenterImpl(view, new ChatProviderImpl(daoSession));
+            return new ChatListSellSectionPresenterImpl(view, new ChatItemProviderImpl(daoSession.getChatItemDao()));
         } else if (mSectionType == TYPE_BUY) {
-            return new ChatListBuySectionPresenterImpl(view, new ChatProviderImpl(daoSession));
+            return new ChatListBuySectionPresenterImpl(view, new ChatItemProviderImpl(daoSession.getChatItemDao()));
         } else if (mSectionType == TYPE_SELL_PRODUCT) {
-            return new ChatListSellProductSectionPresenterImpl(view, new ChatProviderImpl(daoSession));
+            return new ChatListSellProductSectionPresenterImpl(view, new ChatItemProviderImpl(daoSession.getChatItemDao()));
         }
 
         throw new RuntimeException("Invalid section type: " + mSectionType);

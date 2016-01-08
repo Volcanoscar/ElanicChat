@@ -111,6 +111,7 @@ public class ChatProviderImpl implements ChatProvider {
                             item = new ChatItem(message.getMessage_id(), "", "", 0, message.getSender(), message, message.getProduct());
                         }
 
+
                         mMap.put(c1.getString(9), item);
                     }
 

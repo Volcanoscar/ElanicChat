@@ -2,8 +2,8 @@ package in.elanic.elanicchatdemo.presenters;
 
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 
 /**
@@ -11,12 +11,12 @@ import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
  */
 public class ChatListBuySectionPresenterImpl extends ChatListSectionPresenterImpl {
     public ChatListBuySectionPresenterImpl(ChatListSectionView mChatListSectionView,
-                                           ChatProvider mChatProvider) {
+                                           ChatItemProvider mChatProvider) {
         super(mChatListSectionView, mChatProvider);
     }
 
     @Override
-    public List<ChatItem> loadChats(String userId, ChatProvider provider) {
+    public List<ChatItem> loadChats(String userId, ChatItemProvider provider) {
         return provider.getActiveBuyChats(userId);
     }
 }

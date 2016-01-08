@@ -5,9 +5,9 @@ import android.util.Log;
 
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 
 /**
@@ -19,8 +19,8 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     private String mProductId;
 
     public ChatListSellProductSectionPresenterImpl(ChatListSectionView mChatListSectionView,
-                                                   ChatProvider mChatProvider) {
-        super(mChatListSectionView, mChatProvider);
+                                                   ChatItemProvider mChatItemProvider) {
+        super(mChatListSectionView, mChatItemProvider);
     }
 
     @Override
@@ -31,8 +31,9 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     }
 
     @Override
-    public List<ChatItem> loadChats(String userId, ChatProvider provider) {
+    public List<ChatItem> loadChats(String userId, ChatItemProvider provider) {
         Log.i(TAG, "load chats");
-        return provider.getActiveBuyChatsForProduct(userId, mProductId);
+        return null;
+//        return provider.getActiveBuyChatsForProduct(userId, mProductId);
     }
 }

@@ -40,5 +40,13 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
             db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_expiry.columnName + " INTEGER;");
 
         }
+
+        if (oldVersion < 5) {
+            Log.i(TAG, "upgrading from version 4 to 5");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Is_read.columnName + " BOOLEAN;");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Seller_id.columnName + " TEXT;");
+            ChatItemDao.createTable(db, true);
+            Log.i(TAG, "added chat item table to database");
+        }
     }
 }

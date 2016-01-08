@@ -20,7 +20,7 @@ import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
-import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenter;
 import in.elanic.elanicchatdemo.views.adapters.ChatListAdapter;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;

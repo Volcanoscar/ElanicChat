@@ -200,6 +200,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				"request_type" : REQUEST_SEND_MESSAGE, "error" : "invalid user and prodct combination"}))
 			return
 
+		data['seller_id'] = product['user_id']
 		new_message = self.db_provider.createNewMessage(data)
 		sanitizedMessage = self.db_provider.sanitizeEntity(new_message)
 		

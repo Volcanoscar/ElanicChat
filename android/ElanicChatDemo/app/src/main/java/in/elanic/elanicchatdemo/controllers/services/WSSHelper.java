@@ -10,17 +10,22 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
@@ -38,6 +43,7 @@ public class WSSHelper {
     private MessageProvider mMessageProvider;
     private UserProvider mUserProvider;
     private ProductProvider mProductProvider;
+    private ChatItemProvider mChatItemProvider;
 
     private static final boolean DEBUG = true;
 
@@ -46,6 +52,7 @@ public class WSSHelper {
         mMessageProvider = new MessageProviderImpl(mDaoSession.getMessageDao());
         mUserProvider = new UserProviderImpl(mDaoSession.getUserDao());
         mProductProvider = new ProductProviderImpl(mDaoSession.getProductDao());
+        mChatItemProvider = new ChatItemProviderImpl(mDaoSession.getChatItemDao());
     }
 
     public List<User> parseNewUsers(JSONArray jsonArray) {
@@ -327,5 +334,47 @@ public class WSSHelper {
 
     public int saveProductsToDB(List<Product> products) {
         return mProductProvider.addOrUpdateProducts(products);
+    }
+
+    public int createChatItems(List<Message> messages) {
+        Map<String, ChatItem> mMap = new HashMap<>();
+        for (Message message : messages) {
+            String productId = message.getProduct_id();
+            String receiver_id = message.getReceiver_id();
+            String sender_id = message.getSender_id();
+            String sellerId = message.getSeller_id();
+            String buyerId = sender_id.equals(sellerId) ? receiver_id : sender_id;
+            String id = productId + "_" + buyerId;
+
+            if (mMap.containsKey(id)) {
+                continue;
+            }
+
+            if (DEBUG) {
+                Log.i(TAG, "buyer id: " + buyerId + " seller id: " + sellerId);
+            }
+
+            ChatItem item = new ChatItem(id, buyerId, sellerId, productId,
+                    Constants.CHAT_ITEM_STATUS_ACTIVE, new Date(), new Date(), false);
+            mMap.put(id, item);
+        }
+
+        // check in database and add items
+        int count = 0;
+        for (ChatItem mItem : mMap.values()) {
+
+            if (!mChatItemProvider.doesChatItemExist(mItem.getChat_id())) {
+                mChatItemProvider.addOrUpdateChatItem(mItem);
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public int createChatItem(Message message) {
+        List<Message> items = new ArrayList<>();
+        items.add(message);
+        return createChatItems(items);
     }
 }

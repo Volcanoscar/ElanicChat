@@ -1,14 +1,14 @@
 package in.elanic.elanicchatdemo.presenters;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 
 /**
@@ -17,16 +17,17 @@ import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 public abstract class ChatListSectionPresenterImpl implements ChatListSectionPresenter {
 
     private static final boolean DEBUG = true;
+    private static final String TAG = "ChatListSecPresenter";
 
     private String mUserId;
 
     private ChatListSectionView mChatListSectionView;
-    private ChatProvider mChatProvider;
+    private ChatItemProvider mChatItemProvider;
     private List<ChatItem> mItems;
 
-    public ChatListSectionPresenterImpl(ChatListSectionView mChatListSectionView, ChatProvider mChatProvider) {
+    public ChatListSectionPresenterImpl(ChatListSectionView mChatListSectionView, ChatItemProvider mChatItemProvider) {
         this.mChatListSectionView = mChatListSectionView;
-        this.mChatProvider = mChatProvider;
+        this.mChatItemProvider = mChatItemProvider;
     }
 
     @Override
@@ -43,12 +44,16 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     @Override
     public void loadData() {
 
-        mItems = loadChats(mUserId, mChatProvider);
+        mItems = loadChats(mUserId, mChatItemProvider);
 
-//        mItems = mChatProvider.getActiveChats(mUserId);
+//        mItems = mChatItemProvider.getActiveChats(mUserId);
         if (mItems == null || mItems.isEmpty()) {
             mChatListSectionView.showError("No Chats Found");
             return;
+        }
+
+        for (ChatItem item : mItems) {
+            Log.i(TAG, "item seller id: " + item.getSeller_id());
         }
 
         mChatListSectionView.setData(mItems);
@@ -66,14 +71,17 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         }
 
         // TODO -> Change this. Product is available in ChatItem itself
-        Message message = item.getLastMessage();
-        if (mUserId.equals(message.getReceiver_id())) {
+
+        Log.i(TAG, "buyer id: " + item.getBuyer_id() + " seller id: " + item.getSeller_id());
+
+//        Message message = item.getLastMessage();
+        if (mUserId.equals(item.getSeller_id())) {
             // open with sender id
-            mChatListSectionView.openChat(mUserId, message.getSender_id(), message.getProduct_id());
+            mChatListSectionView.openChat(mUserId, item.getBuyer_id(), item.getProduct_id());
 
         } else {
             // open with receiver id
-            mChatListSectionView.openChat(mUserId, message.getReceiver_id(), message.getProduct_id());
+            mChatListSectionView.openChat(mUserId, item.getSeller_id(), item.getProduct_id());
         }
     }
 
@@ -93,5 +101,5 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         return false;
     }
 
-    public abstract List<ChatItem> loadChats(String userId, ChatProvider provider);
+    public abstract List<ChatItem> loadChats(String userId, ChatItemProvider provider);
 }

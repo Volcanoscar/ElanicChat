@@ -66,5 +66,6 @@ public class ELChatApp extends Application {
     public void clearDatabase() {
         mDaoSession.getMessageDao().deleteAll();
         mDaoSession.getUserDao().deleteAll();
+        mDaoSession.getChatItemDao().deleteAll();
     }
 }

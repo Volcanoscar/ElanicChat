@@ -22,6 +22,11 @@ public class Constants {
     public static final int RESPONSE_NEW_MESSAGE = 3;
     public static final int RESPONSE_USER_DATA = 4;
 
+    public static final int CHAT_ITEM_STATUS_ACTIVE = 1;
+    public static final int CHAT_ITEM_STATUS_ARCHIVED = 2;
+    public static final int CHAT_ITEM_STATUS_DELETED = 3;
+    public static final int CHAT_ITEM_STATUS_BLOCKED = 4;
+
     public static final String EXTRA_USER_ID = "user_id";
     public static final String EXTRA_JUST_LOGGED_IN = "just_logged_in";
     public static final String EXTRA_SENDER_ID = "sender_id";

@@ -75,11 +75,11 @@ public class ChatPresenterImpl implements ChatPresenter {
         mProduct = mProductProvider.getProduct(mProductId);
 
         if (mReceiver == null) {
-            Log.e(TAG, "receiver is not available");
+            Log.e(TAG, "receiver is not available: " + mReceiverId);
         }
 
         if (mProduct == null) {
-            Log.e(TAG, "product is not available in db");
+            Log.e(TAG, "product is not available in db: " + mProductId);
         }
     }
 

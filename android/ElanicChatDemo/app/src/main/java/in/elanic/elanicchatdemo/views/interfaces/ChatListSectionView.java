@@ -2,7 +2,7 @@ package in.elanic.elanicchatdemo.views.interfaces;
 
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 
 /**
  * Created by Jay Rambhia on 06/01/16.
