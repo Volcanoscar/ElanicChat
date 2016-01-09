@@ -88,7 +88,7 @@ io.on('request', function(req) {
 	    return;
 	}
 	(function() {
-	    var socket = req.accept('echo-protocol', req.origin);
+	    var socket = req.accept();
 	    var user_id = auth.user_id;
 	    socks.add(socket, user_id);
 	    add_api(user_id, db);

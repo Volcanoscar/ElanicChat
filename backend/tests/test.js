@@ -12,8 +12,8 @@ var client = require('./client.js');
 // var prods = require('./products.json');
 
 var data = { 
-    url : 'http://localhost:' + port,
-    options : 'echo-protocol'
+    url : 'http://localhost:' + port
+//    options : 'echo-protocol'
 };
 
 //Set up server
