@@ -36,6 +36,7 @@ import in.elanic.elanicchatdemo.components.DaggerWebsocketConnectionServiceCompo
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.api.WebsocketApi;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -45,6 +46,8 @@ import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
+import in.elanic.elanicchatdemo.models.providers.websocket.WebsocketCallback;
+import in.elanic.elanicchatdemo.modules.WebsocketApiProviderModule;
 import in.elanic.elanicchatdemo.modules.WebsocketConnectionServiceModule;
 
 /**
@@ -56,9 +59,10 @@ public class WebsocketConnectionService extends Service {
 
     @Inject
     DaoSession mDaoSession;
+    @Inject
+    WebsocketApi mWebSocketApi;
     private WSSHelper mWSSHelper;
 
-    private WebSocket mWebSocket;
     private EventBus mEventBus;
 
     private String mUserId;
@@ -103,6 +107,7 @@ public class WebsocketConnectionService extends Service {
         DaggerWebsocketConnectionServiceComponent.builder()
                 .applicationComponent(applicationComponent)
                 .websocketConnectionServiceModule(new WebsocketConnectionServiceModule())
+                .websocketApiProviderModule(new WebsocketApiProviderModule(false))
                 .build()
                 .inject(this);
     }
@@ -110,7 +115,8 @@ public class WebsocketConnectionService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        new Thread(mConnectionRunnable).start();
+        createWSConnectionRequested();
+//        new Thread(mConnectionRunnable).start();
         return START_STICKY;
     }
 
@@ -147,75 +153,50 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
-        if (mWebSocket != null && !mWebSocket.isOpen()) {
+        if (mWebSocketApi.isConnected()) {
             if (DEBUG) {
                 Log.e(TAG, "ws connection is already open");
             }
             return;
         }
 
-        try {
-
-            if (DEBUG) {
-                Log.i(TAG, "opening ws connection: " + (Constants.WS_URL + "?Id=" + mUserId));
-            }
-
-            mWebSocket = new WebSocketFactory().createSocket(Constants.WS_URL + "?Id=" + mUserId, 3000);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        if (DEBUG) {
-            Log.i(TAG, "adding listeners to ws");
-        }
-
-        mWebSocket.addListener(new WebSocketAdapter() {
+        mWebSocketApi.connect(mUserId);
+        mWebSocketApi.setCallback(new WebsocketCallback() {
             @Override
-            public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
-                super.onConnected(websocket, headers);
+            public void onConnected() {
                 if (DEBUG) {
                     Log.i(TAG, "ws connected");
                 }
             }
 
             @Override
-            public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws Exception {
-                super.onDisconnected(websocket, serverCloseFrame, clientCloseFrame, closedByServer);
+            public void onDisconnected() {
                 if (DEBUG) {
                     Log.e(TAG, "ws disconnected");
                 }
             }
 
             @Override
-            public void onTextMessage(WebSocket websocket, String text) throws Exception {
-                super.onTextMessage(websocket, text);
+            public void onMessageReceived(String response) {
                 if (DEBUG) {
-                    Log.i(TAG, "received message: " + text);
+                    Log.i(TAG, "received message: " + response);
                 }
 
-                processServerResponse(text);
+                processServerResponse(response);
             }
 
             @Override
-            public void onError(WebSocket websocket, WebSocketException cause) throws Exception {
-                super.onError(websocket, cause);
+            public void onError(Throwable error) {
                 if (DEBUG) {
-                    Log.e(TAG, "ws error", cause);
+                    Log.e(TAG, "ws error", error);
                 }
             }
         });
 
-        mWebSocket.connectAsynchronously();
-        if (DEBUG) {
-            Log.i(TAG, "websocket connecting asynchronously");
-        }
     }
 
     private void disconnectWSConnectionRequested() {
-        if (mWebSocket != null && mWebSocket.isOpen()) {
-            mWebSocket.disconnect();
-        }
+        mWebSocketApi.disconnect();
     }
 
     private void sendDataRequested(String data) {
@@ -227,16 +208,7 @@ public class WebsocketConnectionService extends Service {
             }
         }
 
-        if (mWebSocket != null && mWebSocket.isOpen()) {
-            if (DEBUG) {
-                Log.i(TAG, "Send text: " + data);
-            }
-            mWebSocket.sendText(data);
-        } else {
-            if (DEBUG) {
-                Log.e(TAG, "websocket connection is not available");
-            }
-        }
+        mWebSocketApi.sendData(data);
     }
 
     private void processServerResponse(String data) {

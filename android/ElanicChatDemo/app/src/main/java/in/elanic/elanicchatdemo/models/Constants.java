@@ -9,8 +9,8 @@ public class Constants {
 
     public static final boolean ISDEV = BuildConfig.DEBUG;
 
-    public static final String BASE_URL = "http://192.168.1.50:9999/";
-    public static final String WS_URL = "ws://192.168.1.50:9999/ws";
+    public static final String BASE_URL = "http://" + BuildConfig.LOCAL_IP + ":9999/";
+    public static final String WS_URL = "ws://" + BuildConfig.LOCAL_IP + ":9999/ws";
 
     public static final int REQUEST_INVALID_CODE = -1;
     public static final int REQUEST_SEND_MESSAGE = 1;

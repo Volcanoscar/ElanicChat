@@ -5,6 +5,7 @@ import json
 import logging
 import datetime
 import time
+import socket
 
 logging.basicConfig()
 
@@ -74,7 +75,11 @@ if __name__ == "__main__":
 
 	userId = sys.argv[1]
 
-	ws = websocket.WebSocketApp("ws://192.168.1.50:9999/ws?Id=%s" % (userId),
+	ipaddress = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1][0]
+
+	wsUrl = "ws://%s:9999/ws?Id=%s" % (ipaddress, userId)
+
+	ws = websocket.WebSocketApp(wsUrl,
 		on_message=on_message,
 		on_error=on_error,
 		on_close=on_close)

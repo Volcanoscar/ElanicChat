@@ -1,0 +1,5 @@
+setup.py
+Elanic_Chat_Prototype.egg-info/PKG-INFO
+Elanic_Chat_Prototype.egg-info/SOURCES.txt
+Elanic_Chat_Prototype.egg-info/dependency_links.txt
+Elanic_Chat_Prototype.egg-info/top_level.txt
