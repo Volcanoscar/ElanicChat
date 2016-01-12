@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import de.greenrobot.event.EventBus;
@@ -131,6 +132,7 @@ public class ChatPresenterImpl implements ChatPresenter {
             JSONObject jsonRequest = new JSONObject();
             jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
+            jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
             sendMessageToWSService(jsonRequest.toString());
         } catch (JSONException e) {
             e.printStackTrace();
@@ -170,6 +172,7 @@ public class ChatPresenterImpl implements ChatPresenter {
             JSONObject jsonRequest = new JSONObject();
             jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
+            jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
             sendMessageToWSService(jsonRequest.toString());
         } catch (JSONException e) {
             e.printStackTrace();

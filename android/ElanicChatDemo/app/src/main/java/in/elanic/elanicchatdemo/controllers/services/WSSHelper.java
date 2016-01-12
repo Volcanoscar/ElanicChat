@@ -55,7 +55,7 @@ public class WSSHelper {
         mChatItemProvider = new ChatItemProviderImpl(mDaoSession.getChatItemDao());
     }
 
-    public List<User> parseNewUsers(JSONArray jsonArray) {
+    public static List<User> parseNewUsers(JSONArray jsonArray) {
         List<User> users = new ArrayList<>();
 
         for(int i=0; i<jsonArray.length(); i++) {
@@ -130,7 +130,7 @@ public class WSSHelper {
         return mMessageProvider.addOrUpdateMessages(messages);
     }
 
-    public List<Message> parseMessagesFromResponse(JSONObject jsonResponse) throws JSONException {
+    public static List<Message> parseMessagesFromResponse(JSONObject jsonResponse) throws JSONException {
         JSONArray messages = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
         if (messages.length() == 0) {
             if (DEBUG) {
@@ -142,7 +142,7 @@ public class WSSHelper {
         return parseNewMessages(messages);
     }
 
-    public List<Message> parseNewMessages(JSONArray jsonArray) {
+    public static List<Message> parseNewMessages(JSONArray jsonArray) {
 
         List<Message> messages = new ArrayList<>();
 
@@ -169,11 +169,18 @@ public class WSSHelper {
         return messages;
     }
 
-    public String createSyncDataRequest(long mSyncTimestamp) {
+    private static JSONObject createWSRequest(int type) throws  JSONException {
         JSONObject jsonRequest = new JSONObject();
+        jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, type);
+        jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
+        return jsonRequest;
+    }
+
+    public static String createSyncDataRequest(long mSyncTimestamp) {
+
         try {
 
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_ALL_MESSAGES);
+            JSONObject jsonRequest = createWSRequest(Constants.REQUEST_GET_ALL_MESSAGES);
 
             if (mSyncTimestamp != -1) {
                 jsonRequest.put(JSONUtils.KEY_SYNC_TIMESTAMP,
@@ -189,10 +196,11 @@ public class WSSHelper {
         return null;
     }
 
-    public String createFetchUsersDataRequest(List<String> userIds) {
-        JSONObject jsonRequest = new JSONObject();
+    public static String createFetchUsersDataRequest(List<String> userIds) {
+
         try {
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_USER);
+
+            JSONObject jsonRequest = createWSRequest(Constants.REQUEST_GET_USER);
             jsonRequest.put(JSONUtils.KEY_USERS, new JSONArray(userIds));
 
             return jsonRequest.toString();
@@ -204,10 +212,11 @@ public class WSSHelper {
         return null;
     }
 
-    public String createFetchProductsDataRequest(List<String> productIds) {
-        JSONObject jsonRequest = new JSONObject();
+    public static String createFetchProductsDataRequest(List<String> productIds) {
+
         try {
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_PRODUCTS);
+
+            JSONObject jsonRequest = createWSRequest(Constants.REQUEST_GET_PRODUCTS);
             jsonRequest.put(JSONUtils.KEY_PRODUCTS, new JSONArray(productIds));
 
             return jsonRequest.toString();
@@ -219,10 +228,10 @@ public class WSSHelper {
         return null;
     }
 
-    public String createFetchUsersAndProductsDataRequest(List<String> userIds, List<String> productIds) {
-        JSONObject jsonRequest = new JSONObject();
+    public static String createFetchUsersAndProductsDataRequest(List<String> userIds, List<String> productIds) {
         try {
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_GET_USERS_AND_PRODUCTS);
+
+            JSONObject jsonRequest = createWSRequest(Constants.REQUEST_GET_USERS_AND_PRODUCTS);
             jsonRequest.put(JSONUtils.KEY_PRODUCTS, new JSONArray(productIds));
             jsonRequest.put(JSONUtils.KEY_USERS, new JSONArray(userIds));
 
@@ -235,7 +244,7 @@ public class WSSHelper {
         return null;
     }
 
-    public long getTimestampFromResponse(JSONObject jsonResponse) {
+    public static long getTimestampFromResponse(JSONObject jsonResponse) {
 
         if (!jsonResponse.has(JSONUtils.KEY_SYNC_TIMESTAMP)) {
             return -1;
@@ -259,7 +268,7 @@ public class WSSHelper {
         return -1;
     }
 
-    public int getRequestType(JSONObject jsonResponse) {
+    public static int getRequestType(JSONObject jsonResponse) {
 
         if (!jsonResponse.has(JSONUtils.KEY_REQUEST_TYPE)) {
             return Constants.REQUEST_INVALID_CODE;
@@ -274,7 +283,7 @@ public class WSSHelper {
         return Constants.REQUEST_INVALID_CODE;
     }
 
-    public int getResponseType(JSONObject jsonResponse) {
+    public static int getResponseType(JSONObject jsonResponse) {
         if (!jsonResponse.has(JSONUtils.KEY_RESPONSE_TYPE)) {
             return Constants.REQUEST_INVALID_CODE;
         }
@@ -286,6 +295,10 @@ public class WSSHelper {
         }
 
         return Constants.REQUEST_INVALID_CODE;
+    }
+
+    public static String getRequestId(JSONObject jsonResponse) {
+        return jsonResponse.optString(JSONUtils.KEY_REQUEST_ID, null);
     }
 
     public List<String> getUnknownProductIds(@NonNull List<Message> messages) {
@@ -306,7 +319,7 @@ public class WSSHelper {
         return unknownIds;
     }
 
-    public List<Product> parseNewProducts(JSONArray jsonArray) {
+    public static List<Product> parseNewProducts(JSONArray jsonArray) {
         List<Product> products = new ArrayList<>();
 
         for(int i=0; i<jsonArray.length(); i++) {

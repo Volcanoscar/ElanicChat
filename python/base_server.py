@@ -149,9 +149,18 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 
 	def parseRequest(self, data):
+		request_id = data.get('request_id')
+		if not request_id:
+			self.write_message(json.dumps( {'success' : False, "error" : "request_id not present" } ))
+			return
+
+		if not data.has_key('request_type'):
+			self.write_message(json.dumps( {'success' : False, "error" : "request_type not present", "request_id" : request_id } ))
+			return
+
 		request_type = data['request_type']
 		if request_type == REQUEST_SEND_MESSAGE:
-			self.onCreateMessageRequested(data['message'])
+			self.onCreateMessageRequested(data)
 		elif request_type == REQUEST_GET_ALL_MESSAGES:
 			print "get all messages"
 			self.onGetAllMessgesRequested(data)
@@ -161,8 +170,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			self.onGetProductsRequested(data)
 		elif request_type == REQUEST_GET_USERS_AND_PRODUCTS:
 			self.onGetUsersAndProductsRequested(data)
+		else:
+			self.write_message(json.dumps( {'success' : False,
+				"request_type" : data['request_type'], "error" : "Invalid request_type" } ))
+				
 
-	def onCreateMessageRequested(self, data):
+	def onCreateMessageRequested(self, request):
+		request_id = request['request_id']
+		data = request['message']
 		receiver_id = data["receiver_id"]
 		str_message = data["content"]
 		data["sender_id"] = self.id
@@ -170,19 +185,22 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		if data['receiver_id'] == data['sender_id']:
 			print "receiver_id is same as sender_id"
-			self.write_message(json.dumps( {'success' : False, 
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id, 
 				"request_type" : REQUEST_SEND_MESSAGE, "error" : "receiver_id is same as sender_id" } ))
 			return
 
 		if not self.db_provider.getUser(data['receiver_id']):
 			print "receiver is not present in database"
 			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
 				"request_type" : REQUEST_SEND_MESSAGE, "error" : "receiver is not present in database"}))
 			return
 
 		if not data.has_key('product_id'):
 			print "product_id is not present in the message"
 			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
 				"request_type" : REQUEST_SEND_MESSAGE, "error" : "product id is not present"}))
 			return
 
@@ -191,12 +209,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		if not product:
 			print "product does not exist in database"
 			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
 				"request_type" : REQUEST_SEND_MESSAGE, "error" : "product is not present in database"}))
 			return
 
 		if receiver_id != product['user_id'] and data['sender_id'] != product['user_id']:
 			print "invalid user and product combination"
 			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
 				"request_type" : REQUEST_SEND_MESSAGE, "error" : "invalid user and prodct combination"}))
 			return
 
@@ -215,12 +235,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		print new_message
 		sanitizedMessage = self.db_provider.sanitizeEntity(new_message)
 
-		self.write_message(json.dumps({'success' : True, "sent" : sent, 
+		self.write_message(json.dumps({'success' : True, "sent" : sent,
+			"request_id" : request_id,
 			"message" : sanitizedMessage, "request_type" : REQUEST_SEND_MESSAGE,
 			"sync_timestamp" : ModelsProvider.getSyncTime()}))
 
 	def onGetAllMessgesRequested(self, data):
 		userId = self.id
+		request_id = data['request_id']
 
 		if data.has_key('sync_timestamp'):
 			sync_timestamp = data['sync_timestamp']
@@ -233,6 +255,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			response_messages.append(self.db_provider.sanitizeEntity(message))
 
 		response = {'data' : response_messages,
+			"request_id" : request_id, 
 			"sync_timestamp" : ModelsProvider.getSyncTime(),
 		 	'request_type' : REQUEST_GET_ALL_MESSAGES,
 					'success' : True}
@@ -247,6 +270,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 	def onGetUsersRequested(self, data):
 		userIds = data['users']
+		request_id = data['request_id']
 
 		print "user wants these users: ", userIds
 
@@ -257,10 +281,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				user = self.db_provider.sanitizeEntity(user)
 				users.append(user)
 
-		response = {'data' : users, 'request_type' : REQUEST_GET_USER, 'success' : True}
+		response = {'data' : users, 'request_id' : request_id, 'request_type' : REQUEST_GET_USER, 'success' : True}
 		self.write_message(json.dumps(response))
 
 	def onGetProductsRequested(self, data):
+		request_id = data['request_id']
+		if not data.has_key('products'):
+			response = {'request_id' : request_id, 'request_type' : REQUEST_GET_PRODUCTS, 'success' : False, "message" : "products not specified"}
+			self.write_message(json.dumps(response))
+			return
 		productIds = data['products']
 
 		print "user wants these products: ", productIds
@@ -272,11 +301,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				product = self.db_provider.sanitizeEntity(product)
 				products.append(product)
 
-		response = {'data' : products, 'request_type' : REQUEST_GET_PRODUCTS, 'success' : True}
+		response = {'data' : products, "request_id" : request_id, 'request_type' : REQUEST_GET_PRODUCTS, 'success' : True}
 		self.write_message(json.dumps(response))
 
 	def onGetUsersAndProductsRequested(self, data):
 		userIds = data['users']
+		request_id = data['request_id']
 
 		print "user wants these users: ", userIds
 
@@ -298,7 +328,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				product = self.db_provider.sanitizeEntity(product)
 				products.append(product)
 
-		response = {'users' : users, 'products' : products, 'request_type' : REQUEST_GET_USERS_AND_PRODUCTS, 'success' : True}
+		response = {'users' : users, 'products' : products, 'request_id' : request_id, 'request_type' : REQUEST_GET_USERS_AND_PRODUCTS, 'success' : True}
 		self.write_message(json.dumps(response))
 
 

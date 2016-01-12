@@ -58,6 +58,7 @@ public class JSONUtils {
     public static final String KEY_PRODUCTS = "products";
     public static final String KEY_PRODUCT = "product";
     public static final String KEY_RECEIVER = "receiver";
+    public static final String KEY_REQUEST_ID = "request_id";
 
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";

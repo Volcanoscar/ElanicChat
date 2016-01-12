@@ -5,6 +5,7 @@ import java.util.List;
 
 import de.greenrobot.dao.query.QueryBuilder;
 import de.greenrobot.dao.query.WhereCondition;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.MessageDao;
 import in.elanic.elanicchatdemo.models.db.Product;
@@ -74,7 +75,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setIs_deleted(false);
         message.setCreated_at(date);
         message.setUpdated_at(date);
-        message.setType(1);
+        message.setType(Constants.TYPE_SIMPLE_MESSAGE);
         message.setProduct(product);
         message.setOffer_price(0);
 
@@ -97,7 +98,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setIs_deleted(false);
         message.setCreated_at(date);
         message.setUpdated_at(date);
-        message.setType(2);
+        message.setType(Constants.TYPE_OFFER_MESSAGE);
         message.setProduct(product);
         message.setOffer_price(price);
 
