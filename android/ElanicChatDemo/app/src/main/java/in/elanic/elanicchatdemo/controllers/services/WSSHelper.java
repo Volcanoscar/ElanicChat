@@ -24,12 +24,15 @@ import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
+import in.elanic.elanicchatdemo.models.providers.request.WSRequestProvider;
+import in.elanic.elanicchatdemo.models.providers.request.WSRequestProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 
@@ -44,6 +47,7 @@ public class WSSHelper {
     private UserProvider mUserProvider;
     private ProductProvider mProductProvider;
     private ChatItemProvider mChatItemProvider;
+    private WSRequestProvider mWSRequestProvider;
 
     private static final boolean DEBUG = true;
 
@@ -53,6 +57,7 @@ public class WSSHelper {
         mUserProvider = new UserProviderImpl(mDaoSession.getUserDao());
         mProductProvider = new ProductProviderImpl(mDaoSession.getProductDao());
         mChatItemProvider = new ChatItemProviderImpl(mDaoSession.getChatItemDao());
+        mWSRequestProvider = new WSRequestProviderImpl(mDaoSession.getWSRequestDao());
     }
 
     public static List<User> parseNewUsers(JSONArray jsonArray) {
@@ -403,5 +408,32 @@ public class WSSHelper {
         List<Message> items = new ArrayList<>();
         items.add(message);
         return createChatItems(items);
+    }
+
+    public boolean createAndSaveRequest(String userId, String request) throws JSONException {
+        JSONObject jsonRequest = new JSONObject(request);
+        String requestId = jsonRequest.getString(JSONUtils.KEY_REQUEST_ID);
+        int requestType = jsonRequest.getInt(JSONUtils.KEY_REQUEST_TYPE);
+
+        if (mWSRequestProvider.doesRequestExist(requestId)) {
+            if (DEBUG) {
+                Log.e(TAG, "request already exists in db: " + requestId);
+                return false;
+            }
+        }
+
+        return mWSRequestProvider.createRequest(requestId, requestType, request, userId) != null;
+    }
+
+    public boolean markRequestAsCompleted(String requestId) {
+        if (requestId == null || requestId.isEmpty()) {
+            return false;
+        }
+
+        return mWSRequestProvider.markRequestAsCompleted(requestId);
+    }
+
+    public List<WSRequest> getIncompleteRequests() {
+        return mWSRequestProvider.getIncompleteRequests();
     }
 }

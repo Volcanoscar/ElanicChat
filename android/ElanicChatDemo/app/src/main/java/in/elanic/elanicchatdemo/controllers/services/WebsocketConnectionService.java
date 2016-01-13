@@ -41,6 +41,7 @@ import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
@@ -167,6 +168,8 @@ public class WebsocketConnectionService extends Service {
                 if (DEBUG) {
                     Log.i(TAG, "ws connected");
                 }
+
+                checkIncompleteRequests();
             }
 
             @Override
@@ -208,6 +211,12 @@ public class WebsocketConnectionService extends Service {
             }
         }
 
+        try {
+            mWSSHelper.createAndSaveRequest(mUserId, data);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         mWebSocketApi.sendData(data);
     }
 
@@ -227,13 +236,16 @@ public class WebsocketConnectionService extends Service {
                 return;
             }
 
-            long syncTimestmap = mWSSHelper.getTimestampFromResponse(jsonResponse);
+            long syncTimestmap = WSSHelper.getTimestampFromResponse(jsonResponse);
             if (syncTimestmap != -1) {
                 mSyncTimestamp = syncTimestmap;
                 mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
             }
 
-            int requestType = mWSSHelper.getRequestType(jsonResponse);
+            String requestId = WSSHelper.getRequestId(jsonResponse);
+            mWSSHelper.markRequestAsCompleted(requestId);
+
+            int requestType = WSSHelper.getRequestType(jsonResponse);
             if (requestType == Constants.REQUEST_SEND_MESSAGE) {
                 onMessageSentSuccessfully(jsonResponse);
                 return;
@@ -381,7 +393,19 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void syncData() {
-        sendDataRequested(mWSSHelper.createSyncDataRequest(mSyncTimestamp));
+        sendDataRequested(WSSHelper.createSyncDataRequest(mSyncTimestamp));
+    }
+
+    private void checkIncompleteRequests() {
+        List<WSRequest> mRequests = mWSSHelper.getIncompleteRequests();
+        if (mRequests == null || mRequests.isEmpty()) {
+            return;
+        }
+
+        for (WSRequest request : mRequests) {
+            Log.i(TAG, "trying to re-send request: " + request.getRequest_id());
+            sendDataRequested(request.getContent());
+        }
     }
 
     ///////////////////////////////////////////
