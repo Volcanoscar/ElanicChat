@@ -27,7 +27,10 @@ class ModelsProvider:
 			message['offer_price'] = 0
 		message['product_id'] = message['product_id']
 		message_id = messages_collection.insert_one(message).inserted_id
-		message['_id'] = message_id
+
+		message['message_id'] = str(message_id)
+		messages_collection.update_one({'_id' : message_id}, {'$set' : {'message_id' : str(message_id)}})
+		# message['_id'] = message_id
 		return message
 
 	def updateMessageField(self, message_id, data):

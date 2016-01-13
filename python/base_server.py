@@ -234,6 +234,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		print new_message
 		sanitizedMessage = self.db_provider.sanitizeEntity(new_message)
+		sanitizedMessage['local_id'] = data.get('local_id')
 
 		self.write_message(json.dumps({'success' : True, "sent" : sent,
 			"request_id" : request_id,

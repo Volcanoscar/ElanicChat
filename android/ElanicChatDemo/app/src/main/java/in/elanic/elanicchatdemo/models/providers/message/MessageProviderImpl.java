@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.message;
 
+import android.util.Log;
+
 import java.util.Date;
 import java.util.List;
 
@@ -69,6 +71,7 @@ public class MessageProviderImpl implements MessageProvider {
         Date date = new Date();
 
         message.setMessage_id(String.valueOf(date.getTime()));
+        message.setLocal_id(String.valueOf(date.getTime()));
         message.setContent(content);
         message.setSender(sender);
         message.setReceiver(receiver);
@@ -92,6 +95,7 @@ public class MessageProviderImpl implements MessageProvider {
         String content = sender.getUsername() + " made an offer";
 
         message.setMessage_id(String.valueOf(date.getTime()));
+        message.setLocal_id(String.valueOf(date.getTime()));
         message.setContent(content);
         message.setSender(sender);
         message.setReceiver(receiver);
@@ -109,6 +113,38 @@ public class MessageProviderImpl implements MessageProvider {
     @Override
     public boolean updateMessage(Message message) {
         mDao.update(message);
+        return true;
+    }
+
+    @Override
+    public boolean updateLocalMessage(Message message) {
+        if (message.getLocal_id() == null || message.getLocal_id().isEmpty()) {
+            if (DEBUG) {
+                Log.e(TAG, "new message local id is not available");
+            }
+            return false;
+        }
+
+        Message oldMessage = mDao.queryBuilder()
+                .where(MessageDao.Properties.Local_id.eq(message.getLocal_id())).unique();
+        if (oldMessage != null) {
+
+            if (DEBUG) {
+                Log.i(TAG, "old message: " + oldMessage.getMessage_id());
+            }
+
+            oldMessage.delete();
+
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "old message is null. with local_id: " + message.getLocal_id());
+            }
+        }
+
+        mDao.insert(message);
+        if (DEBUG) {
+            Log.i(TAG, "message inserted with id: " + message.getMessage_id());
+        }
         return true;
     }
 

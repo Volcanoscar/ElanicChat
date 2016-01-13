@@ -42,6 +42,7 @@ public class MessageDao extends AbstractDao<Message, String> {
         public final static Property Offer_expiry = new Property(13, java.util.Date.class, "offer_expiry", false, "OFFER_EXPIRY");
         public final static Property Is_read = new Property(14, Boolean.class, "is_read", false, "IS_READ");
         public final static Property Seller_id = new Property(15, String.class, "seller_id", false, "SELLER_ID");
+        public final static Property Local_id = new Property(16, String.class, "local_id", false, "LOCAL_ID");
     };
 
     private DaoSession daoSession;
@@ -75,7 +76,8 @@ public class MessageDao extends AbstractDao<Message, String> {
                 "\"READ_AT\" INTEGER," + // 12: read_at
                 "\"OFFER_EXPIRY\" INTEGER," + // 13: offer_expiry
                 "\"IS_READ\" INTEGER," + // 14: is_read
-                "\"SELLER_ID\" TEXT);"); // 15: seller_id
+                "\"SELLER_ID\" TEXT," + // 15: seller_id
+                "\"LOCAL_ID\" TEXT);"); // 16: local_id
     }
 
     /** Drops the underlying database table. */
@@ -168,6 +170,11 @@ public class MessageDao extends AbstractDao<Message, String> {
         if (seller_id != null) {
             stmt.bindString(16, seller_id);
         }
+ 
+        String local_id = entity.getLocal_id();
+        if (local_id != null) {
+            stmt.bindString(17, local_id);
+        }
     }
 
     @Override
@@ -201,7 +208,8 @@ public class MessageDao extends AbstractDao<Message, String> {
             cursor.isNull(offset + 12) ? null : new java.util.Date(cursor.getLong(offset + 12)), // read_at
             cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)), // offer_expiry
             cursor.isNull(offset + 14) ? null : cursor.getShort(offset + 14) != 0, // is_read
-            cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15) // seller_id
+            cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15), // seller_id
+            cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16) // local_id
         );
         return entity;
     }
@@ -225,6 +233,7 @@ public class MessageDao extends AbstractDao<Message, String> {
         entity.setOffer_expiry(cursor.isNull(offset + 13) ? null : new java.util.Date(cursor.getLong(offset + 13)));
         entity.setIs_read(cursor.isNull(offset + 14) ? null : cursor.getShort(offset + 14) != 0);
         entity.setSeller_id(cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15));
+        entity.setLocal_id(cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16));
      }
     
     /** @inheritdoc */

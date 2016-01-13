@@ -108,6 +108,20 @@ public class WSSHelper {
         return unknownIds;
     }
 
+    public Message saveMyMessageToDB(JSONObject jsonResponse) throws JSONException {
+        JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
+        Message message;
+        try {
+            message = JSONUtils.getMessageFromJSON(message_json);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        mMessageProvider.updateLocalMessage(message);
+        return message;
+    }
+
     public Message saveMessageToDB(JSONObject jsonResponse) throws JSONException{
         JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
         Message message;

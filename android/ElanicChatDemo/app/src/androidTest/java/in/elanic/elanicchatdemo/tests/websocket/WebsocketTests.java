@@ -395,6 +395,7 @@ public class WebsocketTests {
 
         final Message message = new Message();
         message.setMessage_id(String.valueOf(timestmap.getTime()));
+        message.setLocal_id(String.valueOf(timestmap.getTime()));
         message.setContent(messageText);
         message.setSender_id(USER_ID);
         message.setReceiver_id(receiverId);
@@ -436,7 +437,7 @@ public class WebsocketTests {
                     final String responseId = WSSHelper.getRequestId(jsonResponse);
                     mResult.addResult("request id is not null", responseId != null);
                     mResult.addResult("request id matches", requestId.equals(responseId));
-                    mResult.addResult("message id matches", rMessage.getMessage_id().equals(message.getMessage_id()));
+                    mResult.addResult("message local id matches", rMessage.getLocal_id().equals(message.getLocal_id()));
                     mResult.addResult("message content matches", rMessage.getContent().equals(message.getContent()));
                     mResult.addResult("receiver id matches", rMessage.getReceiver_id().equals(message.getReceiver_id()));
                     mResult.addResult("product id matches", rMessage.getProduct_id().equals(message.getProduct_id()));
@@ -497,6 +498,7 @@ public class WebsocketTests {
 
         final Message message = new Message();
         message.setMessage_id(String.valueOf(timestmap.getTime()));
+        message.setLocal_id(String.valueOf(timestmap.getTime()));
         message.setContent(messageText);
         message.setSender_id(USER_ID);
         message.setReceiver_id(receiverId);
@@ -538,8 +540,7 @@ public class WebsocketTests {
                     final String responseId = WSSHelper.getRequestId(jsonResponse);
                     mResult.addResult("request id is not null", responseId != null);
                     mResult.addResult("request id matches", requestId.equals(responseId));
-                    mResult.addResult("message id matches", rMessage.getMessage_id().equals(message.getMessage_id()));
-                    mResult.addResult("message content matches", rMessage.getContent().equals(message.getContent()));
+                    mResult.addResult("message local id matches", rMessage.getLocal_id().equals(message.getLocal_id()));                    mResult.addResult("message content matches", rMessage.getContent().equals(message.getContent()));
                     mResult.addResult("receiver id matches", rMessage.getReceiver_id().equals(message.getReceiver_id()));
                     mResult.addResult("product id matches", rMessage.getProduct_id().equals(message.getProduct_id()));
                     mResult.addResult("offer price matches", rMessage.getOffer_price().equals(message.getOffer_price()));

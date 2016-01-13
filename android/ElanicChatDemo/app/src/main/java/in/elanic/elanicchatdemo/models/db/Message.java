@@ -25,6 +25,7 @@ public class Message {
     private java.util.Date offer_expiry;
     private Boolean is_read;
     private String seller_id;
+    private String local_id;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -52,7 +53,7 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, Integer offer_price, String product_id, Integer offer_response, java.util.Date delivered_at, java.util.Date read_at, java.util.Date offer_expiry, Boolean is_read, String seller_id) {
+    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, Integer offer_price, String product_id, Integer offer_response, java.util.Date delivered_at, java.util.Date read_at, java.util.Date offer_expiry, Boolean is_read, String seller_id, String local_id) {
         this.message_id = message_id;
         this.type = type;
         this.content = content;
@@ -69,6 +70,7 @@ public class Message {
         this.offer_expiry = offer_expiry;
         this.is_read = is_read;
         this.seller_id = seller_id;
+        this.local_id = local_id;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -203,6 +205,14 @@ public class Message {
 
     public void setSeller_id(String seller_id) {
         this.seller_id = seller_id;
+    }
+
+    public String getLocal_id() {
+        return local_id;
+    }
+
+    public void setLocal_id(String local_id) {
+        this.local_id = local_id;
     }
 
     /** To-one relationship, resolved on first access. */

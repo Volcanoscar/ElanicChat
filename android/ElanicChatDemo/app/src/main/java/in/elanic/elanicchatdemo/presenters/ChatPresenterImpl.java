@@ -241,7 +241,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         int matchIndex = -1;
         for(int i=0; i<mMessages.size(); i++) {
             Message existingMessage = mMessages.get(i);
-            if (existingMessage.getMessage_id().equals(message.getMessage_id())) {
+            if (existingMessage.getLocal_id().equals(message.getLocal_id())) {
                 matchIndex = i;
                 break;
             }

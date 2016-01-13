@@ -69,6 +69,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             sb.append("Read At: ");
             sb.append(message.getRead_at());
             sb.append("\n");
+            sb.append("ID: ");
+            sb.append(message.getMessage_id());
+            sb.append("\n");
 
             mHolder.mTextView.setText(sb.toString());
         }

@@ -50,6 +50,7 @@ def on_open(ws):
 				message = raw_input("Message: ")
 				data = {"receiver_id" : receiver_id, "content" : message, "sender_id" : userId,
 				"product_id" : product_id,
+				"local_id" : datetime.datetime.strftime(date, date_format)[:-3],
 				"type" : 1,
 				"created_at" : datetime.datetime.strftime(date, date_format)[:-3],
 				"updated_at" : datetime.datetime.strftime(date, date_format)[:-3],
@@ -57,7 +58,7 @@ def on_open(ws):
 
 				print "sending: %s to userId: %s" % (message, receiver_id)
 
-				request = {'message' : data, 'request_type' : 1}
+				request = {'message' : data, 'request_type' : 1, "request_id" : datetime.datetime.strftime(date, date_format)[:-3]}
 
 				ws.send(json.dumps(request))
 			except KeyboardInterrupt:

@@ -270,7 +270,7 @@ public class WebsocketConnectionService extends Service {
             Log.i(TAG, "update local message in db");
         }
 
-        Message message = mWSSHelper.saveMessageToDB(jsonResponse);
+        Message message = mWSSHelper.saveMyMessageToDB(jsonResponse);
         mWSSHelper.createChatItem(message);
         if (message == null) {
             Log.e(TAG, "unable to save message to db");

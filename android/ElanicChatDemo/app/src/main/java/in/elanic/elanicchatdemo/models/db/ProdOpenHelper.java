@@ -48,5 +48,12 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
             ChatItemDao.createTable(db, true);
             Log.i(TAG, "added chat item table to database");
         }
+
+        if (oldVersion < 6) {
+            Log.i(TAG, "upgrading from version 5 to 6");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Local_id.columnName + " TEXT;");
+            WSRequestDao.createTable(db, true);
+            Log.i(TAG, "added WS Request item table to database");
+        }
     }
 }

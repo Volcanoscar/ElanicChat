@@ -46,6 +46,7 @@ public class JSONUtils {
     public static final String KEY_OFFER_RESPONSE = "offer_response";
     public static final String KEY_IS_READ = "is_read";
     public static final String KEY_SELLER_ID = "seller_id";
+    public static final String KEY_LOCAL_ID = "local_id";
 
     public static final String KEY_SUCCESS = "success";
     public static final String KEY_RESPONSE_TYPE = "response_type";
@@ -69,6 +70,11 @@ public class JSONUtils {
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
 
         json.put(KEY_MESSAGE_ID, message.getMessage_id());
+
+        if (message.getLocal_id() != null && !message.getLocal_id().isEmpty()) {
+            json.put(KEY_LOCAL_ID, message.getLocal_id());
+        }
+
         json.put(KEY_TYPE, message.getType());
         json.put(KEY_CONTENT, message.getContent());
         json.put(KEY_RECEIVER_ID, message.getReceiver_id());
@@ -85,6 +91,11 @@ public class JSONUtils {
     public static Message getMessageFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
         Message message = new Message();
         message.setMessage_id(jsonObject.getString(KEY_MESSAGE_ID));
+
+        if (jsonObject.has(KEY_LOCAL_ID)) {
+            message.setLocal_id(jsonObject.getString(KEY_LOCAL_ID));
+        }
+
         message.setType(jsonObject.getInt(KEY_TYPE));
         message.setContent(jsonObject.getString(KEY_CONTENT));
         message.setReceiver_id(jsonObject.getString(KEY_RECEIVER_ID));

@@ -9,7 +9,7 @@ for _id in _ids:
 	id1 = provider.addUser(user)
 	print id1, "user added"
 
-product_ids = ['121', '122', '123', '124', '125', '126']
+product_ids = ['121', '122', '123', '124', '125', '126', '127']
 for product_id in product_ids:
 	t = datetime.datetime.now()
 
