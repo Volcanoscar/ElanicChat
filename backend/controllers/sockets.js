@@ -36,7 +36,13 @@ module.exports = {
 	socket.on("message", function(message) {
 	    if (message.type == 'utf8') {
 		var data = JSON.parse(message.utf8Data);
-		events[data.request_type](data);
+		try {
+		    events[data.request_type](data);
+		} catch (e) {
+		    console.log("Request type : " + data.request_type + " not found");
+		    console.log("Events data:");
+		    console.log(events);
+		}
 	    }
 	});
 //	socket.on(event, next);
