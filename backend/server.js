@@ -18,7 +18,7 @@ app.get('/api/login', function(req, res) {
     if (req.query.user_id) {
 	db.authenticate(req.query, function(err, user) {
 	    if (err || !user)
-		res.send({ "success" : false, "code" : 404, "message" : "User or product not found" });
+		res.send({ "success" : false, "code" : 404, "message" : "User not found" });
 	    else {
 		// log session here
 		user.created_at = dateformat(user.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
@@ -28,8 +28,7 @@ app.get('/api/login', function(req, res) {
 		res.send({
 		    success : true,
 		    code : 200,
-		    receiver : user,
-		    product : product
+		    user : user
 		});
 	    }
 	});
