@@ -2,6 +2,7 @@ package in.elanic.elanicchatdemo.views.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,8 +14,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 
 import java.util.List;
@@ -42,6 +45,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Bind(R.id.recyclerview) RecyclerView mRecyclerView;
     @Bind(R.id.edittext) EditText mEditText;
     @Bind(R.id.toolbar) Toolbar mToolbar;
+    @Bind(R.id.snackbar_container) FrameLayout mSnackbarContainer;
+
+    private MaterialDialog mProgressDialog;
 
     private ChatAdapter mAdapter;
 
@@ -72,15 +78,24 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         setupComponent(ELChatApp.get(this).component());
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
+
+        mPresenter.attachView(getIntent().getExtras());
+
         setupToolbar();
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true));
 
-        mAdapter = new ChatAdapter(this);
+        mAdapter = new ChatAdapter(this, mPresenter.getUserId());
         mAdapter.setHasStableIds(true);
 
         mRecyclerView.setAdapter(mAdapter);
-        mPresenter.attachView(getIntent().getExtras());
         mPresenter.loadData();
+
+        mAdapter.setCallback(new ChatAdapter.ActionCallback() {
+            @Override
+            public void respondToOffer(int position, boolean accept) {
+                mPresenter.confirmResponseToOffer(position, accept);
+            }
+        });
 
     }
 
@@ -134,6 +149,48 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     public void setData(List<Message> data) {
         mAdapter.setItems(data);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void confirmOfferResponse(final int position, final boolean accept) {
+
+        String title = accept ? "Accept Offer" : "Decline Offer";
+        String content = accept ? "Are you sure you want to accept this offer?" :
+                "Are you sure you want to reject this offer?";
+
+        new MaterialDialog.Builder(this)
+                .title(title)
+                .content(content)
+                .positiveText(accept ? "Accept" : "Reject")
+                .negativeText("Cancel")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(MaterialDialog dialog, DialogAction which) {
+                        mPresenter.respondToOffer(position, accept);
+                    }
+                }).show();
+    }
+
+    @Override
+    public void showProgressDialog(boolean show) {
+        if (show) {
+            showProgressDialog(false);
+            mProgressDialog = new MaterialDialog.Builder(this)
+                    .title("Please Wait")
+                    .progress(true, 60)
+                    .show();
+            mProgressDialog.setCancelable(false);
+        } else {
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+                mProgressDialog = null;
+            }
+        }
+    }
+
+    @Override
+    public void showSnackbar(CharSequence message) {
+        Snackbar.make(mSnackbarContainer, message, Snackbar.LENGTH_SHORT).show();
     }
 
     @OnClick(R.id.button)

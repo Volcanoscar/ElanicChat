@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_margin="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/comment_box_right"
+        android:paddingLeft="16dp"
+        android:paddingRight="24dp"
+        android:layout_marginLeft="64dp"
+        android:layout_gravity="right">
+
+        <TextView
+            android:id="@+id/offer_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:text="MADE AN OFFER\nRs 600"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:padding="8dp"
+            android:background="@color/colorAccent"
+            android:textColor="#fff"
+            android:id="@+id/offer_status"
+            android:textSize="16sp"
+            android:text="Offer still available"/>
+
+    </LinearLayout>
+
+</FrameLayout>

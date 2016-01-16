@@ -77,6 +77,7 @@ if __name__ == "__main__":
 	userId = sys.argv[1]
 
 	ipaddress = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1][0]
+	print "connecting to ", ipaddress
 
 	wsUrl = "ws://%s:9999/ws?Id=%s" % (ipaddress, userId)
 

@@ -2,8 +2,13 @@ from pymongo import MongoClient
 import datetime
 import pymongo
 import copy
+from bson.objectid import ObjectId
 
 date_format = "%Y-%m-%d %H:%M:%S.%f"
+
+OFFER_ACCEPTED = 2
+OFFER_DECLINED = 3
+OFFER_EXPIRED = 4
 
 # m.db.messages.delete_many( {"created_at" : {"$type" : 2} }) to find or delete by type
 
@@ -25,6 +30,10 @@ class ModelsProvider:
 		message['is_deleted'] = False
 		if not message.has_key('offer_price'):
 			message['offer_price'] = 0
+			message['offer_response'] = -1
+		else:
+			message['offer_response'] = 1
+
 		message['product_id'] = message['product_id']
 		message_id = messages_collection.insert_one(message).inserted_id
 
@@ -36,8 +45,13 @@ class ModelsProvider:
 	def updateMessageField(self, message_id, data):
 		print "type of data", type(data)
 		data['updated_at'] = datetime.datetime.now()
-		self.db.messages.update_one({'_id' : message_id}, { "$set" : data })
 
+		if type(message_id) == str or type(message_id) == unicode:
+			message_id = ObjectId(message_id)
+
+		print "message_id", message_id, type(message_id)
+		result = self.db.messages.update_one({'_id' : message_id}, { "$set" : data })
+		print "update result", result, result.matched_count, result.modified_count
 		print 'updated message: ', data
 
 	def addUser(self, user):
@@ -78,6 +92,9 @@ class ModelsProvider:
 		date = datetime.datetime.now()
 		return datetime.datetime.strftime(date, date_format)[:-3]
 
+	def getMessage(self, message_id):
+		return self.db.messages.find_one({'message_id' : message_id})	
+
 	def getMessagesForUser(self, userId, timestamp="", limit=50):
 		messages_collection = self.db.messages
 
@@ -109,4 +126,14 @@ class ModelsProvider:
 		return None
 
 	def getProduct(self, product_id):
-		return self.db.products.find_one({'product_id' : product_id})	
+		return self.db.products.find_one({'product_id' : product_id})
+
+	def updateOfferResponse(self, message, response):
+		params = dict()
+		if response:
+			params['offer_response'] = OFFER_ACCEPTED
+		else:
+			params['offer_response'] = OFFER_DECLINED
+
+		self.updateMessageField(message['message_id'], params)
+		return self.getMessage(message['message_id'])

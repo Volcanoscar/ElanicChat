@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.db;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -7,6 +9,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import in.elanic.elanicchatdemo.models.Constants;
 
 /**
  * Created by Jay Rambhia on 29/12/15.
@@ -63,6 +67,7 @@ public class JSONUtils {
 
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String TAG = "JSONUtils";
 
     public static JSONObject toJSON(Message message) throws JSONException {
         JSONObject json = new JSONObject();
@@ -181,5 +186,28 @@ public class JSONUtils {
     public static Date getDateFromString(String date) throws ParseException {
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
         return df.parse(date);
+    }
+
+    public static String getOfferStatusString(Integer status) {
+
+        if (status == null) {
+            Log.e(TAG, "null status");
+            return "";
+        }
+
+        switch (status) {
+            case Constants.OFFER_ACTIVE:
+            case 0:
+            case -1:
+                return Constants.OFFER_ACTIVE_STRING;
+            case Constants.OFFER_ACCEPTED:
+                return Constants.OFFER_ACCEPTED_STRING;
+            case Constants.OFFER_DECLINED:
+                return Constants.OFFER_DECLINED_STRING;
+            case Constants.OFFER_EXPIRED:
+                return Constants.OFFER_EXPIRED_STRING;
+        }
+
+        return "";
     }
 }

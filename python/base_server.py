@@ -19,6 +19,7 @@ REQUEST_GET_USER = 2
 REQUEST_GET_ALL_MESSAGES = 5
 REQUEST_GET_PRODUCTS = 6
 REQUEST_GET_USERS_AND_PRODUCTS = 7
+REQUEST_RESPOND_TO_OFFER = 8
 
 RESPONSE_NEW_MESSAGE = 3
 RESPONSE_USER = 4
@@ -170,6 +171,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			self.onGetProductsRequested(data)
 		elif request_type == REQUEST_GET_USERS_AND_PRODUCTS:
 			self.onGetUsersAndProductsRequested(data)
+		elif request_type == REQUEST_RESPOND_TO_OFFER:
+			self.onRespondToOfferRequested(data)	
 		else:
 			self.write_message(json.dumps( {'success' : False,
 				"request_type" : data['request_type'], "error" : "Invalid request_type" } ))
@@ -331,6 +334,56 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		response = {'users' : users, 'products' : products, 'request_id' : request_id, 'request_type' : REQUEST_GET_USERS_AND_PRODUCTS, 'success' : True}
 		self.write_message(json.dumps(response))
+
+	def onRespondToOfferRequested(self, data):
+		request_id = data['request_id']
+		message_id = data['message_id']
+		response = data['offer_response']
+
+		message = self.db_provider.getMessage(message_id)
+		if not message:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "No such offer found"}))
+			return
+
+		# check if the user has some relation with the offer or not
+		userId = self.id
+		if message['receiver_id'] != userId:
+			# message is not related to the user
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Offer does not belong to the user"}))
+			return
+
+		# check type of the message
+		if message['type'] != 2:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Offer is not available"}))
+			return
+
+		# TODO: check if offer is expired
+		offer_response = message.get('offer_response')
+		if not offer_response:
+			offer_response = 1
+
+		if offer_response > 1:	
+			# user has alreday responded to the offer
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "User has already responded to the offer"}))
+			return
+
+		new_message = self.db_provider.updateOfferResponse(message, response)
+		new_message = self.db_provider.sanitizeEntity(new_message)
+
+		self.write_message(json.dumps( {'success' : True,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : new_message}))
+
+		# send to the other user
+		self.sendMessage(new_message, new_message['sender_id'])
 
 
 	def sendMessage(self, data, receiver_id):

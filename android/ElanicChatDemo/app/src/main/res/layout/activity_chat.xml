@@ -21,10 +21,16 @@
         android:id="@+id/recyclerview"
         android:layout_marginBottom="48dp"/>
 
+    <FrameLayout
+        android:layout_alignParentBottom="true"
+        android:id="@+id/snackbar_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/snackbar_container"
         android:layout_alignParentRight="true"
         android:id="@+id/button"
         android:text = "Send"/>
@@ -32,7 +38,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@id/snackbar_container"
         android:layout_toLeftOf="@id/button"
         android:maxLines="2"
         android:hint="Enter Message"

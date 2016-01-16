@@ -16,4 +16,8 @@ public interface ChatPresenter {
     void loadData();
     void sendMessage(String content);
     void sendOffer(CharSequence price);
+    String getUserId();
+
+    void confirmResponseToOffer(int position, boolean accept);
+    void respondToOffer(int position, boolean accept);
 }

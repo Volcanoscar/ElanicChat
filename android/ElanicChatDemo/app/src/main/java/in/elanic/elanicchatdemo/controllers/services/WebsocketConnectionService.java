@@ -231,8 +231,12 @@ public class WebsocketConnectionService extends Service {
             }
 
             boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
+            int requestType = WSSHelper.getRequestType(jsonResponse);
             if (!success) {
                 // TODO handle request failure
+                if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
+                    mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
+                }
                 return;
             }
 
@@ -245,7 +249,7 @@ public class WebsocketConnectionService extends Service {
             String requestId = WSSHelper.getRequestId(jsonResponse);
             mWSSHelper.markRequestAsCompleted(requestId);
 
-            int requestType = WSSHelper.getRequestType(jsonResponse);
+
             if (requestType == Constants.REQUEST_SEND_MESSAGE) {
                 onMessageSentSuccessfully(jsonResponse);
                 return;
@@ -259,6 +263,8 @@ public class WebsocketConnectionService extends Service {
                 onProductsDataFetched(jsonResponse);
             } else if (requestType == Constants.REQUEST_GET_USERS_AND_PRODUCTS) {
                 onUsersAndPrdouctsDataFetched(jsonResponse);
+            } else if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
+                onOfferResponseSuccessful(jsonResponse);
             }
 
             int responseType = mWSSHelper.getResponseType(jsonResponse);
@@ -296,7 +302,7 @@ public class WebsocketConnectionService extends Service {
 
         Log.i(TAG, "on new messages arrived");
 
-        List<Message> newMessages = mWSSHelper.parseMessagesFromResponse(jsonResponse);
+        List<Message> newMessages = WSSHelper.parseMessagesFromResponse(jsonResponse);
         if (newMessages == null) {
             if (DEBUG) {
                 Log.e(TAG, "new messages is null");
@@ -390,6 +396,22 @@ public class WebsocketConnectionService extends Service {
         if (users.length() > 0 || products.length() > 0) {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
         }
+    }
+
+    private void onOfferResponseSuccessful(JSONObject jsonResponse) throws JSONException {
+        if (DEBUG) {
+            Log.i(TAG, "update local message in db");
+        }
+
+        Message message = mWSSHelper.updateMessageInDB(jsonResponse);
+        mWSSHelper.createChatItem(message);
+        if (message == null) {
+            Log.e(TAG, "unable to update message to db");
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
+            return;
+        }
+
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_COMPLETED, message));
     }
 
     private void syncData() {

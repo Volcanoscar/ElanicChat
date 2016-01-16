@@ -127,6 +127,20 @@ public class WSSHelper {
         return message;
     }
 
+    public Message updateMessageInDB(JSONObject jsonResponse) throws JSONException {
+        JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
+        Message message;
+        try {
+            message = JSONUtils.getMessageFromJSON(message_json);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        mMessageProvider.updateMessage(message);
+        return message;
+    }
+
     public Message saveMessageToDB(JSONObject jsonResponse) throws JSONException{
         JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
         Message message;
@@ -435,5 +449,12 @@ public class WSSHelper {
 
     public List<WSRequest> getIncompleteRequests() {
         return mWSRequestProvider.getIncompleteRequests();
+    }
+
+    public static JSONObject createOfferResponseRequest(Message message, boolean accept) throws JSONException {
+        JSONObject jsonObject = createWSRequest(Constants.REQUEST_RESPOND_TO_OFFER);
+        jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
+        jsonObject.put(JSONUtils.KEY_OFFER_RESPONSE, accept);
+        return jsonObject;
     }
 }

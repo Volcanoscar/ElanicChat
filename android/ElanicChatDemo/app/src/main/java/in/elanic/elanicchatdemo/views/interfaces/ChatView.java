@@ -10,4 +10,7 @@ import in.elanic.elanicchatdemo.models.db.Message;
 public interface ChatView {
 
     void setData(List<Message> data);
+    void confirmOfferResponse(int position, boolean accept);
+    void showProgressDialog(boolean show);
+    void showSnackbar(CharSequence message);
 }

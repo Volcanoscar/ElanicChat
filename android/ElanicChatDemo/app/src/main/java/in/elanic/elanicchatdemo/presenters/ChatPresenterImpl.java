@@ -14,6 +14,7 @@ import java.util.List;
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
+import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
@@ -179,6 +180,37 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
     }
 
+    @Override
+    public String getUserId() {
+        return mSenderId;
+    }
+
+    @Override
+    public void confirmResponseToOffer(int position, boolean accept) {
+        if (position < 0 || mMessages == null || mMessages.size() <= position) {
+            return;
+        }
+
+        mChatView.confirmOfferResponse(position, accept);
+    }
+
+    @Override
+    public void respondToOffer(int position, boolean accept) {
+        if (position < 0 || mMessages == null || mMessages.size() <= position) {
+            return;
+        }
+
+        Message message = mMessages.get(position);
+        try {
+            JSONObject jsonRequest = WSSHelper.createOfferResponseRequest(message, accept);
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
+
+            mChatView.showProgressDialog(true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     private boolean areDetailsAvailable() {
         if (mReceiver == null) {
             Log.e(TAG, "receiver data is not present");
@@ -227,7 +259,23 @@ public class ChatPresenterImpl implements ChatPresenter {
                 if (DEBUG) {
                     Log.i(TAG, "fetched message : " + message.getMessage_id() + " " + message.getContent());
                 }
-                addMessageToChat(0, message);
+
+                // check if already exists in the list
+                int index = -1;
+                for (int i=0; i<mMessages.size(); i++) {
+                    if (mMessages.get(i).getMessage_id().equals(message.getMessage_id())) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index != -1) {
+                    mMessages.remove(index);
+                } else {
+                    index = 0;
+                }
+
+                addMessageToChat(index, message);
             }
         }
     }
@@ -264,18 +312,58 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
-        try {
+        // This is not happening
+
+/*        try {
             Message message = JSONUtils.getMessageFromJSON(new JSONObject(data));
-            boolean addedToDB = mMessageProvider.addNewMessage(message);
-            if (addedToDB) {
-                addMessageToChat(0, message);
-            }
+            // Already adding it in the service
+//            boolean addedToDB = mMessageProvider.addNewMessage(message);
+//            if (addedToDB) {
+//                addMessageToChat(0, message);
+//            }
+
+            int index = mMessages.indexOf()
 
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (ParseException e) {
             e.printStackTrace();
+        }*/
+    }
+
+    private void onOfferResponseCompleted(Message message) {
+
+        mChatView.showProgressDialog(false);
+
+        if (mMessages == null) {
+            addMessageToChat(0, message);
+            return;
         }
+
+        int matchIndex = -1;
+        for(int i=0; i<mMessages.size(); i++) {
+            Message existingMessage = mMessages.get(i);
+            if (existingMessage.getMessage_id().equals(message.getMessage_id())) {
+                matchIndex = i;
+                break;
+            }
+        }
+
+        if (DEBUG) {
+            Log.i(TAG, "offer responded. timestamp: " + message.getUpdated_at());
+        }
+
+        if (matchIndex != -1) {
+            mMessages.remove(matchIndex);
+            addMessageToChat(matchIndex, message);
+        }
+
+        mChatView.showSnackbar("Offer Response successful");
+    }
+
+    private void onOfferResponseFailed() {
+        mChatView.showProgressDialog(false);
+        mChatView.showSnackbar("Offer Response failed");
     }
 
     public void onEventMainThread(WSResponseEvent event) {
@@ -288,6 +376,15 @@ public class ChatPresenterImpl implements ChatPresenter {
             case WSResponseEvent.EVENT_MESSAGE_SENT:
                 Message message = event.getMessage();
                 onMessageSent(message);
+                break;
+
+            case WSResponseEvent.EVENT_OFFER_RESPONSE_COMPLETED:
+                Message offerMessage = event.getMessage();
+                onOfferResponseCompleted(offerMessage);
+                break;
+
+            case WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED:
+                onOfferResponseFailed();
                 break;
         }
     }

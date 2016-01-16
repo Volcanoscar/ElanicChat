@@ -56,7 +56,7 @@ public class MessageProviderImpl implements MessageProvider {
         WhereCondition c6 = qb.or(qb.and(c1, c2), qb.and(c3, c4));
 
         if (timestamp != null) {
-            qb.where(MessageDao.Properties.Created_at.gt(timestamp), c5, c6);
+            qb.where(MessageDao.Properties.Updated_at.gt(timestamp), c5, c6);
         } else {
             qb.where(c5, c6);
         }
