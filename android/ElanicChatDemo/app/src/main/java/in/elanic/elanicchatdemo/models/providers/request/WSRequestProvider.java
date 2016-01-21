@@ -15,4 +15,5 @@ public interface WSRequestProvider {
     WSRequest createRequest(String requestId, int requestType, String content, String userId);
     boolean markRequestAsCompleted(String requestId);
     List<WSRequest> getIncompleteRequests();
+    void clearPendingRequests();
 }

@@ -22,23 +22,47 @@ module.exports = function(conn){
 	get_unread_messages : function(id, data, next) {
 	    //check for all messages greater than given timestamp 
 	    //and return
-	    if (!data || !data.sync_timestamp)
+
+	    console.log("timestamp %s", data.sync_timestamp);
+
+	    if (!data)
 		next("Invalid Parameters");
-	    var time = Date.parse(data.sync_timestamp);
+
+		if (data.sync_timestamp == undefined) {
+			data.sync_timestamp = new Date();
+			data.sync_timestamp.setDate(data.sync_timestamp.getDate() - 2);
+		}
+		try {
+	    	var time = Date.parse(data.sync_timestamp);
+		} catch(e) {
+			console.log("error: %s", e);
+		}
+
+		if (time == undefined) {
+			time = new Date();
+			time.setDate(time.getDate() - 2);
+		}
+
 	    Message.find({ $or: [{'sender_id' : id}, 
 				 {'receiver_id' : id}]
 			 }).where('updated_at').gt( time ).lean().
 		exec(function(err, msgs) {
 		    var updates = [];
-		    msgs = msgs.map(function(msg) {
-			if (!msg.delivered_at) {
-			    msg.updated_at = msg.delivered_at = new Date();
-			    updates.push(msg);
+		    if (msgs) {
+			    msgs = msgs.map(function(msg) {
+			    	console.log("msg.seller_id %s", msg.seller_id);
+
+				if (!msg.delivered_at) {
+				    msg.updated_at = msg.delivered_at = new Date();
+				    updates.push(msg);
+				}
+				return msg;
+			    });
+			    Message.update(updates);
+			    return next(err, msgs);
 			}
-			return msg;
-		    });
-		    Message.update(updates);
-		    return next(err, msgs);
+
+			return next(err, []);
 		});
 	},
 
@@ -82,9 +106,22 @@ module.exports = function(conn){
 		    if (!user)
 			return next("No such user");
 		    var message = new Message(msg);
+
+		    return Product.findOne({product_id : msg.product_id}).lean().
+		    exec(function(err, product) {
+		    	if (err)
+		    		return next(err);
+		    	if (!product)
+		    		return next("No such product");
+
+		    	// TODO sender_id is -1
+
+		    	message.seller_id = product.user_id;
+		    	return message.save(next);
+		    });
 		    // if for group, try adding array of receivers
 		    // Later: Add validation in models end
-		    return message.save(next);
+		    // return message.save(next);
 		});
 	    
 	    /*// For receiver validation
@@ -97,6 +134,14 @@ module.exports = function(conn){
 	      next(owner);
 	      });
 	    */
+	},
+
+	update_message_id : function(msg) {
+		console.log("message_id %s" , msg.message_id);
+		Message.update({_id : msg._id}, { message_id : msg._id});
+		msg.message_id = msg._id;
+		console.log("message_id %s" , msg.message_id);
+		return msg;
 	},
 
 	authenticate : function(data, next) {

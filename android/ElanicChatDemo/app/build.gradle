@@ -71,6 +71,12 @@ dependencies {
     // Websocket
     compile 'com.neovisionaries:nv-websocket-client:1.17'
 
+    // Socket.io
+    compile ('com.github.nkzawa:socket.io-client:0.3.0') {
+        // excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }
+
     // Retrofit
     compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
     compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'

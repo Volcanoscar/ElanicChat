@@ -192,6 +192,7 @@ public class WSSHelper {
 
                 } catch (ParseException e) {
                     e.printStackTrace();
+                    continue;
                 }
 
             } catch (JSONException e) {
@@ -456,5 +457,9 @@ public class WSSHelper {
         jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
         jsonObject.put(JSONUtils.KEY_OFFER_RESPONSE, accept);
         return jsonObject;
+    }
+
+    public void clearPendingRequests() {
+        mWSRequestProvider.clearPendingRequests();
     }
 }

@@ -4,6 +4,7 @@
   "description": "A tool to learn node",
   "main": "server.js",
   "dependencies": {
+    "cookie": "^0.2.3",
     "date-format": "0.0.2",
     "express": "^4.13.3",
     "lodash": "^3.10.1",
@@ -11,6 +12,7 @@
     "mongoose": "^4.3.4",
     "node-gcm": "^0.13.0",
     "should": "^8.0.2",
+    "socket.io": "^1.4.4",
     "websocket": "^1.0.22"
   },
   "devDependencies": {},

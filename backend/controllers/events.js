@@ -1,4 +1,4 @@
-var socks = require('./sockets.js'),
+var socks = require('./sockets2.js'),
     util = require('./util.js'),
     gcm = require('./gcm.js'),
     _ = require("lodash"),
@@ -7,40 +7,86 @@ var socks = require('./sockets.js'),
 
 module.exports = function(user_id, db) {
     function send(data) {
-	var msg = data.message;
-	_.extend(msg, {
-	    sender_id: user_id,
-	    created_at: Date.now(),
-	    updated_at: Date.now()
-	});
-	db.save_messages(msg, function(err, msg) {
-	    if (err)
-		return socks.error(user_id, API.SEND, err, msg);
-	    var request = {
-		success : API.SUCCESS,
-		sent : API.SUCCESS,
-		message : msg
-	    };
-	    return socks.emit(msg.receiver_id, API.SEND, request, function(err){
-		if (err) {
-		    // gcm details here. Change registration token/ device id to suit your needs.
-		    // uncomment this later
-		    //return gcm.send(request, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
-		    request.sent = API.FAIL;
-		    return socks.emit(user_id, API.SEND, request);
-		    //});
-		}
-		request.message.delivered_at = dateformat(new Date(), 'yyyy-mm-dd hh:MM:SS.sss');
-		return socks.emit(user_id, API.SEND, request);
-	    });
-	});
+    	console.log("user_id in events: %s", user_id);
+		var origMsg = data.message;
+		var request_id = data.request_id;
+		_.extend(origMsg, {
+		    sender_id: user_id,
+		    created_at: Date.now(),
+		    updated_at: Date.now()
+		});
+
+		db.save_messages(origMsg, function(err, msg) {
+
+			console.log("save_message request");
+
+		    if (err)
+			return socks.error(user_id, API.SEND, err, msg);
+
+			msg = db.update_message_id(msg);
+
+			message = msg.toObject();
+			message.local_id = origMsg.local_id;
+			message.created_at = dateformat(msg.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+		    message.updated_at = dateformat(msg.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+
+		    console.log("msg.created_at - %s", msg.created_at);
+
+		    var request = {
+			success : API.SUCCESS,
+			sent : API.SUCCESS,
+			request_id : request_id,
+			message : message
+		    };
+
+
+		    return socks.emit(msg.receiver_id, API.SEND, request, function(err){
+		    	var delivered = false;
+				if (err) {
+
+					console.log("error in seding data to receiver_id, %s", err);
+				    // gcm details here. Change registration token/ device id to suit your needs.
+				    // uncomment this later
+				    //return gcm.send(request, 'fHpHsKn2IHY:APA91bEeo73GFOm_Xjy8gDAoGA7gQ1aV3CRhze8e8IYhAYY9G3Ck3_fM1_8fDuteq121fDFdLMT1MN1q5A-Iz9AyRXEWVKgsLU79WlzBnJrzYDgkCM-hEA4JpxQi5W2_sYKAvrqBcfMi', function() {
+				    request.sent = API.FAIL;
+
+				    console.log("request.message.local_id - %s", request.message.local_id);
+
+				    request.message.created_at = dateformat(msg.created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+					request.message.updated_at = dateformat(msg.updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+					request.message.local_id = origMsg.local_id;
+					// request.message.delivered_at = dateformat(new Date(), 'yyyy-mm-dd hh:MM:SS.sss');
+				    console.log("request.message.local_id - %s", request.message.local_id);
+				    console.log("request.message.created_at - %s", request.message.created_at);
+
+				    return socks.emit(user_id, API.SEND, request);
+				    //});
+				} else {
+					delivered = true;
+				}
+
+			request.message.delivered_at = dateformat(new Date(), 'yyyy-mm-dd hh:MM:SS.sss');
+
+			console.log("request.message.created_at - %s", request.message.created_at);
+
+			return socks.emit(user_id, API.SEND, request);
+		    });
+		});
     }
 
     function get_messages(data) {
 	_.extend(data, { success : API.SUCCESS });
 	db.get_unread_messages(user_id, data, function(err, msgs) {
-	    if (!err)
-		socks.emit(user_id, API.GET, _.extend(data, { data : msgs }));
+	    if (!err) {
+	    	for (var i=0; i < msgs.length; i++) {
+	    		msgs[i].created_at = dateformat(msgs[i].created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+	    		msgs[i].updated_at = dateformat(msgs[i].updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+	    		msgs[i].delivered_at = dateformat(msgs[i].delivered_at, 'yyyy-mm-dd hh:MM:SS.sss');
+	    	}
+
+	    	socks.emit(user_id, API.GET, _.extend(data, { data : msgs, sync_timestamp : dateformat(new Date(), 'yyyy-mm-dd hh:MM:SS.sss')}));
+	    }
+		
 	    else
 		socks.error(user_id, API.GET, err, []);
 	});
@@ -50,8 +96,13 @@ module.exports = function(user_id, db) {
 	db.get_users(data, function(err, users) {
 	    if (err)
 		socks.error(user_id, API.USERS, err, []);
-	    else
-		socks.emit(user_id, API.USERS, _.extend(data, { data : users, success : true }));
+	    else {
+	    	for (var i=0; i < users.length; i++) {
+	    		users[i].created_at = dateformat(users[i].created_at, 'yyyy-mm-dd hh:MM:SS.sss');
+	    		users[i].updated_at = dateformat(users[i].updated_at, 'yyyy-mm-dd hh:MM:SS.sss');
+	    	}
+			socks.emit(user_id, API.USERS, _.extend(data, { data : users, success : true }));
+		}
 	});
     }
 

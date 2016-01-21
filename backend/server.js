@@ -3,9 +3,10 @@ var app = require("express")(),
     wsServer = require("websocket").server,
     util = require('./controllers/util.js'),
     url = require("url"),
+    cookie = require('cookie'), 
     mongoose = require('mongoose'),
     conn = mongoose.createConnection(),
-    socks = require('./controllers/sockets.js'),
+    socks = require('./controllers/sockets2.js'),
     dateformat = require('date-format'),
     add_api = require('./controllers/events.js'),
     DATABASE_NAME = "elchat_v1",
@@ -75,8 +76,41 @@ app.get('/api/start_chat', function(req, res) {
 
 var server = http.createServer(app);
 
-// Websocket details below
+var io = require('socket.io').listen(server);
 
+io.on('connection', function (socket){
+
+	console.log("new connection: %s", socket.request.headers.cookie);
+
+	if (socket.request.headers.cookie == undefined) {
+		socket.disconnect(true);
+		console.log('disconnected because no headers');
+		return;
+	}
+
+	var cookies = cookie.parse(socket.request.headers.cookie);
+	var userId = cookies.userId;
+
+	if (userId == undefined) {
+		socket.disconnect(true);
+		return;
+	}
+
+	socks.add(socket, userId);
+	add_api(userId, db);
+
+	/*socket.on('send_message', function (data) {
+		console.log("new message: %s", data.request_type);
+		socket.emit('send_message', {'message':'Hi! from server'});
+	});
+
+	socket.on('disconnect', function (data) {
+		console.log("disconnect: %s", data);
+	}); */
+});
+
+// Websocket details below
+/*
 var io = new wsServer({
     httpServer : server,
     autoAcceptConnections: false
@@ -100,6 +134,7 @@ io.on('request', function(req) {
     });
     
 });
+*/
 
 conn.on('error', util.log);
 conn.on('open', function() {
@@ -108,6 +143,7 @@ conn.on('open', function() {
 	util.log("Listening on " + port);
     });
 });
+
 if (require.main === module)
     conn.open('mongodb://localhost:27017/'+DATABASE_NAME);
 else

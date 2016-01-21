@@ -85,7 +85,6 @@ public class WebsocketConnectionService extends Service {
     public void onCreate() {
         super.onCreate();
         setupComponent(ELChatApp.get(this).component());
-        registerForEvents();
 
         mConnectionRunnable = new Runnable() {
             @Override
@@ -102,13 +101,15 @@ public class WebsocketConnectionService extends Service {
         }
 
         mWSSHelper = new WSSHelper(mDaoSession);
+        clearPendingRequests();
+
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
         DaggerWebsocketConnectionServiceComponent.builder()
                 .applicationComponent(applicationComponent)
                 .websocketConnectionServiceModule(new WebsocketConnectionServiceModule())
-                .websocketApiProviderModule(new WebsocketApiProviderModule(false))
+                .websocketApiProviderModule(new WebsocketApiProviderModule(WebsocketApiProviderModule.API_SOCKET_IO_NON_BLOCKING))
                 .build()
                 .inject(this);
     }
@@ -117,6 +118,8 @@ public class WebsocketConnectionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         createWSConnectionRequested();
+        registerForEvents();
+
 //        new Thread(mConnectionRunnable).start();
         return START_STICKY;
     }
@@ -145,6 +148,10 @@ public class WebsocketConnectionService extends Service {
         }
 
         mEventBus = null;
+    }
+
+    private void clearPendingRequests() {
+        mWSSHelper.clearPendingRequests();
     }
 
     private void createWSConnectionRequested() {
@@ -200,6 +207,7 @@ public class WebsocketConnectionService extends Service {
 
     private void disconnectWSConnectionRequested() {
         mWebSocketApi.disconnect();
+        mWebSocketApi.setCallback(null);
     }
 
     private void sendDataRequested(String data) {
@@ -289,6 +297,12 @@ public class WebsocketConnectionService extends Service {
         }
 
         Message message = mWSSHelper.saveMyMessageToDB(jsonResponse);
+
+        if (message == null) {
+            Log.e(TAG, "sent message is null");
+            return;
+        }
+
         mWSSHelper.createChatItem(message);
         if (message == null) {
             Log.e(TAG, "unable to save message to db");

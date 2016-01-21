@@ -81,4 +81,25 @@ public class WSRequestProviderImpl implements WSRequestProvider {
     public List<WSRequest> getIncompleteRequests() {
         return mDao.queryBuilder().where(WSRequestDao.Properties.Is_completed.eq(false)).list();
     }
+
+    @Override
+    public void clearPendingRequests() {
+        List<WSRequest> mRequests = mDao.queryBuilder()
+                .where(WSRequestDao.Properties.Is_completed.eq(false)).list();
+        int count  = 0;
+        if (mRequests == null || mRequests.isEmpty()) {
+            return;
+        }
+
+        for (WSRequest request : mRequests) {
+            if (DEBUG) {
+                Log.i(TAG, "set request as completed: " + request.getRequest_id());
+            }
+            request.setIs_completed(true);
+            mDao.update(request);
+            count++;
+        }
+
+        return;
+    }
 }
