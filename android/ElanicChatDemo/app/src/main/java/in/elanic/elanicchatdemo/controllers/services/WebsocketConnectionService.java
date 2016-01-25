@@ -109,7 +109,8 @@ public class WebsocketConnectionService extends Service {
         DaggerWebsocketConnectionServiceComponent.builder()
                 .applicationComponent(applicationComponent)
                 .websocketConnectionServiceModule(new WebsocketConnectionServiceModule())
-                .websocketApiProviderModule(new WebsocketApiProviderModule(WebsocketApiProviderModule.API_SOCKET_IO_NON_BLOCKING))
+                .websocketApiProviderModule(new WebsocketApiProviderModule(
+                        WebsocketApiProviderModule.API_WS_NON_BLOCKONG))
                 .build()
                 .inject(this);
     }
@@ -273,6 +274,8 @@ public class WebsocketConnectionService extends Service {
                 onUsersAndPrdouctsDataFetched(jsonResponse);
             } else if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
                 onOfferResponseSuccessful(jsonResponse);
+            } else if (requestType == Constants.REQUEST_MARK_AS_READ) {
+                onMarkAsReadRequestCompleted(jsonResponse);
             }
 
             int responseType = mWSSHelper.getResponseType(jsonResponse);
@@ -351,15 +354,15 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void fetchUsersData(@NonNull List<String> userIds) {
-        sendDataRequested(mWSSHelper.createFetchUsersDataRequest(userIds));
+        sendDataRequested(WSSHelper.createFetchUsersDataRequest(userIds));
     }
 
     private void fetchProductsData(@NonNull List<String> productIds) {
-        sendDataRequested(mWSSHelper.createFetchProductsDataRequest(productIds));
+        sendDataRequested(WSSHelper.createFetchProductsDataRequest(productIds));
     }
 
     private void fetchUsersAndProductsData(@NonNull List<String> userIds, @NonNull List<String> productIds) {
-        sendDataRequested(mWSSHelper.createFetchUsersAndProductsDataRequest(userIds, productIds));
+        sendDataRequested(WSSHelper.createFetchUsersAndProductsDataRequest(userIds, productIds));
     }
 
     private void onUserDataFetched(JSONObject jsonResponse) throws JSONException {
@@ -370,7 +373,7 @@ public class WebsocketConnectionService extends Service {
             }
             return;
         }
-        mWSSHelper.saveUsersToDB(mWSSHelper.parseNewUsers(users));
+        mWSSHelper.saveUsersToDB(WSSHelper.parseNewUsers(users));
         // send event to ui
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
@@ -383,7 +386,7 @@ public class WebsocketConnectionService extends Service {
             }
             return;
         }
-        mWSSHelper.saveProductsToDB(mWSSHelper.parseNewProducts(products));
+        mWSSHelper.saveProductsToDB(WSSHelper.parseNewProducts(products));
         // send event to ui
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
@@ -392,7 +395,7 @@ public class WebsocketConnectionService extends Service {
         JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_PRODUCTS);
         JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_USERS);
         if (products.length() != 0) {
-            mWSSHelper.saveProductsToDB(mWSSHelper.parseNewProducts(products));
+            mWSSHelper.saveProductsToDB(WSSHelper.parseNewProducts(products));
         } else {
             if (DEBUG) {
                 Log.e(TAG, "empty products array");
@@ -444,6 +447,36 @@ public class WebsocketConnectionService extends Service {
         }
     }
 
+    private void markMessagesAsRead(String chatItemId) {
+
+        if (DEBUG) {
+            Log.i(TAG, "mark unread messages as read");
+        }
+
+        List<Message> unreadMessages = mWSSHelper.getUnreadMessages(chatItemId, mUserId);
+        if (unreadMessages == null || unreadMessages.isEmpty()) {
+            Log.e(TAG, "unread messages is not available");
+            return;
+        }
+
+        if (DEBUG) {
+            for (Message message : unreadMessages) {
+                Log.i(TAG, "unread message: " + message.getMessage_id());
+            }
+        }
+
+        try {
+            JSONObject jsonRequest = WSSHelper.createUnreadMessagesRequest(unreadMessages);
+            sendDataRequested(jsonRequest.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
+        mWSSHelper.updateReadReceipts(jsonResponse);
+    }
+
     ///////////////////////////////////////////
     //////////////// EVENTS //////////////////
     /////////////////////////////////////////
@@ -464,6 +497,10 @@ public class WebsocketConnectionService extends Service {
 
             case WSRequestEvent.EVENT_SYNC:
                 syncData();
+                break;
+
+            case WSRequestEvent.EVENT_SEND_READ_DATA:
+                markMessagesAsRead(event.getData());
                 break;
         }
 

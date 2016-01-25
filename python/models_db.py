@@ -66,30 +66,42 @@ class ModelsProvider:
 		user_collection = self.db.users
 		return user_collection.find_one({"user_id" : user_id})
 
-	def sanitizeEntity(self, user_orig):
+	@staticmethod
+	def sanitizeEntity(orig_enitiy):
 
-		user = copy.deepcopy(user_orig)
+		entity = copy.deepcopy(orig_enitiy)
 
-		user['_id'] = str(user['_id'])
-		user['id'] = user['_id']
-		user['created_at'] = datetime.datetime.strftime(user['created_at'], date_format)[:-3]
-		user['updated_at'] = datetime.datetime.strftime(user['updated_at'], date_format)[:-3]
+		# check for bson keys
+		for item in entity.iteritems():
+			if type(item[1]) == ObjectId:
+				entity[item[0]] = str(item[1])
+			elif type(item[1]) == datetime.datetime:
+				entity[item[0]] = datetime.datetime.strftime(item[1], date_format)[:-3]
 
-		if user.has_key('delivered_at'):
-			delivered_at = user['delivered_at']
-			if delivered_at:
-				user['delivered_at'] = datetime.datetime.strftime(user['delivered_at'], date_format)[:-3]
+		# user['_id'] = str(user['_id'])
+		# user['id'] = user['_id']
+		# user['created_at'] = datetime.datetime.strftime(user['created_at'], date_format)[:-3]
+		# user['updated_at'] = datetime.datetime.strftime(user['updated_at'], date_format)[:-3]
 
-		if user.has_key('read_at'):
-			read_at = user['read_at']
-			if read_at:
-				user['read_at'] = datetime.datetime.strftime(user['read_at'], date_format)[:-3]
+		# if user.has_key('delivered_at'):
+		# 	delivered_at = user['delivered_at']
+		# 	if delivered_at:
+		# 		user['delivered_at'] = datetime.datetime.strftime(user['delivered_at'], date_format)[:-3]
 
-		return user
+		# if user.has_key('read_at'):
+		# 	read_at = user['read_at']
+		# 	if read_at:
+		# 		user['read_at'] = datetime.datetime.strftime(user['read_at'], date_format)[:-3]
+
+		return entity
 
 	@staticmethod
 	def getSyncTime():
 		date = datetime.datetime.now()
+		return datetime.datetime.strftime(date, date_format)[:-3]
+
+	@staticmethod
+	def getJSONDate(date):	
 		return datetime.datetime.strftime(date, date_format)[:-3]
 
 	def getMessage(self, message_id):

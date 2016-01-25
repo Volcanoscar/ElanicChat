@@ -10,8 +10,8 @@ import org.json.JSONObject;
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
-import in.elanic.elanicchatdemo.models.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
@@ -112,7 +112,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     }
 
     private void openNewChat(ChatItem chatItem) {
-        mChatListView.openChat(chatItem.getUser().getUser_id(), chatItem.getProduct().getProduct_id());
+        mChatListView.openChat(chatItem.getChat_id());
     }
 
     @Override
@@ -176,7 +176,8 @@ public class ChatListPresenterImpl implements ChatListPresenter {
                     public void onNext(ChatItem chatItem) {
                         mChatListView.showProgressDialog(false);
                         // add sender to db
-                        mUserProvider.addOrUpdateUser(chatItem.getUser());
+                        mUserProvider.addOrUpdateUser(chatItem.getBuyer());
+                        mUserProvider.addOrUpdateUser(chatItem.getSeller());
                         // add product to db
                         mProductProvider.addOrUpdateProduct(chatItem.getProduct());
 

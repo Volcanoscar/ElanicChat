@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.chat;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 
 import in.elanic.elanicchatdemo.models.db.ChatItem;
@@ -18,4 +20,6 @@ public interface ChatItemProvider {
     List<ChatItem> getActiveSellChats(String userId);
     List<ChatItem> getActiveBuyChats(String userId);
     List<ChatItem> getActiveBuyChatsForProduct(String userId, String producId);
+
+    String getReceiverId(@NonNull ChatItem item, @NonNull String senderId);
 }

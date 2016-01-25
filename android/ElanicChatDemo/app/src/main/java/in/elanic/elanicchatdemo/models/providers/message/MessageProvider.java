@@ -1,5 +1,8 @@
 package in.elanic.elanicchatdemo.models.providers.message;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.Date;
 import java.util.List;
 
@@ -12,12 +15,15 @@ import in.elanic.elanicchatdemo.models.db.User;
  */
 public interface MessageProvider {
 
-    List<Message> getAllMessages(String user1, String user2, String productId);
-    List<Message> getMessages(Date timestamp, String user1, String user2, String productId);
-    Message createNewMessage(String content, User sender, User receiver, Product product);
-    Message createNewOffer(int price, User sender, User receiver, Product product);
-    boolean updateMessage(Message message);
-    boolean updateLocalMessage(Message message);
-    boolean addNewMessage(Message message);
-    int addOrUpdateMessages(List<Message> messages);
+    List<Message> getAllMessages(@NonNull String user1, @NonNull String user2, @NonNull String productId);
+    List<Message> getMessages(@Nullable Date timestamp, String user1, String user2, String productId);
+    Message createNewMessage(@NonNull String content, @NonNull User sender, @NonNull User receiver, @NonNull Product product);
+    Message createNewOffer(int price, @NonNull User sender,@NonNull User receiver, @NonNull Product product);
+    boolean updateMessage(@NonNull Message message);
+    boolean updateLocalMessage(@NonNull Message message);
+    boolean addNewMessage(@NonNull Message message);
+    int addOrUpdateMessages(@NonNull List<Message> messages);
+
+    List<Message> getUnreadMessages(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId);
+    int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
 }

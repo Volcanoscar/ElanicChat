@@ -23,7 +23,7 @@ public class ChatListSellSectionFragment extends ChatListSectionFragment {
         return fragment;
     }
 
-    @Override
+    @Deprecated @Override
     public void openChat(String myUserId, String otherUserId, String productId) {
 
         if (getActivity() == null) {
@@ -31,6 +31,16 @@ public class ChatListSellSectionFragment extends ChatListSectionFragment {
         }
 
         Intent intent = ProductListContainerActivity.getActivityIntent(getActivity(), myUserId, productId);
+        startActivity(intent);
+    }
+
+    @Override
+    public void openChat(String productId) {
+        if (getActivity() == null) {
+            return;
+        }
+
+        Intent intent = ProductListContainerActivity.getActivityIntent(getActivity(), productId);
         startActivity(intent);
     }
 

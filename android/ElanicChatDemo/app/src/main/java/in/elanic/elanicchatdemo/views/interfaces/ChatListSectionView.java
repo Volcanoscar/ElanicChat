@@ -13,6 +13,6 @@ public interface ChatListSectionView {
     void setData(List<ChatItem> data);
     void showProgressBar(boolean show);
 
-    void openChat(String myUserId, String otherUserId, String productId);
-
+    @Deprecated void openChat(String myUserId, String otherUserId, String productId);
+    void openChat(String chatItemId);
 }

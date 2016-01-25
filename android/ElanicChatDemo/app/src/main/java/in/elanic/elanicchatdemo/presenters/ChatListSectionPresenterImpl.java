@@ -69,20 +69,8 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         if (item == null) {
             return;
         }
-
-        // TODO -> Change this. Product is available in ChatItem itself
-
-        Log.i(TAG, "buyer id: " + item.getBuyer_id() + " seller id: " + item.getSeller_id());
-
-//        Message message = item.getLastMessage();
-        if (mUserId.equals(item.getSeller_id())) {
-            // open with sender id
-            mChatListSectionView.openChat(mUserId, item.getBuyer_id(), item.getProduct_id());
-
-        } else {
-            // open with receiver id
-            mChatListSectionView.openChat(mUserId, item.getSeller_id(), item.getProduct_id());
-        }
+        
+        mChatListSectionView.openChat(item.getChat_id());
     }
 
     @Override

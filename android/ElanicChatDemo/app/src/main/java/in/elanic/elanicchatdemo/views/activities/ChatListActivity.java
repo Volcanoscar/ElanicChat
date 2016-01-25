@@ -2,6 +2,8 @@ package in.elanic.elanicchatdemo.views.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -159,7 +161,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
         }
     }
 
-    @Override
+    @Deprecated @Override
     public void openChat(String userId, String productId) {
         if (userId != null && !userId.isEmpty()) {
             Intent intent = ChatActivity.getActivityIntent(this, userId, productId);
@@ -173,13 +175,24 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     @Override
+    public void openChat(@NonNull @Size(min=1) String chatId) {
+        Intent intent = ChatActivity.getActivityIntent(this, chatId);
+        if (intent == null) {
+            Log.e(TAG, "intent is null");
+            return;
+        }
+
+        startActivity(intent);
+    }
+
+    @Override
     public void showProgressBar(boolean show) {
         mViewPager.setVisibility(show ? View.GONE : View.VISIBLE);
         mProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     @Override
-    public boolean openIfChatExists(String productId) {
+    public boolean openIfChatExists(@NonNull String productId) {
         // Check Sell Fragment
         if (mSellFragment != null) {
             if (mSellFragment.openChatIfExists(productId)) {
@@ -197,7 +210,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     @Override
-    public void loadChatSections(String userId) {
+    public void loadChatSections(@NonNull String userId) {
 
         mProgressBar.setVisibility(View.GONE);
         mViewPager.setVisibility(View.VISIBLE);

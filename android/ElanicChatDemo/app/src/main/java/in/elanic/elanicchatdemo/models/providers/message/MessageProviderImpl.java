@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.message;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.Date;
@@ -28,7 +30,7 @@ public class MessageProviderImpl implements MessageProvider {
     private static final boolean DEBUG = true;
 
     @Override
-    public List<Message> getAllMessages(String user1, String user2, String productId) {
+    public List<Message> getAllMessages(@NonNull String user1, @NonNull String user2, @NonNull String productId) {
         return getMessages(null, user1, user2, productId);
 
         /*WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
@@ -43,7 +45,8 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public List<Message> getMessages(Date timestamp, String user1, String user2, String productId) {
+    public List<Message> getMessages(@Nullable Date timestamp, @NonNull String user1,
+                                     @NonNull String user2, @NonNull String productId) {
 
         WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
         WhereCondition c2 = MessageDao.Properties.Sender_id.eq(user2);
@@ -65,7 +68,8 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public Message createNewMessage(String content, User sender, User receiver, Product product) {
+    public Message createNewMessage(@NonNull String content, @NonNull User sender,
+                                    @NonNull User receiver, @NonNull Product product) {
         Message message = new Message();
 
         Date date = new Date();
@@ -87,7 +91,8 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public Message createNewOffer(int price, User sender, User receiver, Product product) {
+    public Message createNewOffer(int price, @NonNull User sender,
+                                  @NonNull User receiver, @NonNull Product product) {
         Message message = new Message();
 
         Date date = new Date();
@@ -111,13 +116,13 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public boolean updateMessage(Message message) {
+    public boolean updateMessage(@NonNull Message message) {
         mDao.update(message);
         return true;
     }
 
     @Override
-    public boolean updateLocalMessage(Message message) {
+    public boolean updateLocalMessage(@NonNull Message message) {
         if (message.getLocal_id() == null || message.getLocal_id().isEmpty()) {
             if (DEBUG) {
                 Log.e(TAG, "new message local id is not available");
@@ -149,17 +154,49 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public boolean addNewMessage(Message message) {
+    public boolean addNewMessage(@NonNull Message message) {
         return mDao.insert(message) != 0;
     }
 
     @Override
-    public int addOrUpdateMessages(List<Message> messages) {
+    public int addOrUpdateMessages(@NonNull List<Message> messages) {
         int count = 0;
         for (Message message : messages) {
+
+            if (message.getIs_read() == null) {
+                message.setIs_read(false);
+            }
+
             count = count + (mDao.insertOrReplace(message) != 0 ? 1: 0);
         }
 
         return count;
+    }
+
+    @Override
+    public List<Message> getUnreadMessages(@NonNull String receiverId,
+                                           @NonNull String senderId,@NonNull String productId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+
+        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+
+        qb.where(MessageDao.Properties.Sender_id.eq(senderId), MessageDao.Properties.Receiver_id.eq(receiverId),
+                MessageDao.Properties.Product_id.eq(productId), boolCondition);
+
+        return qb.build().list();
+    }
+
+    @Override
+    public int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt) {
+        Message message = mDao.load(messageId);
+        if (message != null) {
+            message.setRead_at(readAt);
+            message.setIs_read(true);
+
+            mDao.update(message);
+            return 1;
+        }
+
+        return 0;
     }
 }

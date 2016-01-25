@@ -15,6 +15,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.views.fragments.ChatListSellProductSectionFragment;
 
 public class ProductListContainerActivity extends AppCompatActivity {
@@ -23,10 +24,16 @@ public class ProductListContainerActivity extends AppCompatActivity {
     @Bind(R.id.fragment_container) FrameLayout mFragmentContainer;
     @Bind(R.id.toolbar) Toolbar mToolbar;
 
-    public static Intent getActivityIntent(Context context, String userId, String productId) {
+    @Deprecated public static Intent getActivityIntent(Context context, String userId, String productId) {
         Intent intent = new Intent(context, ProductListContainerActivity.class);
         intent.putExtra(Constants.EXTRA_PRODUCT_ID, productId);
         intent.putExtra(Constants.EXTRA_USER_ID, userId);
+        return intent;
+    }
+
+    public static Intent getActivityIntent(Context context, String productId) {
+        Intent intent = new Intent(context, ProductListContainerActivity.class);
+        intent.putExtra(Constants.EXTRA_PRODUCT_ID, productId);
         return intent;
     }
 
@@ -58,8 +65,8 @@ public class ProductListContainerActivity extends AppCompatActivity {
     }
 
     private void setupFragment() {
-
-        String userId = getIntent().getStringExtra(Constants.EXTRA_USER_ID);
+        PreferenceProvider preferenceProvider = new PreferenceProvider(this);
+        String userId = preferenceProvider.getLoginUserId();
         String productId = getIntent().getStringExtra(Constants.EXTRA_PRODUCT_ID);
 
         ChatListSellProductSectionFragment fragment =

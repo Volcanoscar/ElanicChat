@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.chat;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 
 import de.greenrobot.dao.query.Query;
@@ -59,5 +61,21 @@ public class ChatItemProviderImpl implements ChatItemProvider {
         Query<ChatItem> query = mDao.queryBuilder().where(ChatItemDao.Properties.Product_id.eq(productId),
                 ChatItemDao.Properties.Seller_id.eq(userId)).build();
         return query.list();
+    }
+
+    @Override
+    public String getReceiverId(@NonNull ChatItem item, @NonNull String senderId) {
+        String buyerId = item.getBuyer_id();
+        String sellerId = item.getSeller_id();
+
+        if (senderId.equals(buyerId)) {
+            return sellerId;
+        }
+
+        if (senderId.equals(sellerId)) {
+            return buyerId;
+        }
+
+        return null;
     }
 }

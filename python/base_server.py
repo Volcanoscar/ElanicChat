@@ -20,6 +20,7 @@ REQUEST_GET_ALL_MESSAGES = 5
 REQUEST_GET_PRODUCTS = 6
 REQUEST_GET_USERS_AND_PRODUCTS = 7
 REQUEST_RESPOND_TO_OFFER = 8
+REQUEST_MARK_AS_READ = 9
 
 RESPONSE_NEW_MESSAGE = 3
 RESPONSE_USER = 4
@@ -110,10 +111,12 @@ class StartChatApiHandler(tornado.web.RequestHandler):
 			print "response", response
 			self.write(json.dumps(response))
 			self.finish()
-			return	
+			return
 
 		response = {'success' : True, 'product' : self.db_provider.sanitizeEntity(product),
-					'receiver' : self.db_provider.sanitizeEntity(receiver)}
+					'seller' : self.db_provider.sanitizeEntity(receiver),
+					'buyer' : user}
+
 		print "response", response
 		self.write(json.dumps(response))
 		self.finish()
@@ -172,7 +175,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		elif request_type == REQUEST_GET_USERS_AND_PRODUCTS:
 			self.onGetUsersAndProductsRequested(data)
 		elif request_type == REQUEST_RESPOND_TO_OFFER:
-			self.onRespondToOfferRequested(data)	
+			self.onRespondToOfferRequested(data)
+		elif request_type == REQUEST_MARK_AS_READ:
+			self.onMarkAsReadRequested(data)	
 		else:
 			self.write_message(json.dumps( {'success' : False,
 				"request_type" : data['request_type'], "error" : "Invalid request_type" } ))
@@ -385,9 +390,46 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		# send to the other user
 		self.sendMessage(new_message, new_message['sender_id'])
 
+	def onMarkAsReadRequested(self, data):
+		request_id = data['request_id']
+		message_ids = data.get('message_ids')
+		if not message_ids:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_GET_USERS_AND_PRODUCTS, "error" : "message_ids not found"}))
+			return
+
+		retVal = []
+		userId = self.id
+		for message_id in message_ids:
+			message = self.db_provider.getMessage(message_id)
+			if message:
+				# check if user is the receiver
+				if message['receiver_id'] == userId:
+					isRead = message.get('is_read')
+					if not isRead:
+						params = dict()
+						params['is_read'] = True
+						params['read_at'] = datetime.datetime.now()
+						self.db_provider.updateMessageField(message['_id'], params)
+						params['message_id'] = message_id
+
+						print params
+
+						retVal.append(ModelsProvider.sanitizeEntity(params))
+
+		# TODO : Send read notifications to sender?
+
+		self.write_message(json.dumps( {'success' : True,
+				"request_id" : request_id,
+				"request_type" : REQUEST_MARK_AS_READ, "data" : retVal}))
+		return
+
 
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:
+			data['delivered_at'] = datetime.datetime.now()
+			data = ModelsProvider.sanitizeEntity(data)
 			messages = [data]
 			response = {"success" : True, "response_type" : RESPONSE_NEW_MESSAGE, "data" : messages, 
 						'sync_timestamp' : ModelsProvider.getSyncTime()}

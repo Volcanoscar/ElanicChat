@@ -19,6 +19,7 @@ public class Constants {
     public static final int REQUEST_GET_PRODUCTS = 6;
     public static final int REQUEST_GET_USERS_AND_PRODUCTS = 7;
     public static final int REQUEST_RESPOND_TO_OFFER = 8;
+    public static final int REQUEST_MARK_AS_READ = 9;
 
     public static final int RESPONSE_NEW_MESSAGE = 3;
     public static final int RESPONSE_USER_DATA = 4;
@@ -45,6 +46,7 @@ public class Constants {
     public static final String EXTRA_SENDER_ID = "sender_id";
     public static final String EXTRA_RECEIVER_ID = "receiver_id";
     public static final String EXTRA_PRODUCT_ID = "product_id";
+    public static final String EXTRA_CHAT_ITEM_ID = "chat_item_id";
 
 
 }

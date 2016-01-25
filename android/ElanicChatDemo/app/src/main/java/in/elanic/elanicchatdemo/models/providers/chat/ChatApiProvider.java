@@ -1,6 +1,6 @@
 package in.elanic.elanicchatdemo.models.providers.chat;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import rx.Observable;
 
 /**

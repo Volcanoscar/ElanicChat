@@ -9,6 +9,7 @@ public class WSRequestEvent {
     public static final int EVENT_SEND = 2;
     public static final int EVENT_DISCONNECT = 3;
     public static final int EVENT_SYNC = 4;
+    public static final int EVENT_SEND_READ_DATA = 5;
 
     private int mEvent;
     private String mData;

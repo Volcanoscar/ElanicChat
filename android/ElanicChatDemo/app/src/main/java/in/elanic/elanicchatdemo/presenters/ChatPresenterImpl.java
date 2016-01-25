@@ -16,11 +16,14 @@ import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
 import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
@@ -41,14 +44,17 @@ public class ChatPresenterImpl implements ChatPresenter {
     private UserProvider mUserProvider;
     private MessageProvider mMessageProvider;
     private ProductProvider mProductProvider;
+    private ChatItemProvider chatItemProvider;
 
     private String mSenderId;
     private String mReceiverId;
     private String mProductId;
+    private String chatId;
 
     private User mSender;
     private User mReceiver;
     private Product mProduct;
+    private ChatItem chatItem;
 
     private List<Message> mMessages;
 
@@ -63,16 +69,20 @@ public class ChatPresenterImpl implements ChatPresenter {
         mUserProvider = new UserProviderImpl(this.mDaoSession.getUserDao());
         mMessageProvider = new MessageProviderImpl(this.mDaoSession.getMessageDao());
         mProductProvider = new ProductProviderImpl(this.mDaoSession.getProductDao());
+        chatItemProvider = new ChatItemProviderImpl(this.mDaoSession.getChatItemDao());
     }
 
     @Override
     public void attachView(Bundle extras) {
 
-        mSenderId = extras.getString(Constants.EXTRA_SENDER_ID);
-        mReceiverId = extras.getString(Constants.EXTRA_RECEIVER_ID);
-        mProductId = extras.getString(Constants.EXTRA_PRODUCT_ID);
+        chatId = extras.getString(Constants.EXTRA_CHAT_ITEM_ID);
 
+        chatItem = chatItemProvider.getChatItem(chatId);
+        mProductId = chatItem.getProduct_id();
+        mSenderId = extras.getString(Constants.EXTRA_SENDER_ID);
         mSender = mUserProvider.getUser(mSenderId);
+
+        mReceiverId = chatItemProvider.getReceiverId(chatItem, mSenderId);
         mReceiver = mUserProvider.getUser(mReceiverId);
         mProduct = mProductProvider.getProduct(mProductId);
 
@@ -88,6 +98,18 @@ public class ChatPresenterImpl implements ChatPresenter {
     @Override
     public void detachView() {
         mMessages.clear();
+    }
+
+    @Override
+    public void pause() {
+        if (chatItem != null) {
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND_READ_DATA, chatItem.getChat_id()));
+        }
+    }
+
+    @Override
+    public void resume() {
+
     }
 
     @Override

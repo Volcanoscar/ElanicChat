@@ -1,13 +1,16 @@
 package in.elanic.elanicchatdemo.controllers.services;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -461,5 +464,68 @@ public class WSSHelper {
 
     public void clearPendingRequests() {
         mWSRequestProvider.clearPendingRequests();
+    }
+
+    public List<Message> getUnreadMessages(@NonNull String chatItemId, @NonNull String receiverId) {
+        ChatItem chatItem = mChatItemProvider.getChatItem(chatItemId);
+        if (chatItem == null) {
+            return null;
+        }
+
+        String productId = chatItem.getProduct_id();
+        String buyerId = chatItem.getBuyer_id();
+        String sellerId = chatItem.getSeller_id();
+
+        if (!buyerId.equals(receiverId) && !sellerId.equals(receiverId)) {
+            // No relation. wow.
+            return null;
+        }
+
+        String senderId = null;
+        if (buyerId.equals(receiverId)) {
+            senderId = sellerId;
+        } else if (sellerId.equals(receiverId)) {
+            senderId = buyerId;
+        }
+
+        if (senderId == null) {
+            return null;
+        }
+
+        return mMessageProvider.getUnreadMessages(receiverId, senderId, productId);
+    }
+
+    public static JSONObject createUnreadMessagesRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
+        JSONObject jsonObject = createWSRequest(Constants.REQUEST_MARK_AS_READ);
+
+        List<String> messageIds = new ArrayList<>();
+        for (Message message : messages) {
+            messageIds.add(message.getMessage_id());
+        }
+
+        jsonObject.put(JSONUtils.KEY_MESSAGE_IDS, new JSONArray(messageIds));
+        return jsonObject;
+    }
+
+    public int updateReadReceipts(JSONObject jsonResponse) throws JSONException {
+        JSONArray readReceipts = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
+
+        int count = 0;
+
+        DateFormat df = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT);
+
+        for (int i=0; i<readReceipts.length(); i++) {
+            JSONObject readObject = readReceipts.getJSONObject(i);
+            String messageId = readObject.getString(JSONUtils.KEY_MESSAGE_ID);
+            try {
+                Date readAt = df.parse(readObject.getString(JSONUtils.KEY_READ_AT));
+                count += mMessageProvider.updateReadTimestamp(messageId, readAt);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return count;
     }
 }

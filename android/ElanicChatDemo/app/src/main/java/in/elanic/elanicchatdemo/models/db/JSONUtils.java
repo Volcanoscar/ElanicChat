@@ -18,6 +18,7 @@ import in.elanic.elanicchatdemo.models.Constants;
 public class JSONUtils {
 
     public static final String KEY_MESSAGE_ID = "message_id";
+    public static final String KEY_MESSAGE_IDS = "message_ids";
     public static final String KEY_TYPE = "type";
     public static final String KEY_CONTENT = "content";
     public static final String KEY_RECEIVER_ID = "receiver_id";
@@ -64,7 +65,8 @@ public class JSONUtils {
     public static final String KEY_PRODUCT = "product";
     public static final String KEY_RECEIVER = "receiver";
     public static final String KEY_REQUEST_ID = "request_id";
-
+    public static final String KEY_BUYER = "buyer";
+    public static final String KEY_SELLER = "seller";
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private static final String TAG = "JSONUtils";

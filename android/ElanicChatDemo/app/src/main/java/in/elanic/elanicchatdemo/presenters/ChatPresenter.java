@@ -10,6 +10,9 @@ public interface ChatPresenter {
     void attachView(Bundle extras);
     void detachView();
 
+    void pause();
+    void resume();
+
     void registerForEvents();
     void unregisterForEvents();
 
