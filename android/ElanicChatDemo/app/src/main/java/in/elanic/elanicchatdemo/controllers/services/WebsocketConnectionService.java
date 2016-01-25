@@ -278,18 +278,18 @@ public class WebsocketConnectionService extends Service {
                 onMarkAsReadRequestCompleted(jsonResponse);
             }
 
-            int responseType = mWSSHelper.getResponseType(jsonResponse);
+            int responseType = WSSHelper.getResponseType(jsonResponse);
             Log.i(TAG, "response type: " + responseType);
             if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
                 Log.i(TAG, "response_new_message");
                 onNewMessagesArrived(jsonResponse);
-                return;
+//                return;
             }
 
 
         } catch (JSONException e) {
             e.printStackTrace();
-            return;
+//            return;
         }
     }
 
@@ -307,10 +307,10 @@ public class WebsocketConnectionService extends Service {
         }
 
         mWSSHelper.createChatItem(message);
-        if (message == null) {
+        /*if (message == null) {
             Log.e(TAG, "unable to save message to db");
             return;
-        }
+        }*/
 
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGE_SENT, message));
     }
@@ -403,7 +403,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         if (users.length() != 0) {
-            mWSSHelper.saveUsersToDB(mWSSHelper.parseNewUsers(users));
+            mWSSHelper.saveUsersToDB(WSSHelper.parseNewUsers(users));
         } else {
             if (DEBUG) {
                 Log.e(TAG, "empty users array");
@@ -481,6 +481,7 @@ public class WebsocketConnectionService extends Service {
     //////////////// EVENTS //////////////////
     /////////////////////////////////////////
 
+    @SuppressWarnings("unused")
     public void onEvent(WSRequestEvent event) {
         switch (event.getEvent()) {
             case WSRequestEvent.EVENT_CONNECT:

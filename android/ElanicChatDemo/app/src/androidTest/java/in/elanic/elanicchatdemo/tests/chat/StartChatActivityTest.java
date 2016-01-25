@@ -3,6 +3,8 @@ package in.elanic.elanicchatdemo.tests.chat;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 
@@ -146,8 +148,13 @@ public class StartChatActivityTest //extends ActivityInstrumentationTestCase2<Ch
 
     }
 
-    @Override
+    @Deprecated @Override
     public void openChat(String userId, String productId) {
+
+    }
+
+    @Override
+    public void openChat(@NonNull @Size(min = 1) String chatId) {
 
     }
 

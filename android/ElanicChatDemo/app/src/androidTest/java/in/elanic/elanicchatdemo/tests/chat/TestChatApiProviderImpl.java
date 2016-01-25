@@ -7,11 +7,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.RetrofitApi;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
@@ -71,12 +72,21 @@ public class TestChatApiProviderImpl implements ChatApiProvider {
                 JsonElement productJson = jsonObject.get(JSONUtils.KEY_PRODUCT);
                 Product product = gson.fromJson(productJson, Product.class);
 
-                JsonElement receiverJson = jsonObject.get(JSONUtils.KEY_RECEIVER);
-                User receiver = gson.fromJson(receiverJson, User.class);
+                JsonElement buyerJson = jsonObject.get(JSONUtils.KEY_BUYER);
+                User buyer = gson.fromJson(buyerJson, User.class);
 
-                ChatItem chatItem = new ChatItem(product.getProduct_id(), product.getTitle(), product.getDescription(),
-                        0, receiver, null, product);
+                JsonElement sellerJson = jsonObject.get(JSONUtils.KEY_SELLER);
+                User seller = gson.fromJson(sellerJson, User.class);
 
+                String chatId = product.getProduct_id() + "_" + buyer.getUser_id();
+                ChatItem chatItem = new ChatItem(chatId);
+                chatItem.setBuyer(buyer);
+                chatItem.setSeller(seller);
+                chatItem.setProduct(product);
+                chatItem.setStatus(Constants.CHAT_ITEM_STATUS_ACTIVE);
+                chatItem.setCreated_at(new Date());
+                chatItem.setUpdated_at(new Date());
+                chatItem.setIs_deleted(false);
                 return Observable.just(chatItem);
             }
         });

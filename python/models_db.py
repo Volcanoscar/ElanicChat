@@ -42,6 +42,24 @@ class ModelsProvider:
 		# message['_id'] = message_id
 		return message
 
+	@staticmethod
+	def createTestOfferMessage(message_id, receiver_id, product_id, sender_id, seller_id):
+		message = dict()
+
+		message['message_id'] = message_id
+		message['type'] = 2
+		message['product_id'] = product_id
+		message['sender_id'] = sender_id
+		message['receiver_id'] = receiver_id
+		message['seller_id'] = seller_id
+ 		message['offer_price'] = 200
+		message['content'] = 'Test Offer'
+		message['created_at'] = datetime.datetime.now()
+		message['updated_at'] = datetime.datetime.now()
+		message['is_deleted'] = False
+
+		return message
+
 	def updateMessageField(self, message_id, data):
 		print "type of data", type(data)
 		data['updated_at'] = datetime.datetime.now()

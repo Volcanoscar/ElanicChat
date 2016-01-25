@@ -113,9 +113,9 @@ class StartChatApiHandler(tornado.web.RequestHandler):
 			self.finish()
 			return
 
-		response = {'success' : True, 'product' : self.db_provider.sanitizeEntity(product),
-					'seller' : self.db_provider.sanitizeEntity(receiver),
-					'buyer' : user}
+		response = {'success' : True, 'product' : ModelsProvider.sanitizeEntity(product),
+					'seller' : ModelsProvider.sanitizeEntity(receiver),
+					'buyer' : ModelsProvider.sanitizeEntity(user)}
 
 		print "response", response
 		self.write(json.dumps(response))
@@ -345,6 +345,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		message_id = data['message_id']
 		response = data['offer_response']
 
+		# Check for testing
+		if message_id == 'offer_test_message_accept' or \
+			message_id == 'offer_test_message_decline' or \
+			message_id == 'offer_test_message_responded':
+
+			self.sendTestResponseForOffer(data)
+			return
+
+
 		message = self.db_provider.getMessage(message_id)
 		if not message:
 			self.write_message(json.dumps( {'success' : False,
@@ -390,6 +399,39 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		# send to the other user
 		self.sendMessage(new_message, new_message['sender_id'])
 
+	def sendTestResponseForOffer(self, data):
+		print "send test offer message response"
+
+		request_id = data['request_id']
+		message_id = data['message_id']
+		response = data['offer_response']
+
+		receiver_id = 'offer_test_message_receiver'
+		product_id = 'offer_test_message_product'
+		seller_id = 'offer_test_message_seller'
+		price = 200
+		sender_id = self.id
+
+		message = ModelsProvider.createTestOfferMessage(message_id, receiver_id, product_id, sender_id, seller_id)
+		if message_id == 'offer_test_message_accept':
+			message['offer_response'] = 2
+		elif message_id == 'offer_test_message_decline':
+			message['offer_response'] = 3
+		elif message_id == 'offer_test_message_responded':
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "User has already responded to the offer"}))
+			return
+
+		self.write_message(json.dumps( {'success' : True,
+			"request_id" : request_id,
+			"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : ModelsProvider.sanitizeEntity(message)}))
+
+		print "sent response", json.dumps( {'success' : True,
+			"request_id" : request_id,
+			"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : ModelsProvider.sanitizeEntity(message)})
+		return
+
 	def onMarkAsReadRequested(self, data):
 		request_id = data['request_id']
 		message_ids = data.get('message_ids')
@@ -398,6 +440,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				"request_id" : request_id,
 				"request_type" : REQUEST_GET_USERS_AND_PRODUCTS, "error" : "message_ids not found"}))
 			return
+
+		# check for tests
+		for message_id in message_ids:
+			if message_id.find('test') != -1:
+				self.sendTestMarkAsRequestedOffer(data)
+				return
 
 		retVal = []
 		userId = self.id
@@ -425,6 +473,24 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				"request_type" : REQUEST_MARK_AS_READ, "data" : retVal}))
 		return
 
+	def sendTestMarkAsRequestedOffer(self, data):
+		request_id = data['request_id']
+		message_ids = data.get('message_ids')
+
+		retVal = []
+		for messageId in message_ids:
+			if messageId.find('_unread_') != -1:
+				params = dict()
+				params['is_read'] = True
+				params['read_at'] = datetime.datetime.now()
+				params['message_id'] = messageId
+
+				retVal.append(ModelsProvider.sanitizeEntity(params))
+
+		self.write_message(json.dumps( {'success' : True,
+				"request_id" : request_id,
+				"request_type" : REQUEST_MARK_AS_READ, "data" : retVal}))
+		return
 
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:
