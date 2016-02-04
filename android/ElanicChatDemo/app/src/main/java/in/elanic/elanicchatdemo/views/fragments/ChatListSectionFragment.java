@@ -20,6 +20,7 @@ import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
+import in.elanic.elanicchatdemo.models.UIBuyChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenter;
 import in.elanic.elanicchatdemo.views.adapters.ChatListAdapter;
@@ -87,7 +88,7 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
     }
 
     @Override
-    public void setData(List<ChatItem> data) {
+    public void setData(List<UIBuyChatItem> data) {
         if (mAdapter != null) {
             mAdapter.setItems(data);
             mAdapter.notifyDataSetChanged();

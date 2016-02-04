@@ -7,6 +7,7 @@ import java.util.List;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 
 /**
@@ -15,8 +16,10 @@ import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 public class ChatListSellSectionPresenterImpl extends ChatListSectionPresenterImpl {
     private static final String TAG = "ChatListSellSecPresente";
 
-    public ChatListSellSectionPresenterImpl(ChatListSectionView mChatListSectionView, ChatItemProvider mChatProvider) {
-        super(mChatListSectionView, mChatProvider);
+    public ChatListSellSectionPresenterImpl(ChatListSectionView mChatListSectionView,
+                                            ChatItemProvider mChatProvider,
+                                            UIBuyChatItemProvider uiBuyChatItemProvider) {
+        super(mChatListSectionView, mChatProvider, uiBuyChatItemProvider);
     }
 
     @Override

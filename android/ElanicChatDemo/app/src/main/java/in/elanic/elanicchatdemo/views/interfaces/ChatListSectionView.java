@@ -2,6 +2,7 @@ package in.elanic.elanicchatdemo.views.interfaces;
 
 import java.util.List;
 
+import in.elanic.elanicchatdemo.models.UIBuyChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 
 /**
@@ -10,7 +11,7 @@ import in.elanic.elanicchatdemo.models.db.ChatItem;
 public interface ChatListSectionView {
 
     void showError(CharSequence text);
-    void setData(List<ChatItem> data);
+    void setData(List<UIBuyChatItem> data);
     void showProgressBar(boolean show);
 
     @Deprecated void openChat(String myUserId, String otherUserId, String productId);

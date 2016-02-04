@@ -102,6 +102,18 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (mSellFragment != null) {
+            mSellFragment.loadChats();
+        }
+
+        if (mBuyFragment != null) {
+            mBuyFragment.loadChats();
+        }
+    }
+
+    @Override
     protected void onStop() {
         mPresenter.unregisterForEvents();
         super.onStop();

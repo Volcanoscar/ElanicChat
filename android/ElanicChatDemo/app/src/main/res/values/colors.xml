@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+
+    <color name="theme_app">#ffF95B4B</color>
+    <color name="theme_app_darker">#fff3320e</color>
+    <color name="theme_app_lighter">#ffff8f81</color>
+
+    <!-- Common values -->
+    <color name="black_100_percent">#ff000000</color>
+    <color name="black_80_percent">#cc000000</color>
+    <color name="black_60_percent">#99000000</color>
+    <color name="black_40_percent">#66000000</color>
+    <color name="black_20_percent">#33000000</color>
+    <color name="black_10_percent">#19000000</color>
+    <color name="white_100_percent">#ffffffff</color>
+    <color name="white_80_percent">#ccffffff</color>
+    <color name="white_60_percent">#99ffffff</color>
+    <color name="white_40_percent">#66ffffff</color>
+    <color name="white_20_percent">#33ffffff</color>
+    <color name="white_10_percent">#19ffffff</color>
+
+    <color name="colorPrimary">#ff1c1c1c</color>
+    <color name="colorPrimaryDark">#ff151515</color>
+    <color name="colorAccent">@color/theme_app</color>
+
 </resources>

@@ -25,5 +25,11 @@ public interface MessageProvider {
     int addOrUpdateMessages(@NonNull List<Message> messages);
 
     List<Message> getUnreadMessages(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId);
+    long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId);
+    long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String productId);
+
     int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
+
+    Message getLatestSimpleMessage(@NonNull String productId);
+    Message getLatestOffer(@NonNull String productId);
 }

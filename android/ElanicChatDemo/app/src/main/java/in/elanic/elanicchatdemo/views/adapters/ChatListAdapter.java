@@ -12,9 +12,12 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
+import in.elanic.elanicchatdemo.models.UIBuyChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
+import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.utils.DateUtils;
 
 /**
  * Created by Jay Rambhia on 01/01/16.
@@ -23,7 +26,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private LayoutInflater mInflater;
     private Context mContext;
-    private List<ChatItem> mItems;
+    private List<UIBuyChatItem> mItems;
     private Callback mCallback;
 
     public ChatListAdapter(Context context) {
@@ -39,15 +42,29 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ChatItemViewHolder viewHolder = (ChatItemViewHolder)holder;
-        ChatItem item = mItems.get(position);
+        UIBuyChatItem item = mItems.get(position);
         Product product = item.getProduct();
-        User receiver = item.getBuyer();
+        User receiver = item.getChatItem().getBuyer();
+
+        Message latestMessage = item.getLatestMessage();
 
         if (product != null) {
-            viewHolder.mTextView.setText(product.getTitle() + " <-> " + receiver.getUser_id());
+            viewHolder.productNameView.setText(product.getTitle());
         } else {
-            viewHolder.mTextView.setText(item.getChat_id() + " product is null");
+            viewHolder.productNameView.setText(item.getChatItem().getChat_id() + " product is null");
         }
+
+        if (latestMessage != null) {
+            viewHolder.messageView.setText(latestMessage.getContent());
+            viewHolder.timeView.setText(DateUtils.getPrintableTime(latestMessage.getCreated_at()));
+
+        } else {
+            viewHolder.messageView.setText("Latest message is null");
+            viewHolder.timeView.setText("");
+        }
+
+        viewHolder.unreadMessageView.setText(String.valueOf(item.getUnreadMessages()));
+
     }
 
     @Override
@@ -57,10 +74,10 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public long getItemId(int position) {
-        return mItems.get(position).getChat_id().hashCode();
+        return mItems.get(position).getChatItem().getChat_id().hashCode();
     }
 
-    public void setItems(List<ChatItem> mItems) {
+    public void setItems(List<UIBuyChatItem> mItems) {
         this.mItems = mItems;
     }
 
@@ -70,7 +87,10 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public class ChatItemViewHolder extends RecyclerView.ViewHolder {
 
-        @Bind(R.id.textview) TextView mTextView;
+        @Bind(R.id.product_name_view) TextView productNameView;
+        @Bind(R.id.message_view) TextView messageView;
+        @Bind(R.id.time_view) TextView timeView;
+        @Bind(R.id.unread_message_view) TextView unreadMessageView;
 
         public ChatItemViewHolder(View itemView) {
             super(itemView);

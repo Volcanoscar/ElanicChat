@@ -4,7 +4,6 @@ import dagger.Module;
 import dagger.Provides;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatApiProvider;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListPresenter;

@@ -7,6 +7,7 @@ import android.util.Log;
 import java.util.Date;
 import java.util.List;
 
+import de.greenrobot.dao.query.CountQuery;
 import de.greenrobot.dao.query.QueryBuilder;
 import de.greenrobot.dao.query.WhereCondition;
 import in.elanic.elanicchatdemo.models.Constants;
@@ -187,6 +188,34 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+
+        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+
+        qb.where(MessageDao.Properties.Sender_id.eq(senderId), MessageDao.Properties.Receiver_id.eq(receiverId),
+                MessageDao.Properties.Product_id.eq(productId), boolCondition);
+
+        // TODO CountQuery for efficiency
+        return qb.count();
+    }
+
+    @Override
+    public long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String productId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+
+        qb.where(MessageDao.Properties.Product_id.eq(productId), MessageDao.Properties.Receiver_id.eq(receiverId), boolCondition);
+        CountQuery<Message> cq = qb.buildCount();
+        if (DEBUG) {
+            Log.i(TAG, "productId: " + productId + ", receiverId: " + receiverId + ", cq unread count: " + cq.count());
+            Log.i(TAG, "productId: " + productId + ", receiverId: " + receiverId + ", qb unread count: " + qb.count());
+        }
+
+        return cq.count();
+    }
+
+    @Override
     public int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt) {
         Message message = mDao.load(messageId);
         if (message != null) {
@@ -198,5 +227,31 @@ public class MessageProviderImpl implements MessageProvider {
         }
 
         return 0;
+    }
+
+    @Override
+    public Message getLatestSimpleMessage(@NonNull String productId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        qb.where(MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Type.eq(Constants.TYPE_SIMPLE_MESSAGE));
+        List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
+        if (messages == null || messages.isEmpty()) {
+            return null;
+        }
+
+        return messages.get(0);
+    }
+
+    @Override
+    public Message getLatestOffer(@NonNull String productId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        qb.where(MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Type.eq(Constants.TYPE_OFFER_MESSAGE));
+        List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
+        if (messages == null || messages.isEmpty()) {
+            return null;
+        }
+
+        return messages.get(0);
     }
 }
