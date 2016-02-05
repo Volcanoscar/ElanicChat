@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">ElanicChatDemo</string>
+    
+    <string name="offer_pending">Pending</string>
+    <string name="offer_available">Available</string>
+    <string name="offer_declined">Offer Declined</string>
+    <string name="offer_accept">Accept</string>
+    <string name="offer_accepted">Accepted</string>
+    <string name="offer_expired">Offer Expired</string>
+    <string name="offer_invalid">Offer Invalid</string>
 </resources>

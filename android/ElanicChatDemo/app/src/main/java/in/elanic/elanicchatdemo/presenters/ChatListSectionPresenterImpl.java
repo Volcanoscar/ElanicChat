@@ -22,16 +22,16 @@ import rx.schedulers.Schedulers;
  */
 public abstract class ChatListSectionPresenterImpl implements ChatListSectionPresenter {
 
-    private static final boolean DEBUG = true;
+    protected static final boolean DEBUG = true;
     private static final String TAG = "ChatListSecPresenter";
 
-    private String mUserId;
+    protected String mUserId;
 
-    private ChatListSectionView mChatListSectionView;
+    protected ChatListSectionView mChatListSectionView;
     private ChatItemProvider mChatItemProvider;
     private UIBuyChatItemProvider uiChatItemProvider;
     private List<ChatItem> mItems;
-    private List<UIBuyChatItem> uiItems;
+    protected List<UIBuyChatItem> uiItems;
 
     public ChatListSectionPresenterImpl(ChatListSectionView mChatListSectionView,
                                         ChatItemProvider mChatItemProvider, UIBuyChatItemProvider chatItemProvider) {
@@ -43,12 +43,16 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     @Override
     public void attachView(Bundle extras) {
         mUserId = extras.getString(Constants.EXTRA_USER_ID);
-        loadData();
     }
 
     @Override
     public void detachView() {
 
+    }
+
+    @Override
+    public String getUserId() {
+        return mUserId;
     }
 
     @Override

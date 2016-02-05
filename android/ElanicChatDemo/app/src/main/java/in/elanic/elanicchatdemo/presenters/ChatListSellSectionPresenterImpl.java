@@ -27,4 +27,18 @@ public class ChatListSellSectionPresenterImpl extends ChatListSectionPresenterIm
         Log.i(TAG, "load chats");
         return provider.getActiveSellChats(userId);
     }
+
+    @Override
+    public void openChat(int position) {
+        if (position < 0 || uiItems == null || uiItems.size() <= position) {
+            return;
+        }
+
+        ChatItem item = uiItems.get(position).getChatItem();
+        if (item == null) {
+            return;
+        }
+
+        mChatListSectionView.openChat(item.getProduct_id());
+    }
 }

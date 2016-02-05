@@ -29,6 +29,8 @@ public class Constants {
     public static final int CHAT_ITEM_STATUS_DELETED = 3;
     public static final int CHAT_ITEM_STATUS_BLOCKED = 4;
 
+    public static final int OFFER_INVALID = -1;
+    public static final String OFFER_INVALID_STRING = "Offer is invalid";
     public static final int OFFER_ACTIVE = 1;
     public static final String OFFER_ACTIVE_STRING = "Offer is still available";
     public static final int OFFER_ACCEPTED = 2;

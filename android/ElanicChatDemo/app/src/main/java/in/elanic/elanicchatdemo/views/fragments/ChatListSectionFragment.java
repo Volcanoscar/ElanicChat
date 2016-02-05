@@ -52,7 +52,9 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
         View view = inflater.inflate(R.layout.fragment_chat_list_layout, container, false);
         ButterKnife.bind(this, view);
 
-        mAdapter = new ChatListAdapter(getActivity());
+        mPresenter.attachView(getArguments());
+
+        mAdapter = new ChatListAdapter(getActivity(), mPresenter.getUserId());
         mAdapter.setHasStableIds(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(mAdapter);
@@ -67,9 +69,13 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
         mRecyclerView.setVisibility(View.GONE);
         mErrorView.setVisibility(View.GONE);
 
-        mPresenter.attachView(getArguments());
-
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mPresenter.loadData();
     }
 
     @Override

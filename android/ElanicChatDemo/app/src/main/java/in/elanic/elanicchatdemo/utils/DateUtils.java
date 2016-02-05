@@ -25,4 +25,17 @@ public class DateUtils {
             return "Long ago";
         }
     }
+
+    public static String getRemainingTime(Date date) {
+        Date now = new Date();
+        long diff = (date.getTime() - now.getTime()) / (1000 * 60);
+
+        if (diff > 0 && diff < 60) {
+            return diff + " mins";
+        } else if (diff > 60) {
+            return diff/60 + " hrs";
+        }
+
+        return "";
+    }
 }

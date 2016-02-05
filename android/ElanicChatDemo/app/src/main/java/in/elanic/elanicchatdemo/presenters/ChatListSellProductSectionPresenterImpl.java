@@ -30,11 +30,16 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
         mProductId = extras.getString(Constants.EXTRA_PRODUCT_ID);
         // load data is called in attachView()
         super.attachView(extras);
+
+        if (DEBUG) {
+            Log.i(TAG, "product id: " + mProductId);
+            Log.i(TAG, "user id: " + mUserId);
+        }
     }
 
     @Override
     public List<ChatItem> loadChats(String userId, ChatItemProvider provider) {
-        Log.i(TAG, "load chats");
+        Log.i(TAG, "load chats: userId - " + userId + ", product id: " + mProductId);
 //        return null;
         return provider.getActiveBuyChatsForProduct(userId, mProductId);
     }

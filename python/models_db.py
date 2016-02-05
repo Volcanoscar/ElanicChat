@@ -33,6 +33,7 @@ class ModelsProvider:
 			message['offer_response'] = -1
 		else:
 			message['offer_response'] = 1
+			message['offer_expiry'] = self.getExpiryDate(date)
 
 		message['product_id'] = message['product_id']
 		message_id = messages_collection.insert_one(message).inserted_id
@@ -94,6 +95,10 @@ class ModelsProvider:
 		# 		user['read_at'] = datetime.datetime.strftime(user['read_at'], date_format)[:-3]
 
 		return entity
+
+	@staticmethod
+	def getExpiryDate(date):
+		return date + datetime.timedelta(hours=1)
 
 	@staticmethod
 	def getSyncTime():

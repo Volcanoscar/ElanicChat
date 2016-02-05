@@ -70,7 +70,57 @@
         android:layout_marginBottom="4dp"/>
 
     <View
+        android:id="@+id/divider1"
         android:layout_below="@id/imageview"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#ffcacaca"/>
+
+    <LinearLayout
+        android:id="@+id/offer_layout"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_below="@id/divider1">
+
+        <TextView
+            android:id="@+id/offer_price_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/black_60_percent"
+            android:textSize="16sp"
+            android:text="OFFER\nRs. 6000"/>
+
+        <TextView
+            android:id="@+id/offer_response_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/black_60_percent"
+            android:textSize="14sp"
+            android:drawableLeft="@drawable/ic_done_grey_600_18dp"
+            android:drawablePadding="8dp"
+            android:text="ACCEPT"/>
+
+        <TextView
+            android:id="@+id/offer_valid_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/black_60_percent"
+            android:textSize="14sp"
+            android:drawableLeft="@drawable/ic_alarm_grey_600_18dp"
+            android:drawablePadding="8dp"
+            android:text="22:10"/>
+
+    </LinearLayout>
+
+    <View
+        android:layout_below="@id/offer_layout"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:background="#ffcacaca"/>

@@ -12,4 +12,6 @@ public interface ChatListSectionPresenter {
     void loadData();
     void openChat(int position);
     boolean openIfChatExists(String productId);
+
+    String getUserId();
 }
