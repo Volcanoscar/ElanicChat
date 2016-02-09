@@ -19,7 +19,7 @@ public interface ChatItemProvider {
 
     List<ChatItem> getActiveSellChats(String userId);
     List<ChatItem> getActiveBuyChats(String userId);
-    List<ChatItem> getActiveBuyChatsForProduct(String userId, String producId);
+    List<ChatItem> getActiveSellChatsForProduct(String userId, String productId);
 
     String getReceiverId(@NonNull ChatItem item, @NonNull String senderId);
 }

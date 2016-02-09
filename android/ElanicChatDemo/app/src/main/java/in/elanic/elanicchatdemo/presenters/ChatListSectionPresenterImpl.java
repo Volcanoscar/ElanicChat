@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.presenters;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.List;
@@ -69,7 +70,8 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
             Log.i(TAG, "item seller id: " + item.getSeller_id());
         }
 
-        Observable<List<UIBuyChatItem>> observable = uiChatItemProvider.getUIBuyChats(mItems, mUserId);
+        Observable<List<UIBuyChatItem>> observable = loadUIChats(mUserId, mItems, uiChatItemProvider);
+                /*uiChatItemProvider.getUIBuyChats(mItems, mUserId);*/
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<List<UIBuyChatItem>>() {
@@ -124,5 +126,8 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         return false;
     }
 
-    public abstract List<ChatItem> loadChats(String userId, ChatItemProvider provider);
+    public abstract List<ChatItem> loadChats(@NonNull String userId, @NonNull ChatItemProvider provider);
+    public abstract Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
+                                                                @NonNull List<ChatItem> chatItems,
+                                                                @NonNull UIBuyChatItemProvider provider);
 }

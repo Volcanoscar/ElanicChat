@@ -32,4 +32,7 @@ public interface MessageProvider {
 
     Message getLatestSimpleMessage(@NonNull String productId);
     Message getLatestOffer(@NonNull String productId);
+
+    Message getLatestOffer(@NonNull String productId, @NonNull String buyerId);
+    Message getLatestSimpleMessage(@NonNull String productId, @NonNull String buyerId);
 }

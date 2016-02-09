@@ -15,4 +15,11 @@ public interface UIBuyChatItemProvider {
 
     Observable<List<UIBuyChatItem>> getUIBuyChats(@NonNull List<ChatItem> chats,
                                                   @NonNull String userId);
+
+    Observable<List<UIBuyChatItem>> getUISellChats(@NonNull List<ChatItem> chats,
+                                                   @NonNull String userId);
+
+    Observable<List<UIBuyChatItem>> getUISellChatsForProduct(@NonNull String productId,
+                                                              @NonNull List<ChatItem> chats,
+                                                              @NonNull String userId);
 }

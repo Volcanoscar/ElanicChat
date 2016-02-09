@@ -254,4 +254,38 @@ public class MessageProviderImpl implements MessageProvider {
 
         return messages.get(0);
     }
+
+    @Override
+    public Message getLatestOffer(@NonNull String productId, @NonNull String buyerId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+
+        WhereCondition c1 = qb.or(MessageDao.Properties.Sender_id.eq(buyerId),
+                MessageDao.Properties.Receiver_id.eq(buyerId));
+
+        qb.where(c1, MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Type.eq(Constants.TYPE_OFFER_MESSAGE));
+        List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
+        if (messages == null || messages.isEmpty()) {
+            return null;
+        }
+
+        return messages.get(0);
+    }
+
+    @Override
+    public Message getLatestSimpleMessage(@NonNull String productId, @NonNull String buyerId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+
+        WhereCondition c1 = qb.or(MessageDao.Properties.Sender_id.eq(buyerId),
+                MessageDao.Properties.Receiver_id.eq(buyerId));
+
+        qb.where(c1, MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Type.eq(Constants.TYPE_SIMPLE_MESSAGE));
+        List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
+        if (messages == null || messages.isEmpty()) {
+            return null;
+        }
+
+        return messages.get(0);
+    }
 }

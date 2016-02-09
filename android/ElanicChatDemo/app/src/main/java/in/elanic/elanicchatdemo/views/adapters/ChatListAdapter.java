@@ -16,7 +16,6 @@ import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.UIBuyChatItem;
-import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
@@ -52,7 +51,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         User receiver = item.getChatItem().getBuyer();
 
         Message latestMessage = item.getLatestMessage();
-        Message latestOffer = item.getLatestOffer();
+        Message latestOffer = item.getDisplayOffer();
 
         if (product != null) {
             viewHolder.productNameView.setText(product.getTitle());

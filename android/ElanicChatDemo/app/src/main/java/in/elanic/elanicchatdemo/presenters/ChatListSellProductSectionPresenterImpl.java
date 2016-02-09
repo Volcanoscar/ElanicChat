@@ -1,15 +1,18 @@
 package in.elanic.elanicchatdemo.presenters;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.List;
 
+import in.elanic.elanicchatdemo.models.UIBuyChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
+import rx.Observable;
 
 /**
  * Created by Jay Rambhia on 07/01/16.
@@ -38,9 +41,16 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     }
 
     @Override
-    public List<ChatItem> loadChats(String userId, ChatItemProvider provider) {
+    public List<ChatItem> loadChats(@NonNull String userId, @NonNull ChatItemProvider provider) {
         Log.i(TAG, "load chats: userId - " + userId + ", product id: " + mProductId);
 //        return null;
-        return provider.getActiveBuyChatsForProduct(userId, mProductId);
+        return provider.getActiveSellChatsForProduct(userId, mProductId);
+    }
+
+    @Override
+    public Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
+                                                       @NonNull List<ChatItem> chatItems,
+                                                       @NonNull UIBuyChatItemProvider provider) {
+        return provider.getUISellChatsForProduct(mProductId, chatItems, userId);
     }
 }

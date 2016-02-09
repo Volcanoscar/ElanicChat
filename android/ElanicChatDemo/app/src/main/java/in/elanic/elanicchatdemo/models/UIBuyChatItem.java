@@ -13,7 +13,10 @@ public class UIBuyChatItem {
     private User seller;
     private int unreadMessages;
     private Message latestMessage;
-    private Message latestOffer;
+    private Message displayOffer;
+
+    private String displayText;
+    private int otherOffers;
 
     public UIBuyChatItem(ChatItem chatItem) {
         this.chatItem = chatItem;
@@ -49,11 +52,27 @@ public class UIBuyChatItem {
         this.latestMessage = latestMessage;
     }
 
-    public Message getLatestOffer() {
-        return latestOffer;
+    public Message getDisplayOffer() {
+        return displayOffer;
     }
 
-    public void setLatestOffer(Message latestOffer) {
-        this.latestOffer = latestOffer;
+    public void setDisplayOffer(Message displayOffer) {
+        this.displayOffer = displayOffer;
+    }
+
+    public String getDisplayText() {
+        return displayText;
+    }
+
+    public void setDisplayText(String displayText) {
+        this.displayText = displayText;
+    }
+
+    public int getOtherOffers() {
+        return otherOffers;
+    }
+
+    public void setOtherOffers(int otherOffers) {
+        this.otherOffers = otherOffers;
     }
 }
