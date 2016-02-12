@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.views.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 
+import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListSectionViewComponent;
 import in.elanic.elanicchatdemo.models.Constants;
@@ -31,6 +32,11 @@ public class ChatListBuySectionFragment extends ChatListSectionFragment {
                         ChatListSectionViewModule.TYPE_BUY))
                 .build()
                 .inject(this);
+    }
+
+    @Override
+    protected int getLayoutResId() {
+        return R.layout.fragment_chat_list_layout;
     }
 
     @Deprecated @Override

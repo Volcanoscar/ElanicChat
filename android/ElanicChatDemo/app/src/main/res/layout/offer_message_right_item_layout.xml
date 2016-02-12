@@ -25,17 +25,18 @@
             android:text="MADE AN OFFER\nRs 600"/>
 
         <TextView
+            android:id="@+id/offer_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
             android:padding="8dp"
-            android:background="@color/colorAccent"
-            android:textColor="#fff"
-            android:id="@+id/offer_status"
+            android:textColor="@color/black_60_percent"
             android:textSize="16sp"
-            android:text="Offer still available"/>
+            android:drawableLeft="@drawable/ic_alarm_grey_600_18dp"
+            android:drawablePadding="8dp"
+            android:text="22:10"/>
 
     </LinearLayout>
 

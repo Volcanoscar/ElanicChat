@@ -4,14 +4,20 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import in.elanic.elanicchatdemo.models.UIBuyChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProvider;
+import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
+import in.elanic.elanicchatdemo.utils.ProductUtils;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
+import in.elanic.elanicchatdemo.views.interfaces.ChatListSellProductSectionView;
 import rx.Observable;
 
 /**
@@ -21,11 +27,16 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
 
     private static final String TAG = "SellProductSecPresenter";
     private String mProductId;
+    private ProductProvider productProvider;
+    private ChatListSellProductSectionView chatListSellProductSectionView;
 
-    public ChatListSellProductSectionPresenterImpl(ChatListSectionView mChatListSectionView,
-                                                   ChatItemProvider mChatItemProvider,
+    public ChatListSellProductSectionPresenterImpl(ChatListSellProductSectionView chatListSectionView,
+                                                   ProductProvider productProvider,
+                                                   ChatItemProvider chatItemProvider,
                                                    UIBuyChatItemProvider uiBuyChatItemProvider) {
-        super(mChatListSectionView, mChatItemProvider, uiBuyChatItemProvider);
+        super(chatListSectionView, chatItemProvider, uiBuyChatItemProvider);
+        this.chatListSellProductSectionView = chatListSectionView;
+        this.productProvider = productProvider;
     }
 
     @Override
@@ -38,6 +49,8 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
             Log.i(TAG, "product id: " + mProductId);
             Log.i(TAG, "user id: " + mUserId);
         }
+
+        chatListSellProductSectionView.showProductLayout(false);
     }
 
     @Override
@@ -53,4 +66,45 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
                                                        @NonNull UIBuyChatItemProvider provider) {
         return provider.getUISellChatsForProduct(mProductId, chatItems, userId);
     }
+
+    @Override
+    protected void onUIChatsLoaded(List<UIBuyChatItem> uiChats) {
+        // Load product
+        Product product = productProvider.getProduct(mProductId);
+        if (product == null) {
+            // TODO throw error
+            return;
+        }
+
+        setProduct(product);
+
+        int bestOfferPrice = 0;
+        int bestOfferIndex = -1;
+        for (int i=0; i<uiChats.size(); i++) {
+            UIBuyChatItem chatItem = uiChats.get(i);
+            Message offer = chatItem.getDisplayOffer();
+            if (offer != null && offer.getOffer_response() != null
+                    && offer.getOffer_response() == Constants.OFFER_ACTIVE
+                    && offer.getOffer_price() != null
+                    && offer.getOffer_price() > bestOfferPrice) {
+
+                bestOfferPrice = offer.getOffer_price();
+                bestOfferIndex = i;
+            }
+        }
+
+        if (bestOfferIndex != -1) {
+            chatListSellProductSectionView.setOfferPrice("BEST OFFER\n Rs. " + bestOfferPrice);
+        }
+    }
+
+    private void setProduct(@NonNull Product product) {
+        chatListSellProductSectionView.setTitle(product.getTitle());
+        chatListSellProductSectionView.setSpecifications(ProductUtils.getProductSpecification(product));
+        chatListSellProductSectionView.setPrice("Listed at Rs. " + product.getSelling_price());
+        chatListSellProductSectionView.setOfferPrice("");
+        chatListSellProductSectionView.showProductLayout(true);
+    }
+
+
 }

@@ -17,6 +17,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -48,6 +51,16 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Bind(R.id.edittext) EditText mEditText;
     @Bind(R.id.toolbar) Toolbar mToolbar;
     @Bind(R.id.snackbar_container) FrameLayout mSnackbarContainer;
+
+    @Bind(R.id.profile_imageview) ImageView profileView;
+    @Bind(R.id.username_view) TextView usernameView;
+
+    @Bind(R.id.product_layout) RelativeLayout productLayout;
+    @Bind(R.id.title_view) TextView titleView;
+    @Bind(R.id.offer_view) TextView offerView;
+    @Bind(R.id.imageview) ImageView imageView;
+    @Bind(R.id.specs_view) TextView specsView;
+    @Bind(R.id.price_view) TextView priceView;
 
     private MaterialDialog mProgressDialog;
 
@@ -158,7 +171,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     }
 
     private void setupToolbar() {
-        mToolbar.setTitle("Chat");
+        mToolbar.setTitle("");
         setSupportActionBar(mToolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -234,6 +247,46 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     }
 
     @Override
+    public void showProductLayout(boolean status) {
+        productLayout.setVisibility(status ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void setProductTitle(@NonNull CharSequence text) {
+        titleView.setText(text);
+    }
+
+    @Override
+    public void setPrice(@NonNull CharSequence text) {
+        priceView.setText(text);
+    }
+
+    @Override
+    public void setOfferPrice(@NonNull CharSequence text) {
+        offerView.setText(text);
+    }
+
+    @Override
+    public void setImage(@NonNull String url) {
+        // TODO load image
+    }
+
+    @Override
+    public void setSpecifications(@NonNull CharSequence text) {
+        specsView.setText(text);
+    }
+
+    @Override
+    public void setProfileImage(@NonNull String url) {
+        // TODO load image
+    }
+
+    @Override
+    public void setUsername(@NonNull CharSequence text) {
+        usernameView.setText(text);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_chat, menu);
         return true;
@@ -265,4 +318,5 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .negativeText("Cancel")
                 .show();
     }
+
 }

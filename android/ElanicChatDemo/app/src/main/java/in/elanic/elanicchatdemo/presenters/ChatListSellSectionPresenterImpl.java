@@ -39,6 +39,11 @@ public class ChatListSellSectionPresenterImpl extends ChatListSectionPresenterIm
     }
 
     @Override
+    protected void onUIChatsLoaded(List<UIBuyChatItem> uiChats) {
+        // Do nothing here
+    }
+
+    @Override
     public void openChat(int position) {
         if (position < 0 || uiItems == null || uiItems.size() <= position) {
             return;

@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.presenters;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -30,6 +31,7 @@ import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
+import in.elanic.elanicchatdemo.utils.ProductUtils;
 import in.elanic.elanicchatdemo.views.interfaces.ChatView;
 
 /**
@@ -88,11 +90,17 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         if (mReceiver == null) {
             Log.e(TAG, "receiver is not available: " + mReceiverId);
+            return;
         }
 
         if (mProduct == null) {
             Log.e(TAG, "product is not available in db: " + mProductId);
+            return;
         }
+
+        setReceiver(mReceiver);
+        setProduct(mProduct);
+        // TODO Load latest offer
     }
 
     @Override
@@ -233,6 +241,18 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
     }
 
+    private void setReceiver(@NonNull User receiver) {
+        mChatView.setUsername(receiver.getUsername());
+    }
+
+    private void setProduct(@NonNull Product product) {
+        mChatView.setProductTitle(product.getTitle());
+        mChatView.setSpecifications(ProductUtils.getProductSpecification(product));
+        mChatView.setPrice("Listed at Rs. " + product.getSelling_price());
+        mChatView.setOfferPrice("");
+        mChatView.showProductLayout(true);
+    }
+    
     private boolean areDetailsAvailable() {
         if (mReceiver == null) {
             Log.e(TAG, "receiver data is not present");

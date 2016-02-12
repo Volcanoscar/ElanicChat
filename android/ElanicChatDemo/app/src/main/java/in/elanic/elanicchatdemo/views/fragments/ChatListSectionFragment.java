@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.views.fragments;
 
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.inject.Inject;
 
 import butterknife.Bind;
@@ -49,7 +51,7 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_chat_list_layout, container, false);
+        View view = inflater.inflate(getLayoutResId(), container, false);
         ButterKnife.bind(this, view);
 
         mPresenter.attachView(getArguments());
@@ -131,4 +133,5 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
     }
 
     protected abstract void setupComponent(ApplicationComponent applicationComponent);
+    @LayoutRes protected abstract int getLayoutResId();
 }

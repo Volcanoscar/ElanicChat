@@ -5,11 +5,13 @@ import dagger.Provides;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProviderImpl;
+import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListBuySectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSectionPresenter;
 import in.elanic.elanicchatdemo.presenters.ChatListSellProductSectionPresenterImpl;
 import in.elanic.elanicchatdemo.presenters.ChatListSellSectionPresenterImpl;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
+import in.elanic.elanicchatdemo.views.interfaces.ChatListSellProductSectionView;
 
 /**
  * Created by Jay Rambhia on 06/01/16.
@@ -38,11 +40,18 @@ public class ChatListSectionViewModule {
     @Provides
     public ChatListSectionPresenter providePresenter(ChatListSectionView view, DaoSession daoSession) {
         if (mSectionType == TYPE_SELL) {
-            return new ChatListSellSectionPresenterImpl(view, new ChatItemProviderImpl(daoSession.getChatItemDao()), new UIBuyChatItemProviderImpl(daoSession));
+            return new ChatListSellSectionPresenterImpl(view,
+                    new ChatItemProviderImpl(daoSession.getChatItemDao()),
+                    new UIBuyChatItemProviderImpl(daoSession));
         } else if (mSectionType == TYPE_BUY) {
-            return new ChatListBuySectionPresenterImpl(view, new ChatItemProviderImpl(daoSession.getChatItemDao()), new UIBuyChatItemProviderImpl(daoSession));
+            return new ChatListBuySectionPresenterImpl(view,
+                    new ChatItemProviderImpl(daoSession.getChatItemDao()),
+                    new UIBuyChatItemProviderImpl(daoSession));
         } else if (mSectionType == TYPE_SELL_PRODUCT) {
-            return new ChatListSellProductSectionPresenterImpl(view, new ChatItemProviderImpl(daoSession.getChatItemDao()), new UIBuyChatItemProviderImpl(daoSession));
+            return new ChatListSellProductSectionPresenterImpl((ChatListSellProductSectionView)view,
+                    new ProductProviderImpl(daoSession.getProductDao()),
+                    new ChatItemProviderImpl(daoSession.getChatItemDao()),
+                    new UIBuyChatItemProviderImpl(daoSession));
         }
 
         throw new RuntimeException("Invalid section type: " + mSectionType);

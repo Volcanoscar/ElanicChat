@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="4dp"
+    android:background="@color/colorPrimary"
+    android:paddingTop="16dp">
+
+    <ImageView
+        android:id="@+id/imageview"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/ic_launcher"/>
+
+    <TextView
+        android:id="@+id/offer_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="8dp"
+        android:maxLines="2"
+        android:paddingRight="8dp"
+        android:gravity="center"
+        android:text="BEST OFFER\nRs. 600"
+        android:textColor="@color/white_80_percent"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/title_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/imageview"
+        android:layout_marginRight="8dp"
+        android:layout_toRightOf="@id/imageview"
+        android:layout_toLeftOf="@id/offer_view"
+        android:maxLines="2"
+        android:paddingRight="8dp"
+        android:text="Title"
+        android:textColor="@color/white_100_percent"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/specs_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title_view"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toLeftOf="@id/offer_view"
+        android:layout_toRightOf="@id/imageview"
+        android:drawablePadding="4dp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingRight="8dp"
+        android:text="Size: M | Brand : Blue Lagoon YOLO YOYO"
+        android:textColor="@color/white_60_percent"
+        android:textSize="12sp"/>
+
+
+    <TextView
+        android:id="@+id/price_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/imageview"
+        android:layout_marginRight="8dp"
+        android:layout_toRightOf="@id/imageview"
+        android:text="Listed at Rs 1200"
+        android:textColor="@color/white_60_percent"
+        android:textSize="12sp" />
+
+</RelativeLayout>

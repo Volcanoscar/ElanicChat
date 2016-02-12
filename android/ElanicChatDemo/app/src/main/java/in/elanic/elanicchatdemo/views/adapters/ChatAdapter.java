@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Date;
 import java.util.List;
 
 import butterknife.Bind;
@@ -19,6 +20,7 @@ import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.User;
+import in.elanic.elanicchatdemo.utils.DateUtils;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -76,7 +78,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 sender_text = sender.getUsername();
             }
 
-            StringBuilder sb = new StringBuilder();
+            /*StringBuilder sb = new StringBuilder();
             sb.append(sender_text);
             sb.append("\n");
             sb.append("Message: ");
@@ -101,7 +103,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             sb.append(message.getMessage_id());
             sb.append("\n");
 
-            mHolder.mTextView.setText(sb.toString());
+            mHolder.mTextView.setText(sb.toString());*/
+
+            mHolder.mTextView.setText(message.getContent());
+
         } else if (holder instanceof MyOfferViewHolder) {
             MyOfferViewHolder viewHolder = (MyOfferViewHolder)holder;
             StringBuilder sb = new StringBuilder();
@@ -111,7 +116,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.i(TAG, "offer response: " + message.getOffer_response());
 
             viewHolder.mOfferView.setText(sb.toString());
-            viewHolder.mOfferStatus.setText(JSONUtils.getOfferStatusString(message.getOffer_response()));
+
+            Date expiryDate = message.getOffer_expiry();
+            if (expiryDate != null) {
+
+                if(new Date().compareTo(expiryDate) >= 0) {
+                    viewHolder.mOfferStatus.setText(R.string.offer_expired);
+                } else {
+                    viewHolder.mOfferStatus.setText(DateUtils.getRemainingTime(expiryDate));
+                    viewHolder.mOfferStatus.setVisibility(View.VISIBLE);
+                }
+
+            } else {
+                viewHolder.mOfferStatus.setVisibility(View.INVISIBLE);
+            }
+
+//            viewHolder.mOfferStatus.setText(JSONUtils.getOfferStatusString(message.getOffer_response()));
 
         } else if (holder instanceof OtherOfferViewHolder) {
             OtherOfferViewHolder viewHolder = (OtherOfferViewHolder)holder;
@@ -120,7 +140,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             sb.append(String.valueOf(message.getOffer_price()));
 
             viewHolder.mOfferView.setText(sb.toString());
-            viewHolder.mOfferStatus.setText(JSONUtils.getOfferStatusString(message.getOffer_response()));
+
+            Date expiryDate = message.getOffer_expiry();
+            if (expiryDate != null) {
+
+                if(new Date().compareTo(expiryDate) >= 0) {
+                    viewHolder.mOfferStatus.setText(R.string.offer_expired);
+                } else {
+                    viewHolder.mOfferStatus.setText(DateUtils.getRemainingTime(expiryDate));
+                    viewHolder.mOfferStatus.setVisibility(View.VISIBLE);
+                }
+
+            } else {
+                viewHolder.mOfferStatus.setVisibility(View.INVISIBLE);
+            }
+
+//            viewHolder.mOfferStatus.setText(JSONUtils.getOfferStatusString(message.getOffer_response()));
 
             Log.i(TAG, "offer response: " + message.getOffer_response());
 
@@ -174,8 +209,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         @Bind(R.id.offer_view) TextView mOfferView;
         @Bind(R.id.response_layout) ViewGroup mResponseLayout;
-        @Bind(R.id.accept_button) Button mAcceptButton;
-        @Bind(R.id.decline_button) Button mDeclineButton;
+        @Bind(R.id.accept_button) TextView mAcceptButton;
+        @Bind(R.id.decline_button) TextView mDeclineButton;
         @Bind(R.id.offer_status) TextView mOfferStatus;
 
         public OtherOfferViewHolder(View itemView) {

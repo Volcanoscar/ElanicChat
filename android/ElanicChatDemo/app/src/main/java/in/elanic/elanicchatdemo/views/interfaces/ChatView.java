@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.views.interfaces;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -13,4 +15,14 @@ public interface ChatView {
     void confirmOfferResponse(int position, boolean accept);
     void showProgressDialog(boolean show);
     void showSnackbar(CharSequence message);
+
+    void showProductLayout(boolean status);
+    void setProductTitle(@NonNull CharSequence text);
+    void setPrice(@NonNull CharSequence text);
+    void setOfferPrice(@NonNull CharSequence text);
+    void setImage(@NonNull String url);
+    void setSpecifications(@NonNull CharSequence text);
+
+    void setProfileImage(@NonNull String url);
+    void setUsername(@NonNull CharSequence text);
 }

@@ -82,12 +82,15 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
                 if(new Date().compareTo(expiryDate) >= 0) {
                     response = Constants.OFFER_EXPIRED;
-                    viewHolder.offerValidityView.setText(R.string.offer_expired);
+
+                    viewHolder.offerValidityView.setVisibility(View.INVISIBLE);
+
+//                    viewHolder.offerValidityView.setText(R.string.offer_expired);
                 } else {
                     viewHolder.offerValidityView.setText(DateUtils.getRemainingTime(expiryDate));
+                    viewHolder.offerValidityView.setVisibility(View.VISIBLE);
                 }
 
-                viewHolder.offerValidityView.setVisibility(View.VISIBLE);
             } else {
                 viewHolder.offerValidityView.setVisibility(View.INVISIBLE);
             }

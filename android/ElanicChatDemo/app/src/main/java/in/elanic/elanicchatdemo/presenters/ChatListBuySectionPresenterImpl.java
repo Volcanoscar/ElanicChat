@@ -33,4 +33,9 @@ public class ChatListBuySectionPresenterImpl extends ChatListSectionPresenterImp
                                                        @NonNull UIBuyChatItemProvider provider) {
         return provider.getUIBuyChats(chatItems, userId);
     }
+
+    @Override
+    protected void onUIChatsLoaded(List<UIBuyChatItem> uiChats) {
+        // Do nothing here
+    }
 }

@@ -89,6 +89,7 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
                     public void onNext(List<UIBuyChatItem> uiBuyChatItems) {
                         uiItems = uiBuyChatItems;
                         mChatListSectionView.setData(uiItems);
+                        onUIChatsLoaded(uiBuyChatItems);
                     }
                 });
 
@@ -130,4 +131,5 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     public abstract Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
                                                                 @NonNull List<ChatItem> chatItems,
                                                                 @NonNull UIBuyChatItemProvider provider);
+    protected abstract void onUIChatsLoaded(List<UIBuyChatItem> uiChats);
 }
