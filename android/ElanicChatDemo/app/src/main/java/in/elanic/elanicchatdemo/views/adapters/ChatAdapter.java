@@ -120,15 +120,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Date expiryDate = message.getOffer_expiry();
             if (expiryDate != null) {
 
+                viewHolder.mOfferStatus.setVisibility(View.VISIBLE);
+
                 if(new Date().compareTo(expiryDate) >= 0) {
                     viewHolder.mOfferStatus.setText(R.string.offer_expired);
                 } else {
                     viewHolder.mOfferStatus.setText(DateUtils.getRemainingTime(expiryDate));
-                    viewHolder.mOfferStatus.setVisibility(View.VISIBLE);
                 }
 
             } else {
-                viewHolder.mOfferStatus.setVisibility(View.INVISIBLE);
+                viewHolder.mOfferStatus.setVisibility(View.GONE);
             }
 
 //            viewHolder.mOfferStatus.setText(JSONUtils.getOfferStatusString(message.getOffer_response()));
@@ -146,9 +147,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                 if(new Date().compareTo(expiryDate) >= 0) {
                     viewHolder.mOfferStatus.setText(R.string.offer_expired);
+                    viewHolder.mAcceptButton.setVisibility(View.GONE);
+                    viewHolder.mDeclineButton.setVisibility(View.GONE);
                 } else {
                     viewHolder.mOfferStatus.setText(DateUtils.getRemainingTime(expiryDate));
                     viewHolder.mOfferStatus.setVisibility(View.VISIBLE);
+                    viewHolder.mAcceptButton.setVisibility(View.VISIBLE);
+                    viewHolder.mDeclineButton.setVisibility(View.VISIBLE);
                 }
 
             } else {

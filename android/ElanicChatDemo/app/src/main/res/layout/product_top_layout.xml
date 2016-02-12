@@ -2,15 +2,13 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingBottom="4dp"
-    android:background="@color/colorPrimary"
-    android:paddingTop="16dp">
+    android:layout_height="56dp"
+    android:background="@color/colorPrimary">
 
     <ImageView
         android:id="@+id/imageview"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
@@ -38,6 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@id/imageview"
         android:layout_marginRight="8dp"
+        android:layout_marginTop="4dp"
         android:layout_toRightOf="@id/imageview"
         android:layout_toLeftOf="@id/offer_view"
         android:maxLines="2"
@@ -47,6 +46,7 @@
         android:textSize="16sp" />
 
     <TextView
+        android:visibility="gone"
         android:id="@+id/specs_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -71,6 +71,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/imageview"
         android:layout_marginRight="8dp"
+        android:layout_marginBottom="4dp"
         android:layout_toRightOf="@id/imageview"
         android:text="Listed at Rs 1200"
         android:textColor="@color/white_60_percent"
