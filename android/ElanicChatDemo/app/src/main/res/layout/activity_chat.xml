@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white_100_percent"
     tools:context=".views.activities.ChatActivity">
 
     <android.support.v7.widget.Toolbar
@@ -51,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/recyclerview"
-        android:layout_marginBottom="48dp"/>
+        android:layout_marginBottom="58dp"/>
 
     <FrameLayout
         android:layout_alignParentBottom="true"
@@ -59,24 +60,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <Button
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/send_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/snackbar_container"
         android:layout_alignParentRight="true"
-        android:layout_marginBottom="8dp"
-        android:id="@+id/button"
-        android:text = "Send"/>
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="12dp"
+        android:layout_marginRight="12dp"
+        android:src="@drawable/ic_send_white_24dp"
+        app:fabSize="mini"/>
 
     <EditText
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_above="@id/snackbar_container"
-        android:layout_toLeftOf="@id/button"
+        android:layout_toLeftOf="@id/send_fab"
         android:layout_marginBottom="8dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginLeft="8dp"
         android:maxLines="2"
         android:hint="Enter Message"
-        android:background="@drawable/comment_box_left"
+        android:background="@drawable/text_field_chat"
         android:inputType="textCapSentences|textShortMessage"
         android:id="@+id/edittext"/>
 

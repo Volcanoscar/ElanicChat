@@ -79,6 +79,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setLocal_id(String.valueOf(date.getTime()));
         message.setContent(content);
         message.setSender(sender);
+        message.setSeller(product.getUser_id().equals(sender.getUser_id()) ? receiver : sender);
         message.setReceiver(receiver);
         message.setIs_deleted(false);
         message.setCreated_at(date);
@@ -104,6 +105,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setLocal_id(String.valueOf(date.getTime()));
         message.setContent(content);
         message.setSender(sender);
+        message.setSeller(product.getUser_id().equals(sender.getUser_id()) ? receiver : sender);
         message.setReceiver(receiver);
         message.setIs_deleted(false);
         message.setCreated_at(date);

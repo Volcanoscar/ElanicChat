@@ -1,68 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_margin="8dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/comment_box_right"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="@drawable/chat_bubble_orange"
         android:layout_marginLeft="48dp"
         android:layout_gravity="right">
 
         <TextView
-            android:id="@+id/offer_view"
+            android:id="@+id/offer_time_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center"
-            android:textSize="18sp"
-            android:text="MADE AN OFFER Rs 600"/>
+            android:textColor="@color/white_60_percent"
+            android:layout_alignParentRight="true"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:textSize="14sp"
+            android:drawableLeft="@drawable/ic_timer_grey_400_18dp"
+            android:drawablePadding="8dp"
+            android:text="22:10"/>
+
+        <TextView
+            android:id="@+id/offer_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginRight="8dp"
+            android:layout_toLeftOf="@id/offer_time_view"
+            android:textColor="@color/white_100_percent"
+            android:textSize="16sp"
+            android:text="Rs 600"/>
 
         <View
             android:id="@+id/divider1"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
+            android:layout_below="@id/offer_view"
             android:layout_width="match_parent"
             android:layout_height="0.5dp"
             android:background="#ffcacaca"/>
 
-        <LinearLayout
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/offer_buy_now_button"
+            android:layout_width="wrap_content"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:layout_below="@id/divider1"
+            android:layout_height="28dp"
+            android:textAllCaps="true"
+            android:gravity="center_vertical"
+            android:textColor="@color/white_80_percent"
+            android:textSize="14sp"
+            android:drawablePadding="8dp"
+            android:drawableLeft="@drawable/ic_shopping_basket_grey_800_18dp"
+            android:text="@string/offer_buy_now"/>
+
+        <TextView
+            android:id="@+id/offer_status"
             android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:layout_height="wrap_content">
+            android:layout_below="@id/divider1"
+            android:layout_height="28dp"
+            android:textAllCaps="true"
+            android:gravity="center_vertical"
+            android:textColor="@color/white_80_percent"
+            android:textSize="12sp"
+            android:text="@string/offer_waiting_response"/>
 
-            <TextView
-                android:id="@+id/offer_status"
-                android:layout_weight="0.75"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="left|center_vertical"
-                android:padding="8dp"
-                android:textColor="@color/black_60_percent"
-                android:textSize="12sp"
-                android:text="@string/offer_waiting_response"/>
+        <ImageView
+            android:id="@+id/offer_status_imageview"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:padding="2dp"
+            android:layout_below="@id/divider1"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_close_grey_400_24dp"/>
 
-            <TextView
-                android:id="@+id/offer_time_view"
-                android:layout_weight="0.45"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="right|center_vertical"
-                android:padding="8dp"
-                android:textColor="@color/black_60_percent"
-                android:textSize="16sp"
-                android:drawableLeft="@drawable/ic_alarm_grey_600_18dp"
-                android:drawablePadding="8dp"
-                android:text="22:10"/>
+    </RelativeLayout>
+    
+    <TextView
+        android:id="@+id/time_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:gravity="center_vertical"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="4dp"
+        android:drawablePadding="4dp"
+        android:textColor="@color/black_40_percent"
+        android:drawableRight="@drawable/ic_access_time_grey_400_12dp"
+        android:text="22:54"
+        android:textSize="10sp"/>
 
-        </LinearLayout>
-
-    </LinearLayout>
-
-</FrameLayout>
+</LinearLayout>

@@ -149,6 +149,7 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
+
         Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver, mProduct);
 
         if (DEBUG) {

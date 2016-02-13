@@ -12,12 +12,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -238,7 +235,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         Snackbar.make(mSnackbarContainer, message, Snackbar.LENGTH_SHORT).show();
     }
 
-    @OnClick(R.id.button)
+    @OnClick(R.id.send_fab)
     public void onSendClicked() {
         String text = mEditText.getText().toString().trim();
         if (text.isEmpty()) {

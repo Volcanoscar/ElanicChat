@@ -87,7 +87,9 @@ public class JSONUtils {
         json.put(KEY_RECEIVER_ID, message.getReceiver_id());
         json.put(KEY_SENDER_ID, message.getSender_id());
         json.put(KEY_CREATED_AT, df.format(message.getCreated_at()));
-        json.put(KEY_UPDATED_AT, df.format(message.getUpdated_at()));
+        if (message.getUpdated_at() != null) {
+            json.put(KEY_UPDATED_AT, df.format(message.getUpdated_at()));
+        }
         json.put(KEY_IS_DELETED, message.getIs_deleted());
         json.put(KEY_PRODUCT_ID, message.getProduct_id());
         json.put(KEY_OFFER_PRICE, message.getOffer_price());

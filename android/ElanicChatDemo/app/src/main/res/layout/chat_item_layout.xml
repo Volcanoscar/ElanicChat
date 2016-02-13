@@ -68,6 +68,8 @@
         android:text="Ankita: I dont care"
         android:layout_alignBottom="@id/imageview"
         android:layout_toRightOf="@id/imageview"
+        android:layout_toLeftOf="@id/unread_message_view"
+        android:layout_marginRight="8dp"
         android:layout_marginBottom="2dp"/>
 
     <View
