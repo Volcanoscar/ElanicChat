@@ -8,11 +8,14 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.util.List;
+
 import butterknife.Bind;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListSectionViewComponent;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.UIBuyChatItem;
 import in.elanic.elanicchatdemo.modules.ChatListSectionViewModule;
 import in.elanic.elanicchatdemo.views.activities.ChatActivity;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSellProductSectionView;
@@ -20,7 +23,8 @@ import in.elanic.elanicchatdemo.views.interfaces.ChatListSellProductSectionView;
 /**
  * Created by Jay Rambhia on 07/01/16.
  */
-public class ChatListSellProductSectionFragment extends ChatListSectionFragment implements ChatListSellProductSectionView {
+public class ChatListSellProductSectionFragment extends ChatListSectionFragment
+        implements ChatListSellProductSectionView {
 
     @Bind(R.id.product_layout) RelativeLayout productLayout;
     @Bind(R.id.title_view) TextView titleView;
@@ -66,6 +70,15 @@ public class ChatListSellProductSectionFragment extends ChatListSectionFragment 
                         ChatListSectionViewModule.TYPE_SELL_PRODUCT))
                 .build()
                 .inject(this);
+    }
+
+    @Override
+    public void setData(List<UIBuyChatItem> data) {
+        if (mAdapter != null) {
+            mAdapter.showUserList(true);
+        }
+
+        super.setData(data);
     }
 
     @Override

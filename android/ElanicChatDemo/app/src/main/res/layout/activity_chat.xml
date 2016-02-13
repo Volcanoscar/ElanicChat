@@ -64,6 +64,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@id/snackbar_container"
         android:layout_alignParentRight="true"
+        android:layout_marginBottom="8dp"
         android:id="@+id/button"
         android:text = "Send"/>
 
@@ -72,9 +73,11 @@
         android:layout_height="wrap_content"
         android:layout_above="@id/snackbar_container"
         android:layout_toLeftOf="@id/button"
+        android:layout_marginBottom="8dp"
         android:maxLines="2"
         android:hint="Enter Message"
-        android:inputType="textCapSentences"
+        android:background="@drawable/comment_box_left"
+        android:inputType="textCapSentences|textShortMessage"
         android:id="@+id/edittext"/>
 
 </RelativeLayout>

@@ -40,7 +40,7 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
     @Inject
     ChatListSectionPresenter mPresenter;
 
-    private ChatListAdapter mAdapter;
+    protected ChatListAdapter mAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {

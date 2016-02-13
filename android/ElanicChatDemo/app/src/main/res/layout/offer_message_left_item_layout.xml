@@ -41,6 +41,30 @@
             android:gravity="center_vertical"
             android:layout_below="@id/divider1">
 
+            <TextView
+                android:id="@+id/offer_status"
+                android:layout_weight="1.5"
+                android:visibility="gone"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:layout_gravity="left|center_vertical"
+                android:padding="8dp"
+                android:textColor="@color/black_60_percent"
+                android:textSize="12sp"
+                android:text="@string/offer_waiting_response"/>
+
+            <TextView
+                android:id="@+id/buy_now_button"
+                android:layout_width="0dp"
+                android:visibility="gone"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/black_60_percent"
+                android:textSize="14sp"
+                android:drawableLeft="@drawable/ic_done_grey_600_18dp"
+                android:drawablePadding="8dp"
+                android:text="@string/offer_buy_now"/>
 
             <TextView
                 android:id="@+id/accept_button"
@@ -65,7 +89,7 @@
                 android:text="@string/offer_decline"/>
 
             <TextView
-                android:id="@+id/offer_status"
+                android:id="@+id/offer_time_view"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

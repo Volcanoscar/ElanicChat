@@ -3,10 +3,13 @@
     
     <string name="offer_pending">Pending</string>
     <string name="offer_available">Available</string>
-    <string name="offer_declined">Offer Declined</string>
+    <string name="offer_declined">Declined</string>
     <string name="offer_decline">Decline</string>
     <string name="offer_accept">Accept</string>
     <string name="offer_accepted">Accepted</string>
-    <string name="offer_expired">Offer Expired</string>
-    <string name="offer_invalid">Offer Invalid</string>
+    <string name="offer_expired">Expired</string>
+    <string name="offer_invalid">Invalid</string>
+
+    <string name="offer_waiting_response">Waiting For Response</string>
+    <string name="offer_buy_now">Buy Now</string>
 </resources>

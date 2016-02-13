@@ -1,7 +1,9 @@
 package in.elanic.elanicchatdemo.views.adapters;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.DrawableRes;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,10 +34,19 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private Callback mCallback;
     private String userId;
 
+    private boolean showUserList = false;
+
+    private int activeColor;
+    private int inactiveColor;
+
     public ChatListAdapter(Context context, String userId) {
         mContext = context;
         mInflater = LayoutInflater.from(mContext);
         this.userId = userId;
+
+        Resources res = context.getResources();
+        activeColor = ContextCompat.getColor(context, R.color.black_80_percent);
+        inactiveColor = ContextCompat.getColor(context, R.color.black_40_percent);
     }
 
     @Override
@@ -53,10 +64,20 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         Message latestMessage = item.getLatestMessage();
         Message latestOffer = item.getDisplayOffer();
 
-        if (product != null) {
-            viewHolder.productNameView.setText(product.getTitle());
+        if (showUserList) {
+
+            if (receiver != null) {
+                viewHolder.productNameView.setText(receiver.getUsername());
+            } else {
+                viewHolder.productNameView.setText(item.getChatItem().getChat_id() + " receiver is null");
+            }
+
         } else {
-            viewHolder.productNameView.setText(item.getChatItem().getChat_id() + " product is null");
+            if (product != null) {
+                viewHolder.productNameView.setText(product.getTitle());
+            } else {
+                viewHolder.productNameView.setText(item.getChatItem().getChat_id() + " product is null");
+            }
         }
 
         if (latestMessage != null) {
@@ -70,6 +91,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         if (latestOffer != null) {
 
+            boolean isBuyer = !latestOffer.getSeller_id().equals(userId);
             boolean isMyOffer = latestOffer.getSender_id().equals(userId);
             Integer response = latestOffer.getOffer_response();
 
@@ -77,70 +99,71 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 response = Constants.OFFER_INVALID;
             }
 
+            viewHolder.offerValidityView.setVisibility(View.VISIBLE);
+
             Date expiryDate = latestOffer.getOffer_expiry();
-            if (expiryDate != null) {
 
-                if(new Date().compareTo(expiryDate) >= 0) {
-                    response = Constants.OFFER_EXPIRED;
+            boolean isExpired = !(expiryDate != null && new Date().compareTo(expiryDate) < 0);
 
-                    viewHolder.offerValidityView.setVisibility(View.INVISIBLE);
+            if (response == Constants.OFFER_DECLINED) {
 
-//                    viewHolder.offerValidityView.setText(R.string.offer_expired);
+                viewHolder.showOfferIsDeclined();
+
+            } else if (response == Constants.OFFER_ACTIVE) {
+
+                if (isExpired) {
+                    viewHolder.showOfferIsExpired();
                 } else {
+
+                    if (isMyOffer) {
+                        viewHolder.offerResponseView.setText(R.string.offer_pending);
+                        viewHolder.setLeftDrawable(R.drawable.ic_alarm_on_grey_800_18dp, viewHolder.offerResponseView);
+                    } else {
+                        if (isBuyer) {
+                            viewHolder.offerResponseView.setText(R.string.offer_buy_now);
+                            viewHolder.setLeftDrawable(R.drawable.ic_shopping_basket_grey_800_18dp, viewHolder.offerResponseView);
+                        } else {
+                            viewHolder.offerResponseView.setText(R.string.offer_accept);
+                            viewHolder.setLeftDrawable(R.drawable.ic_done_grey_800_18dp, viewHolder.offerResponseView);
+                        }
+                    }
+
+                    viewHolder.offerResponseView.setTextColor(activeColor);
+
                     viewHolder.offerValidityView.setText(DateUtils.getRemainingTime(expiryDate));
                     viewHolder.offerValidityView.setVisibility(View.VISIBLE);
                 }
 
-            } else {
-                viewHolder.offerValidityView.setVisibility(View.INVISIBLE);
-            }
-
-            if (response == Constants.OFFER_EXPIRED) {
-                viewHolder.offerResponseView.setText(R.string.offer_expired);
-                viewHolder.setLeftDrawable(R.drawable.ic_alarm_off_grey_600_18dp, viewHolder.offerResponseView);
-            } else if (response == Constants.OFFER_INVALID) {
-                viewHolder.offerResponseView.setText(R.string.offer_invalid);
-                viewHolder.setLeftDrawable(R.drawable.ic_block_grey_600_18dp, viewHolder.offerResponseView);
-            } else {
-                if (isMyOffer) {
-                    if (response == Constants.OFFER_ACTIVE) {
-                        viewHolder.offerResponseView.setText(R.string.offer_pending);
-                        viewHolder.setLeftDrawable(R.drawable.ic_restore_grey_600_18dp, viewHolder.offerResponseView);
-                    } else if (response == Constants.OFFER_ACCEPTED) {
-                        viewHolder.offerResponseView.setText(R.string.offer_accepted);
-                        viewHolder.setLeftDrawable(R.drawable.ic_done_grey_600_18dp, viewHolder.offerResponseView);
-                    } else if (response == Constants.OFFER_DECLINED) {
-                        viewHolder.offerResponseView.setText(R.string.offer_declined);
-                        viewHolder.setLeftDrawable(R.drawable.ic_block_grey_600_18dp, viewHolder.offerResponseView);
-                    }/* else if (response == Constants.OFFER_EXPIRED) {
-
-                    }*/
+            } else if (response == Constants.OFFER_ACCEPTED) {
+                if (isExpired) {
+                    viewHolder.showOfferIsExpired();
                 } else {
-                    if (response == Constants.OFFER_ACTIVE) {
-                        viewHolder.offerResponseView.setText(R.string.offer_accept);
-                        viewHolder.setLeftDrawable(R.drawable.ic_done_grey_600_18dp, viewHolder.offerResponseView);
-                    } else if (response == Constants.OFFER_ACCEPTED) {
+
+                    if (isBuyer) {
+                        viewHolder.offerResponseView.setText(R.string.offer_buy_now);
+                        viewHolder.setLeftDrawable(R.drawable.ic_shopping_basket_grey_800_18dp, viewHolder.offerResponseView);
+                    } else {
                         viewHolder.offerResponseView.setText(R.string.offer_accepted);
-                        viewHolder.setLeftDrawable(R.drawable.ic_done_grey_600_18dp, viewHolder.offerResponseView);
-                    } else if (response == Constants.OFFER_DECLINED) {
-                        viewHolder.offerResponseView.setText(R.string.offer_declined);
-                        viewHolder.setLeftDrawable(R.drawable.ic_block_grey_600_18dp, viewHolder.offerResponseView);
-                    }/* else if (response == Constants.OFFER_EXPIRED) {
-                        viewHolder.offerResponseView.setText(R.string.offer_expired);
-                        viewHolder.setLeftDrawable(R.drawable.ic_alarm_off_grey_600_18dp, viewHolder.offerResponseView);
-                    }*/
+                        viewHolder.setLeftDrawable(R.drawable.ic_done_grey_800_18dp, viewHolder.offerResponseView);
+                    }
+                    viewHolder.offerResponseView.setTextColor(activeColor);
+
+                    viewHolder.offerValidityView.setText(DateUtils.getRemainingTime(expiryDate));
+                    viewHolder.offerValidityView.setVisibility(View.VISIBLE);
                 }
+            } else if (response == Constants.OFFER_EXPIRED) {
+                viewHolder.showOfferIsExpired();
             }
 
             viewHolder.offerLayout.setVisibility(View.VISIBLE);
             viewHolder.offerPriceView.setText("OFFER\nRs." + latestOffer.getOffer_price());
 
-
-
         } else {
             viewHolder.offerLayout.setVisibility(View.GONE);
         }
 
+        int unreadMessages = item.getUnreadMessages();
+        viewHolder.unreadMessageView.setVisibility(unreadMessages > 0 ? View.VISIBLE : View.GONE);
         viewHolder.unreadMessageView.setText(String.valueOf(item.getUnreadMessages()));
 
     }
@@ -153,6 +176,10 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public long getItemId(int position) {
         return mItems.get(position).getChatItem().getChat_id().hashCode();
+    }
+
+    public void showUserList(boolean showUserList) {
+        this.showUserList = showUserList;
     }
 
     public void setItems(List<UIBuyChatItem> mItems) {
@@ -190,6 +217,20 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         public void setLeftDrawable(@DrawableRes int res, TextView view) {
             view.setCompoundDrawablesWithIntrinsicBounds(res, 0, 0, 0);
+        }
+
+        public void showOfferIsExpired() {
+            offerResponseView.setText(R.string.offer_expired);
+            setLeftDrawable(R.drawable.ic_alarm_off_grey_400_18dp, offerResponseView);
+            offerResponseView.setTextColor(inactiveColor);
+            offerValidityView.setVisibility(View.INVISIBLE);
+        }
+
+        public void showOfferIsDeclined() {
+            offerResponseView.setText(R.string.offer_declined);
+            setLeftDrawable(R.drawable.ic_block_grey_400_18dp, offerResponseView);
+            offerResponseView.setTextColor(inactiveColor);
+            offerValidityView.setVisibility(View.INVISIBLE);
         }
     }
 
