@@ -14,4 +14,6 @@ public interface ChatListSectionPresenter {
     boolean openIfChatExists(String productId);
 
     String getUserId();
+
+    void openBestOfferChat();
 }

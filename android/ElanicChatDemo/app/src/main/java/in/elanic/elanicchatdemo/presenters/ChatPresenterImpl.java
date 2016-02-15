@@ -33,6 +33,7 @@ import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 import in.elanic.elanicchatdemo.utils.ProductUtils;
 import in.elanic.elanicchatdemo.views.interfaces.ChatView;
+import rx.Observable;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -55,10 +56,12 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     private User mSender;
     private User mReceiver;
+    private User buyer;
     private Product mProduct;
     private ChatItem chatItem;
 
     private List<Message> mMessages;
+    private Message latestOffer;
 
     private EventBus mEventBus;
 
@@ -98,9 +101,15 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
+        if (mSender == null) {
+            Log.e(TAG, "sender is not available in db: " + mSenderId);
+            return;
+        }
+
         setReceiver(mReceiver);
         setProduct(mProduct);
-        // TODO Load latest offer
+        buyer = mProduct.getUser_id().equals(mSenderId) ? mReceiver : mSender;
+        getLatestOffer(mProduct, buyer);
     }
 
     @Override
@@ -242,6 +251,24 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
     }
 
+    @Override
+    public void scrollToLatestOffer() {
+
+        if (mMessages == null || mMessages.size() == 0 || latestOffer == null) {
+            return;
+        }
+
+        synchronized (this) {
+            for (int i=0; i<mMessages.size(); i++) {
+                Message message = mMessages.get(i);
+                if (latestOffer.getMessage_id().equals(message.getMessage_id())) {
+                    mChatView.scrollToPosition(i);
+                    break;
+                }
+            }
+        }
+    }
+
     private void setReceiver(@NonNull User receiver) {
         mChatView.setUsername(receiver.getUsername());
     }
@@ -252,6 +279,23 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.setPrice("Listed at Rs. " + product.getSelling_price());
         mChatView.setOfferPrice("");
         mChatView.showProductLayout(true);
+    }
+
+    private void getLatestOffer(@NonNull Product product, @NonNull User buyer) {
+        Message offer = mMessageProvider.getLatestOffer(product.getProduct_id(), buyer.getUser_id());
+        if (offer != null && offer.getOffer_response() != null &&
+                (offer.getOffer_response() == Constants.OFFER_ACTIVE
+                        || offer.getOffer_price() == Constants.OFFER_ACCEPTED)
+                && offer.getOffer_price() != null) {
+            mChatView.setOfferPrice("ACTIVE OFFER\nRs. " + offer.getOffer_price());
+
+            latestOffer = offer;
+
+        } else {
+            mChatView.setOfferPrice("");
+
+            latestOffer = null;
+        }
     }
     
     private boolean areDetailsAvailable() {
@@ -275,6 +319,8 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         mMessages.add(position, message);
         mChatView.setData(mMessages);
+
+        getLatestOffer(mProduct, buyer);
     }
 
     private void sendMessageToWSService(String data) {

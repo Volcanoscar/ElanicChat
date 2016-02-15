@@ -95,7 +95,7 @@ public class NumbersLayout extends FlowLayout {
 
     private ImageView getDeleteButton(Context context) {
         ImageView imageView = new ImageView(context);
-        imageView.setImageResource(R.drawable.ic_keyboard_backspace_grey_400_24dp);
+        imageView.setImageResource(R.drawable.ic_keyboard_backspace_grey_800_24dp);
         imageView.setBackgroundResource(R.drawable.grey_circle_ripple);
         imageView.setScaleType(ImageView.ScaleType.CENTER);
 

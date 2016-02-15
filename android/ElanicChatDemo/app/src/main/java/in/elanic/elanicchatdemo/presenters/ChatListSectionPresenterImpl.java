@@ -127,6 +127,11 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         return false;
     }
 
+    @Override
+    public void openBestOfferChat() {
+        // Do nothing
+    }
+
     public abstract List<ChatItem> loadChats(@NonNull String userId, @NonNull ChatItemProvider provider);
     public abstract Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
                                                                 @NonNull List<ChatItem> chatItems,

@@ -24,6 +24,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -88,8 +89,6 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Inject
     ChatPresenter mPresenter;
 
-    private Intent mServiceIntent;
-
     @Deprecated public static Intent getActivityIntent(Context context, String userId, String productId) {
         Intent intent = new Intent(context, ChatActivity.class);
 
@@ -148,6 +147,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             }
         });
 
+        offerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPresenter.scrollToLatestOffer();
+            }
+        });
+
         mEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -158,13 +164,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() > 0) {
                     if (offerFAB.getVisibility() == View.VISIBLE) {
-                        CustomAnimationUtils.animateOut(offerView, View.GONE);
+                        CustomAnimationUtils.animateOut(offerFAB, View.GONE);
                         CustomAnimationUtils.animateIn(sendFAB, View.VISIBLE);
                     }
                 } else {
                     if (sendFAB.getVisibility() == View.VISIBLE) {
                         CustomAnimationUtils.animateOut(sendFAB, View.GONE);
-                        CustomAnimationUtils.animateIn(offerView, View.VISIBLE);
+                        CustomAnimationUtils.animateIn(offerFAB, View.VISIBLE);
                     }
                 }
             }
@@ -240,9 +246,6 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
     @Override
     protected void onDestroy() {
-        if (mServiceIntent != null) {
-            stopService(mServiceIntent);
-        }
         mPresenter.detachView();
         super.onDestroy();
     }
@@ -295,7 +298,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .negativeText("Cancel")
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
-                    public void onClick(MaterialDialog dialog, DialogAction which) {
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         mPresenter.respondToOffer(position, accept);
                     }
                 }).show();
@@ -384,6 +387,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     }
 
     @Override
+    public void scrollToPosition(int position) {
+        if (mRecyclerView != null) {
+            mRecyclerView.scrollToPosition(position);
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_chat, menu);
         return true;
@@ -406,7 +416,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .inputType(InputType.TYPE_CLASS_NUMBER)
                 .input("Your offer", "", false, new MaterialDialog.InputCallback() {
                     @Override
-                    public void onInput(MaterialDialog dialog, CharSequence input) {
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                         Toast.makeText(ChatActivity.this, input, Toast.LENGTH_SHORT).show();
                         mPresenter.sendOffer(input);
                     }
@@ -425,6 +435,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         ft.commit();
 
         CustomAnimationUtils.animateOut(offerFAB, View.GONE);
+        hideKeyboard();
     }
 
     private void hideBottomLayout() {
@@ -439,6 +450,15 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 CustomAnimationUtils.animateIn(offerFAB, View.VISIBLE);
             }
         }, 200);
+    }
 
+    public void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view == null) {
+            return;
+        }
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        imm = null;
     }
 }

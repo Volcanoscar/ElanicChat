@@ -30,6 +30,8 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     private ProductProvider productProvider;
     private ChatListSellProductSectionView chatListSellProductSectionView;
 
+    private UIBuyChatItem bestOfferChatItem;
+
     public ChatListSellProductSectionPresenterImpl(ChatListSellProductSectionView chatListSectionView,
                                                    ProductProvider productProvider,
                                                    ChatItemProvider chatItemProvider,
@@ -51,6 +53,15 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
         }
 
         chatListSellProductSectionView.showProductLayout(false);
+    }
+
+    @Override
+    public void openBestOfferChat() {
+        if (bestOfferChatItem == null) {
+            return;
+        }
+
+        mChatListSectionView.openChat(bestOfferChatItem.getChatItem().getChat_id());
     }
 
     @Override
@@ -94,6 +105,7 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
         }
 
         if (bestOfferIndex != -1) {
+            bestOfferChatItem = uiChats.get(bestOfferIndex);
             chatListSellProductSectionView.setOfferPrice("BEST OFFER\n Rs. " + bestOfferPrice);
         }
     }

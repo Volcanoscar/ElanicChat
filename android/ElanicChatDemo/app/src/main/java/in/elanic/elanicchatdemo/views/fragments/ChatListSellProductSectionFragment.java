@@ -11,6 +11,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import butterknife.Bind;
+import butterknife.OnClick;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListSectionViewComponent;
@@ -114,5 +115,10 @@ public class ChatListSellProductSectionFragment extends ChatListSectionFragment
     @Override
     public void setSpecifications(@NonNull CharSequence text) {
         specsView.setText(text);
+    }
+
+    @OnClick(R.id.offer_view)
+    public void onBestOfferClicked() {
+        mPresenter.openBestOfferChat();
     }
 }

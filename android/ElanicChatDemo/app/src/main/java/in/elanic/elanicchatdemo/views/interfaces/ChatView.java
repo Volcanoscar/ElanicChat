@@ -25,4 +25,6 @@ public interface ChatView {
 
     void setProfileImage(@NonNull String url);
     void setUsername(@NonNull CharSequence text);
+
+    void scrollToPosition(int position);
 }

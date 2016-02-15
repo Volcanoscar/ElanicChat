@@ -22,6 +22,7 @@
     <color name="grey_800">#ff333333</color>
     <color name="grey_600">#ff666666</color>
     <color name="grey_400">#ff999999</color>
+    <color name="grey_200">#ffcccccc</color>
 
     <color name="colorPrimary">#ff1c1c1c</color>
     <color name="colorPrimaryDark">#ff151515</color>
