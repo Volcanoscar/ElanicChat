@@ -43,6 +43,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static final int VIEW_OTHERS_MESSAGE = OTHER_MESSAGE << Constants.TYPE_SIMPLE_MESSAGE;
     public static final int VIEW_MY_OFFER = MY_MESSAGE << Constants.TYPE_OFFER_MESSAGE;
     public static final int VIEW_OTHER_OFFER = OTHER_MESSAGE << Constants.TYPE_OFFER_MESSAGE;
+    public static final int VIEW_MY_EVENT = MY_MESSAGE << Constants.TYPE_EVENT_MESSAGE;
+    public static final int VIEW_OTHER_EVENT = OTHER_MESSAGE << Constants.TYPE_EVENT_MESSAGE;
 
     private int myChatColor;
     private int otherChatColor;
@@ -67,9 +69,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return new MyOfferViewHolder(mInflater.inflate(R.layout.offer_message_right_item_layout, parent, false));
         } else if (viewType == VIEW_OTHER_OFFER) {
             return new OtherOfferViewHolder(mInflater.inflate(R.layout.offer_message_left_item_layout, parent, false));
+        } else if (viewType == VIEW_OTHER_EVENT) {
+            return new EventViewHolder(mInflater.inflate(R.layout.event_message_item_layout, parent, false));
+        } else {
+            return new EmptyViewHolder(new View(mContext));
         }
 
-        throw new RuntimeException("Invalid view type: " + viewType);
     }
 
     @Override
@@ -312,6 +317,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
+        } else if (holder instanceof EventViewHolder) {
+            EventViewHolder viewHolder = (EventViewHolder)holder;
+            viewHolder.mContentView.setText(message.getContent());
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
         }
     }
 
@@ -456,6 +465,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mAcceptButton.setVisibility(!status ? View.VISIBLE : View.GONE);
             mDeclineButton.setVisibility(!status ? View.VISIBLE : View.GONE);
             mOfferStatusView.setVisibility(status ? View.VISIBLE : View.GONE);
+            mOfferTimeView.setVisibility(!status ? View.VISIBLE : View.GONE);
             mBuyNowButton.setVisibility(View.GONE);
         }
 
@@ -463,6 +473,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mBuyNowButton.setVisibility(View.VISIBLE);
             mAcceptButton.setVisibility(View.GONE);
             mOfferStatusView.setVisibility(View.GONE);
+        }
+    }
+
+    public class EventViewHolder extends RecyclerView.ViewHolder {
+        @Bind(R.id.time_view) TextView mTimeView;
+        @Bind(R.id.content_view) TextView mContentView;
+
+        public EventViewHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+    }
+
+    public class EmptyViewHolder extends RecyclerView.ViewHolder {
+
+        public EmptyViewHolder(View itemView) {
+            super(itemView);
         }
     }
 

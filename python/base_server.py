@@ -381,7 +381,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			return
 
 		new_message = self.db_provider.updateOfferResponse(message, response)
+		receiver_offer_event_message = self.db_provider.createReceiverOfferEvent(new_message)
+		sender_offer_event_message = self.db_provider.createSenderOfferEvent(new_message)
+
 		new_message = self.db_provider.sanitizeEntity(new_message)
+		receiver_offer_event_message = self.db_provider.sanitizeEntity(receiver_offer_event_message)
+
+		# Make offer event
+
+		self.sendMessage(receiver_offer_event_message, new_message['receiver_id'])
 
 		self.write_message(json.dumps( {'success' : True,
 				"request_id" : request_id,
@@ -389,6 +397,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		# send to the other user
 		self.sendMessage(new_message, new_message['sender_id'])
+		self.sendMessage(sender_offer_event_message, new_message['sender_id'])
 
 	def onMarkAsReadRequested(self, data):
 		request_id = data['request_id']

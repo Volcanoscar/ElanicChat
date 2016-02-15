@@ -42,6 +42,7 @@ public class Constants {
 
     public static final int TYPE_SIMPLE_MESSAGE = 1;
     public static final int TYPE_OFFER_MESSAGE = 2;
+    public static final int TYPE_EVENT_MESSAGE = 3;
 
     public static final String EXTRA_USER_ID = "user_id";
     public static final String EXTRA_JUST_LOGGED_IN = "just_logged_in";

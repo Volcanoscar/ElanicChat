@@ -43,6 +43,65 @@ class ModelsProvider:
 		# message['_id'] = message_id
 		return message
 
+	def createReceiverOfferEvent(self, offer_message):
+		messages_collection = self.db.messages
+		date = datetime.datetime.now()
+		message = copy.deepcopy(offer_message)
+		message.pop('_id')
+		message.pop('message_id')
+
+		message['type'] = 3
+		message['created_at'] = date
+		message['updated_at'] = date
+
+		response = offer_message['offer_response']
+		if response == OFFER_ACCEPTED:
+			message['content'] = 'You accepted the offer'
+		elif response == OFFER_DECLINED:
+			message['content'] = 'You declined the offer'
+		else:
+			message['content'] = 'You responded to the offer'
+
+		message_id = messages_collection.insert_one(message).inserted_id
+
+		message['message_id'] = str(message_id)
+		messages_collection.update_one({'_id' : message_id}, {'$set' : {'message_id' : str(message_id)}})
+		# message['_id'] = message_id
+		return message
+
+	def createSenderOfferEvent(self, offer_message):
+		messages_collection = self.db.messages
+		date = datetime.datetime.now()
+		message = copy.deepcopy(offer_message)
+		message.pop('_id')
+		message.pop('message_id')
+		
+		message['type'] = 3
+		message['sender_id'], message['receiver_id'] = message['receiver_id'], message['sender_id']
+		message['created_at'] = date
+		message['updated_at'] = date
+
+		response = offer_message['offer_response']
+		receiver = self.getUser(message['receiver_id'])
+
+		username = "Receiver"
+		if receiver is not None:
+			username = "@" + receiver['username']
+
+		if response == OFFER_ACCEPTED:
+			message['content'] = username + ' accepted the offer'
+		elif response == OFFER_DECLINED:
+			message['content'] = username + ' declined the offer'
+		else:
+			message['content'] = username + ' responded to the offer'
+
+		message_id = messages_collection.insert_one(message).inserted_id
+
+		message['message_id'] = str(message_id)
+		messages_collection.update_one({'_id' : message_id}, {'$set' : {'message_id' : str(message_id)}})
+		# message['_id'] = message_id
+		return message
+
 	def updateMessageField(self, message_id, data):
 		print "type of data", type(data)
 		data['updated_at'] = datetime.datetime.now()
