@@ -2,16 +2,25 @@ package in.elanic.elanicchatdemo.views.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
+import android.transition.Slide;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,8 +50,11 @@ import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.modules.ChatViewModule;
 import in.elanic.elanicchatdemo.presenters.ChatPresenter;
+import in.elanic.elanicchatdemo.utils.CustomAnimationUtils;
 import in.elanic.elanicchatdemo.views.adapters.ChatAdapter;
+import in.elanic.elanicchatdemo.views.fragments.ChatBottomLayout;
 import in.elanic.elanicchatdemo.views.interfaces.ChatView;
+import in.elanic.elanicchatdemo.views.utils.OfferInputTransition;
 
 public class ChatActivity extends AppCompatActivity implements ChatView {
 
@@ -62,9 +74,16 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Bind(R.id.specs_view) TextView specsView;
     @Bind(R.id.price_view) TextView priceView;
 
-    private MaterialDialog mProgressDialog;
+    @Bind(R.id.send_fab) FloatingActionButton sendFAB;
+    @Bind(R.id.offer_fab) FloatingActionButton offerFAB;
 
+    @Bind(R.id.bottom_layout) FrameLayout bottomLayout;
+
+    private MaterialDialog mProgressDialog;
     private ChatAdapter mAdapter;
+    private ChatBottomLayout chatBottomLayout;
+
+    private Handler handler;
 
     @Inject
     ChatPresenter mPresenter;
@@ -109,6 +128,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
 
+        handler = new Handler();
+
         mPresenter.attachView(getIntent().getExtras());
 
         setupToolbar();
@@ -127,6 +148,62 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             }
         });
 
+        mEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() > 0) {
+                    if (offerFAB.getVisibility() == View.VISIBLE) {
+                        CustomAnimationUtils.animateOut(offerView, View.GONE);
+                        CustomAnimationUtils.animateIn(sendFAB, View.VISIBLE);
+                    }
+                } else {
+                    if (sendFAB.getVisibility() == View.VISIBLE) {
+                        CustomAnimationUtils.animateOut(sendFAB, View.GONE);
+                        CustomAnimationUtils.animateIn(offerView, View.VISIBLE);
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+
+        chatBottomLayout = ChatBottomLayout.newInstance(new Bundle());
+        if (Build.VERSION.SDK_INT >= 21) {
+            chatBottomLayout.setEnterTransition(new Slide(Gravity.BOTTOM));
+            chatBottomLayout.setExitTransition(new Slide(Gravity.BOTTOM));
+        }
+
+        if (Build.VERSION.SDK_INT >= 19) {
+            chatBottomLayout.setSharedElementEnterTransition(new OfferInputTransition());
+            chatBottomLayout.setSharedElementReturnTransition(new OfferInputTransition());
+        }
+
+        chatBottomLayout.setCallback(new ChatBottomLayout.Callback() {
+            @Override
+            public void onSendOfferRequested(CharSequence price) {
+                mPresenter.sendOffer(price);
+                hideBottomLayout();
+            }
+
+            @Override
+            public void onPriceChanged(CharSequence price) {
+                // TODO calculate commission and stuff
+            }
+
+            @Override
+            public void onCloseRequested() {
+                hideBottomLayout();
+            }
+        });
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
@@ -168,6 +245,17 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         }
         mPresenter.detachView();
         super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (bottomLayout.getVisibility() == View.VISIBLE) {
+            hideBottomLayout();
+            return;
+        }
+
+        super.onBackPressed();
     }
 
     private void setupToolbar() {
@@ -246,6 +334,15 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         mEditText.setText("");
     }
 
+    @OnClick(R.id.offer_fab)
+    public void onOfferFABClicked() {
+        if (bottomLayout.getVisibility() == View.VISIBLE) {
+            return;
+        }
+
+        showBottomLayout();
+    }
+
     @Override
     public void showProductLayout(boolean status) {
         productLayout.setVisibility(status ? View.VISIBLE : View.GONE);
@@ -319,4 +416,29 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .show();
     }
 
+    private void showBottomLayout() {
+
+        bottomLayout.setVisibility(View.VISIBLE);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.addSharedElement(offerFAB, "offer_fab_transition");
+        ft.replace(R.id.bottom_layout, chatBottomLayout);
+        ft.commit();
+
+        CustomAnimationUtils.animateOut(offerFAB, View.GONE);
+    }
+
+    private void hideBottomLayout() {
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.bottom_layout, new Fragment());
+        ft.commit();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                bottomLayout.setVisibility(View.GONE);
+                CustomAnimationUtils.animateIn(offerFAB, View.VISIBLE);
+            }
+        }, 200);
+
+    }
 }

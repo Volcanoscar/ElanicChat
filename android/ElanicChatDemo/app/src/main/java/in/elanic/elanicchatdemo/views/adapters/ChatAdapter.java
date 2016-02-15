@@ -474,7 +474,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public void showBuyNowButton(boolean status) {
             mBuyNowButton.setVisibility(View.VISIBLE);
             mAcceptButton.setVisibility(View.GONE);
+            mDeclineButton.setVisibility(View.VISIBLE);
             mOfferStatusView.setVisibility(View.GONE);
+            mOfferTimeView.setVisibility(View.VISIBLE);
         }
     }
 
