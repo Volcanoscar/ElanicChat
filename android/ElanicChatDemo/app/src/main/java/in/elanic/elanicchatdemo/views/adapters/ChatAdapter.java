@@ -217,6 +217,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
+
             if (isMyMessage) {
                 if (message.getRead_at() != null) {
                     viewHolder.showMessageIsRead();
@@ -239,7 +241,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             sb.append(String.valueOf(message.getOffer_price()));
 
             viewHolder.mOfferView.setText(sb.toString());
-
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
 
             Integer response = message.getOffer_response();
             Date expiryDate = message.getOffer_expiry();

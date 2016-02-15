@@ -82,7 +82,7 @@ class ModelsProvider:
 		message['updated_at'] = date
 
 		response = offer_message['offer_response']
-		receiver = self.getUser(message['receiver_id'])
+		receiver = self.getUser(offer_message['receiver_id'])
 
 		username = "Receiver"
 		if receiver is not None:

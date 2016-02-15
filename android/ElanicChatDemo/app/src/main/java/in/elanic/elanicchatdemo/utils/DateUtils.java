@@ -32,7 +32,7 @@ public class DateUtils {
 
         if (diff > 0 && diff < 60) {
             return diff + " mins";
-        } else if (diff > 60) {
+        } else if (diff >= 60) {
             return diff/60 + " hrs";
         }
 
