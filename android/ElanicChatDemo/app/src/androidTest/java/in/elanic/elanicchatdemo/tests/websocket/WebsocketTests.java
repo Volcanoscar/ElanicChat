@@ -21,18 +21,18 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
-import in.elanic.elanicchatdemo.ELChatApp;
+import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
 import in.elanic.elanicchatdemo.dagger.components.DaggerTestWebsocketTestsComponent;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.api.WebsocketApi;
+import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.models.providers.websocket.WebsocketCallback;
-import in.elanic.elanicchatdemo.modules.WebsocketApiProviderModule;
-import in.elanic.elanicchatdemo.views.activities.LoginActivity;
+import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
+import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
+import in.elanic.elanicchatdemo.features.login.LoginActivity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

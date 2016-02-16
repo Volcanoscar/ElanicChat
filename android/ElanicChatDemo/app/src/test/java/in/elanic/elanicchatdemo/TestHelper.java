@@ -2,13 +2,13 @@ package in.elanic.elanicchatdemo;
 
 import android.app.Application;
 
-import in.elanic.elanicchatdemo.components.ApplicationComponent;
+import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerApplicationComponent;
 import in.elanic.elanicchatdemo.dagger.DaggerMockLoginViewComponent;
 import in.elanic.elanicchatdemo.dagger.MockLoginViewComponent;
 import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
-import in.elanic.elanicchatdemo.modules.ApplicationModule;
-import in.elanic.elanicchatdemo.modules.DaoSessionModule;
+import in.elanic.elanicchatdemo.app.ApplicationModule;
+import in.elanic.elanicchatdemo.models.db.DaoSessionModule;
 
 /**
  * Created by Jay Rambhia on 02/01/16.

@@ -2,7 +2,7 @@ package in.elanic.elanicchatdemo.dagger.modules;
 
 import dagger.Module;
 import dagger.Provides;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.tests.chat.TestChatApiProviderImpl;
 
 /**

@@ -9,8 +9,8 @@ import com.google.gson.JsonObject;
 
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
-import in.elanic.elanicchatdemo.models.providers.user.RetrofitLoginProvider;
+import in.elanic.elanicchatdemo.models.api.rest.login.LoginProvider;
+import in.elanic.elanicchatdemo.models.api.rest.login.RetrofitLoginProvider;
 import rx.Observable;
 import rx.functions.Func1;
 

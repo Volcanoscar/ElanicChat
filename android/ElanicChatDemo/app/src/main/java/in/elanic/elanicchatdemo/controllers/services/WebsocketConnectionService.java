@@ -7,49 +7,28 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.neovisionaries.ws.client.WebSocket;
-import com.neovisionaries.ws.client.WebSocketAdapter;
-import com.neovisionaries.ws.client.WebSocketException;
-import com.neovisionaries.ws.client.WebSocketFactory;
-import com.neovisionaries.ws.client.WebSocketFrame;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Inject;
 
 import de.greenrobot.event.EventBus;
-import in.elanic.elanicchatdemo.ELChatApp;
-import in.elanic.elanicchatdemo.components.ApplicationComponent;
-import in.elanic.elanicchatdemo.components.DaggerWebsocketConnectionServiceComponent;
+import in.elanic.elanicchatdemo.app.ELChatApp;
+import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.api.WebsocketApi;
+import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
-import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
-import in.elanic.elanicchatdemo.models.providers.message.MessageProvider;
-import in.elanic.elanicchatdemo.models.providers.message.MessageProviderImpl;
-import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
-import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
-import in.elanic.elanicchatdemo.models.providers.websocket.WebsocketCallback;
-import in.elanic.elanicchatdemo.modules.WebsocketApiProviderModule;
-import in.elanic.elanicchatdemo.modules.WebsocketConnectionServiceModule;
+import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
+import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
 
 /**
  * Created by Jay Rambhia on 29/12/15.

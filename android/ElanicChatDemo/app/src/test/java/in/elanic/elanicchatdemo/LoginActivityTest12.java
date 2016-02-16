@@ -1,6 +1,5 @@
 package in.elanic.elanicchatdemo;
 
-import android.app.Instrumentation;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
@@ -13,15 +12,11 @@ import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import javax.inject.Inject;
-
 import in.elanic.elanicchatdemo.dagger.DaggerMockLoginViewComponent;
 import in.elanic.elanicchatdemo.dagger.modules.MockLoginViewModule;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.presenters.LoginPresenter;
-import in.elanic.elanicchatdemo.views.activities.LoginActivity;
-import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+import in.elanic.elanicchatdemo.features.login.view.LoginView;
 
 import static org.junit.Assert.assertEquals;
 

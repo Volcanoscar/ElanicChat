@@ -3,11 +3,11 @@ package in.elanic.elanicchatdemo.tests.chat;
 import android.os.Bundle;
 import android.util.Log;
 
-import in.elanic.elanicchatdemo.models.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatApiProvider;
-import in.elanic.elanicchatdemo.presenters.ChatListPresenter;
-import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
+import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.features.chatlist.container.presenter.ChatListPresenter;
+import in.elanic.elanicchatdemo.features.chatlist.container.view.ChatListView;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import rx.Observable;
 import rx.observables.BlockingObservable;
 

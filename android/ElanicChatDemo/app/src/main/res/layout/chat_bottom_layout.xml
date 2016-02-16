@@ -61,7 +61,7 @@
 
     </android.support.v7.widget.CardView>
 
-    <in.elanic.elanicchatdemo.views.widgets.NumbersLayout
+    <in.elanic.elanicchatdemo.features.shared.widgets.NumbersLayout
         android:id="@+id/numbers_layout"
         android:layout_gravity="bottom"
         android:layout_marginTop="144dp"

@@ -3,9 +3,9 @@ package in.elanic.elanicchatdemo.dagger.components;
 import dagger.Component;
 import in.elanic.elanicchatdemo.tests.login.LoginActivityTest;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginViewModule;
-import in.elanic.elanicchatdemo.components.ApplicationComponent;
+import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
-import in.elanic.elanicchatdemo.presenters.LoginPresenter;
+import in.elanic.elanicchatdemo.features.login.presenter.LoginPresenter;
 import in.elanic.elanicchatdemo.scopes.ActivityScope;
 
 /**

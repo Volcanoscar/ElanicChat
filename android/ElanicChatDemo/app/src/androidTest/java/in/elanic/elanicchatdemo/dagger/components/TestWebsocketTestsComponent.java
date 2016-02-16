@@ -1,9 +1,9 @@
 package in.elanic.elanicchatdemo.dagger.components;
 
 import dagger.Component;
-import in.elanic.elanicchatdemo.components.ApplicationComponent;
-import in.elanic.elanicchatdemo.models.api.WebsocketApi;
-import in.elanic.elanicchatdemo.modules.WebsocketApiProviderModule;
+import in.elanic.elanicchatdemo.app.ApplicationComponent;
+import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
+import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
 import in.elanic.elanicchatdemo.scopes.ActivityScope;
 import in.elanic.elanicchatdemo.tests.websocket.WebsocketTests;
 

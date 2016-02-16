@@ -7,27 +7,27 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name=".ELChatApp"
+        android:name=".app.ELChatApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".views.activities.ChatActivity" />
+        <activity android:name=".features.chat.ChatActivity" />
 
         <service
             android:name=".controllers.services.WebsocketConnectionService"
             android:exported="false" />
 
-        <activity android:name=".views.activities.LoginActivity">
+        <activity android:name=".features.login.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".views.activities.ChatListActivity" />
-        <activity android:name=".views.activities.ProductListContainerActivity"></activity>
+        <activity android:name=".features.chatlist.container.ChatListActivity" />
+        <activity android:name=".features.chatlist.container.ProductListContainerActivity"></activity>
     </application>
 
 </manifest>

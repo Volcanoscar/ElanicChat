@@ -1,10 +1,10 @@
 package in.elanic.elanicchatdemo.dagger.components;
 
 import dagger.Component;
-import in.elanic.elanicchatdemo.components.ApplicationComponent;
+import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.dagger.modules.TestChatApiProviderModule;
 import in.elanic.elanicchatdemo.dagger.modules.TestChatListViewModule;
-import in.elanic.elanicchatdemo.presenters.ChatListPresenter;
+import in.elanic.elanicchatdemo.features.chatlist.container.presenter.ChatListPresenter;
 import in.elanic.elanicchatdemo.scopes.ActivityScope;
 import in.elanic.elanicchatdemo.tests.chat.StartChatActivityTest;
 

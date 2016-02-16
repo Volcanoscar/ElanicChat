@@ -6,20 +6,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
 
-import java.util.concurrent.TimeUnit;
-
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
+import in.elanic.elanicchatdemo.models.api.rest.login.LoginProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
-import in.elanic.elanicchatdemo.presenters.LoginPresenterImpl;
-import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+import in.elanic.elanicchatdemo.features.login.presenter.LoginPresenterImpl;
+import in.elanic.elanicchatdemo.features.login.view.LoginView;
 import retrofit.Callback;
 import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.observables.BlockingObservable;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by Jay Rambhia on 05/01/16.

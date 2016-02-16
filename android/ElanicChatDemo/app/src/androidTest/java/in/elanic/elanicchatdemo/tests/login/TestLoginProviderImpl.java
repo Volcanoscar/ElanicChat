@@ -7,14 +7,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.util.concurrent.ExecutorService;
-
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.api.RetrofitApi;
+import in.elanic.elanicchatdemo.models.api.rest.RetrofitApi;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
-import in.elanic.elanicchatdemo.models.providers.user.RetrofitLoginProvider;
+import in.elanic.elanicchatdemo.models.api.rest.login.LoginProvider;
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
 import retrofit.RxJavaCallAdapterFactory;

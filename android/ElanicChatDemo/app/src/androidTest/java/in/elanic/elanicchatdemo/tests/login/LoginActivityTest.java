@@ -11,15 +11,15 @@ import org.junit.Rule;
 
 import javax.inject.Inject;
 
-import in.elanic.elanicchatdemo.ELChatApp;
+import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.dagger.components.DaggerTestLoginViewComponent;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginViewModule;
 import in.elanic.elanicchatdemo.dagger.modules.TestLoginProviderModule;
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.presenters.LoginPresenter;
-import in.elanic.elanicchatdemo.views.activities.LoginActivity;
-import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+import in.elanic.elanicchatdemo.features.login.presenter.LoginPresenter;
+import in.elanic.elanicchatdemo.features.login.LoginActivity;
+import in.elanic.elanicchatdemo.features.login.view.LoginView;
 
 
 /**

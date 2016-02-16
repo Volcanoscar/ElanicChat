@@ -3,6 +3,8 @@ package in.elanic.elanicchatdemo.tests.chat;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 
@@ -12,16 +14,14 @@ import org.junit.Test;
 
 import javax.inject.Inject;
 
-import in.elanic.elanicchatdemo.ELChatApp;
+import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.dagger.components.DaggerTestChatListViewComponent;
 import in.elanic.elanicchatdemo.dagger.modules.TestChatApiProviderModule;
 import in.elanic.elanicchatdemo.dagger.modules.TestChatListViewModule;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.presenters.ChatListPresenter;
-import in.elanic.elanicchatdemo.views.activities.ChatListActivity;
-import in.elanic.elanicchatdemo.views.interfaces.ChatListView;
-
-import static org.junit.Assert.assertTrue;
+import in.elanic.elanicchatdemo.features.chatlist.container.presenter.ChatListPresenter;
+import in.elanic.elanicchatdemo.features.chatlist.container.ChatListActivity;
+import in.elanic.elanicchatdemo.features.chatlist.container.view.ChatListView;
 
 /**
  * Created by Jay Rambhia on 08/01/16.
@@ -32,7 +32,7 @@ public class StartChatActivityTest //extends ActivityInstrumentationTestCase2<Ch
     @Inject
     ChatListPresenter mPresenter;
 
-    private ChatListActivity mActivity;
+//    private ChatListActivity mActivity;
     private Instrumentation mInstrumentation;
 
     /*public StartChatActivityTest() {
@@ -56,7 +56,7 @@ public class StartChatActivityTest //extends ActivityInstrumentationTestCase2<Ch
     }
 
     @Rule
-    public ActivityTestRule<ChatListActivity> activityTestRule = new ActivityTestRule<ChatListActivity>(
+    public ActivityTestRule<ChatListActivity> activityTestRule = new ActivityTestRule<>(
             ChatListActivity.class,
             true,
             false
@@ -146,8 +146,13 @@ public class StartChatActivityTest //extends ActivityInstrumentationTestCase2<Ch
 
     }
 
-    @Override
+    @Deprecated @Override
     public void openChat(String userId, String productId) {
+
+    }
+
+    @Override
+    public void openChat(@NonNull @Size(min = 1) String chatId) {
 
     }
 
@@ -157,12 +162,12 @@ public class StartChatActivityTest //extends ActivityInstrumentationTestCase2<Ch
     }
 
     @Override
-    public boolean openIfChatExists(String productId) {
+    public boolean openIfChatExists(@NonNull String productId) {
         return false;
     }
 
     @Override
-    public void loadChatSections(String userId) {
+    public void loadChatSections(@NonNull String userId) {
 
     }
 }

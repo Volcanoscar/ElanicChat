@@ -6,11 +6,10 @@ import dagger.Module;
 import dagger.Provides;
 import in.elanic.elanicchatdemo.TestLoginPresenterImpl;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
-import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
+import in.elanic.elanicchatdemo.models.api.rest.login.LoginProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
-import in.elanic.elanicchatdemo.presenters.LoginPresenter;
-import in.elanic.elanicchatdemo.presenters.LoginPresenterImpl;
-import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+import in.elanic.elanicchatdemo.features.login.presenter.LoginPresenter;
+import in.elanic.elanicchatdemo.features.login.view.LoginView;
 
 /**
  * Created by Jay Rambhia on 02/01/16.

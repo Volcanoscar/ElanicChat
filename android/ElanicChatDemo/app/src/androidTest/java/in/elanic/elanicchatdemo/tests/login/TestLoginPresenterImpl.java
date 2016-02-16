@@ -3,12 +3,11 @@ package in.elanic.elanicchatdemo.tests.login;
 import android.util.Log;
 
 import in.elanic.elanicchatdemo.models.db.User;
-import in.elanic.elanicchatdemo.models.providers.user.LoginProvider;
+import in.elanic.elanicchatdemo.models.api.rest.login.LoginProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
-import in.elanic.elanicchatdemo.presenters.LoginPresenter;
-import in.elanic.elanicchatdemo.views.interfaces.LoginView;
+import in.elanic.elanicchatdemo.features.login.presenter.LoginPresenter;
+import in.elanic.elanicchatdemo.features.login.view.LoginView;
 import rx.Observable;
-import rx.functions.Action1;
 import rx.observables.BlockingObservable;
 
 import static org.junit.Assert.assertEquals;
