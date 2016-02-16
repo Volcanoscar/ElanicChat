@@ -35,6 +35,7 @@ import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProvider
 import in.elanic.elanicchatdemo.features.login.LoginActivity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -580,6 +581,245 @@ public class WebsocketTests {
 
         mWebsocketApi.connect(USER_ID);
         mWebsocketApi.sendData(jsonObject.toString());
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        mResult.checkResults();
+    }
+
+    @Test
+    public void acceptOfferMessage() {
+        mWebsocketApi.disconnect();
+
+        final Message message = new Message();
+        message.setMessage_id("test_accept_offer");
+
+        final JSONObject jsonRequest;
+        try {
+            jsonRequest = WSSHelper.createOfferResponseRequest(message, true);
+        } catch (JSONException e) {
+            assertFalse(true);
+            return;
+        }
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final TestResult mResult = new TestResult();
+
+        mWebsocketApi.setCallback(null);
+        mWebsocketApi.setCallback(new WebsocketCallback() {
+            @Override
+            public void onConnected() {
+//                mResult.addResult("ws connected", true);
+//                Log.i(TAG, "connected");
+//                latch.countDown();
+            }
+
+            @Override
+            public void onDisconnected() {
+
+            }
+
+            @Override
+            public void onMessageReceived(String response) {
+
+                Log.i(TAG, "Response: " + response);
+
+                JSONObject jsonResponse = null;
+                final Message rMessage;
+                try {
+                    jsonResponse = new JSONObject(response);
+                    rMessage = JSONUtils.getMessageFromJSON(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE));
+
+                    final String responseId = WSSHelper.getRequestId(jsonResponse);
+                    mResult.addResult("request id is not null", responseId != null);
+                    mResult.addResult("request id matches", jsonRequest.getString(JSONUtils.KEY_REQUEST_ID).equals(responseId));
+                    mResult.addResult("offer response matches", rMessage.getOffer_response().equals(Constants.OFFER_ACCEPTED));
+                    mResult.addResult("message id matches", rMessage.getMessage_id().equals(message.getMessage_id()));
+
+                    Log.i(TAG, "latch countdown");
+                    latch.countDown();
+
+                } catch (final JSONException | ParseException e) {
+                    e.printStackTrace();
+                    mResult.addResult("got no json error", false);
+                    latch.countDown();
+                }
+
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                mResult.addResult("got some error: " + error.getMessage(), false);
+                latch.countDown();
+            }
+        });
+
+        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.sendData(jsonRequest.toString());
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        mResult.checkResults();
+    }
+
+    @Test
+    public void declineOfferMessage() {
+        mWebsocketApi.disconnect();
+
+        final Message message = new Message();
+        message.setMessage_id("test_decline_offer");
+
+        final JSONObject jsonRequest;
+        try {
+            jsonRequest = WSSHelper.createOfferResponseRequest(message, false);
+        } catch (JSONException e) {
+            assertFalse(true);
+            return;
+        }
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final TestResult mResult = new TestResult();
+
+        mWebsocketApi.setCallback(null);
+        mWebsocketApi.setCallback(new WebsocketCallback() {
+            @Override
+            public void onConnected() {
+//                mResult.addResult("ws connected", true);
+//                Log.i(TAG, "connected");
+//                latch.countDown();
+            }
+
+            @Override
+            public void onDisconnected() {
+
+            }
+
+            @Override
+            public void onMessageReceived(String response) {
+
+                Log.i(TAG, "Response: " + response);
+
+                JSONObject jsonResponse = null;
+                final Message rMessage;
+                try {
+                    jsonResponse = new JSONObject(response);
+                    rMessage = JSONUtils.getMessageFromJSON(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE));
+
+                    final String responseId = WSSHelper.getRequestId(jsonResponse);
+                    mResult.addResult("request id is not null", responseId != null);
+                    mResult.addResult("request id matches", jsonRequest.getString(JSONUtils.KEY_REQUEST_ID).equals(responseId));
+                    mResult.addResult("offer response matches", rMessage.getOffer_response().equals(Constants.OFFER_DECLINED));
+                    mResult.addResult("message id matches", rMessage.getMessage_id().equals(message.getMessage_id()));
+
+                    Log.i(TAG, "latch countdown");
+                    latch.countDown();
+
+                } catch (final JSONException | ParseException e) {
+                    e.printStackTrace();
+                    mResult.addResult("got no json error", false);
+                    latch.countDown();
+                }
+
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                mResult.addResult("got some error: " + error.getMessage(), false);
+                latch.countDown();
+            }
+        });
+
+        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.sendData(jsonRequest.toString());
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        mResult.checkResults();
+    }
+
+    @Test
+    public void cancelOfferMessage() {
+        mWebsocketApi.disconnect();
+
+        final Message message = new Message();
+        message.setMessage_id("test_cancel_offer");
+
+        final JSONObject jsonRequest;
+        try {
+
+            jsonRequest = WSSHelper.createOfferCancellationRequest(message);
+
+        } catch (JSONException e) {
+            assertFalse(true);
+            return;
+        }
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final TestResult mResult = new TestResult();
+
+        mWebsocketApi.setCallback(null);
+        mWebsocketApi.setCallback(new WebsocketCallback() {
+            @Override
+            public void onConnected() {
+//                mResult.addResult("ws connected", true);
+//                Log.i(TAG, "connected");
+//                latch.countDown();
+            }
+
+            @Override
+            public void onDisconnected() {
+
+            }
+
+            @Override
+            public void onMessageReceived(String response) {
+
+                Log.i(TAG, "Response: " + response);
+
+                JSONObject jsonResponse = null;
+                final Message rMessage;
+                try {
+                    jsonResponse = new JSONObject(response);
+                    rMessage = JSONUtils.getMessageFromJSON(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE));
+
+                    final String responseId = WSSHelper.getRequestId(jsonResponse);
+                    mResult.addResult("request id is not null", responseId != null);
+                    mResult.addResult("request id matches", jsonRequest.getString(JSONUtils.KEY_REQUEST_ID).equals(responseId));
+                    mResult.addResult("offer response matches", rMessage.getOffer_response().equals(Constants.OFFER_CANCELED));
+                    mResult.addResult("message id matches", rMessage.getMessage_id().equals(message.getMessage_id()));
+
+                    Log.i(TAG, "latch countdown");
+                    latch.countDown();
+
+                } catch (final JSONException | ParseException e) {
+                    e.printStackTrace();
+                    mResult.addResult("got no json error", false);
+                    latch.countDown();
+                }
+
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                mResult.addResult("got some error: " + error.getMessage(), false);
+                latch.countDown();
+            }
+        });
+
+        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.sendData(jsonRequest.toString());
 
         try {
             latch.await();

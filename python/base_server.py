@@ -354,6 +354,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Response not provided"}))
 			return
 
+		if message_id.find('test') != -1:
+			# test request
+			self.testRespondToOfferRequest(data)
+			return
+
 		message = self.db_provider.getMessage(message_id)
 		if not message:
 			self.write_message(json.dumps( {'success' : False,
@@ -407,9 +412,59 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		# send to the other user
 		self.sendMessage([new_message, sender_offer_event_message], new_message['sender_id'])
 
+	def testRespondToOfferRequest(self, data):
+		request_id = data['request_id']
+		message_id = data['message_id']
+		response = data.get('offer_response')
+
+		if response:
+			if message_id.find('accept') != -1:
+				# send positive result
+				message = self.db_provider.getTestOfferForResponse(message_id, True)
+				if message is None:
+					self.write_message(json.dumps( {'success' : False,
+						"request_id" : request_id,
+						"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Unable to generate test offer"}))
+				else:
+					message = ModelsProvider.sanitizeEntity(message)
+					self.write_message(json.dumps( {'success' : True,
+						"request_id" : request_id,
+						"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : message}))
+
+
+			else:
+				self.write_message(json.dumps( {'success' : False,
+					"request_id" : request_id,
+					"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Offer does not belong to the user"}))
+
+		else:
+			if message_id.find('decline') != -1:
+				# send positive result
+				message = self.db_provider.getTestOfferForResponse(message_id, False)
+				if message is None:
+					self.write_message(json.dumps( {'success' : False,
+						"request_id" : request_id,
+						"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Unable to generate test offer"}))
+				else:
+					message = ModelsProvider.sanitizeEntity(message)
+					self.write_message(json.dumps( {'success' : True,
+						"request_id" : request_id,
+						"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : message}))
+
+
+			else:
+				self.write_message(json.dumps( {'success' : False,
+					"request_id" : request_id,
+					"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Offer does not belong to the user"}))
+
 	def onCancelOfferRequested(self, data):
 		request_id = data['request_id']
 		message_id = data['message_id']
+
+		if message_id.find('test') != -1:
+			# test request
+			self.testCancelOfferRequest(data)
+			return
 
 		message = self.db_provider.getMessage(message_id)
 		if not message:
@@ -463,6 +518,29 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		# send to the other user
 		self.sendMessages([new_message, receiver_offer_event_message], new_message['receiver_id'])
+
+	def testCancelOfferRequest(self, data):
+		request_id = data['request_id']
+		message_id = data['message_id']
+
+		if message_id.find('cancel') != -1:
+			# send positive result
+			message = self.db_provider.getTestOfferForCancellation(message_id)
+			message = ModelsProvider.sanitizeEntity(message)
+
+			if message is None:
+				self.write_message(json.dumps( {'success' : False,
+					"request_id" : request_id,
+					"request_type" : REQUEST_CANCEL_OFFER, "error" : "Unable to generate test offer"}))
+			else:
+				self.write_message(json.dumps( {'success' : True,
+					"request_id" : request_id,
+					"request_type" : REQUEST_CANCEL_OFFER, "message" : message}))
+		else:
+			self.write_message(json.dumps( {'success' : False,
+					"request_id" : request_id,
+					"request_type" : REQUEST_CANCEL_OFFER, "error" : "Offer does not belong to the user"}))
+
 
 	def onMarkAsReadRequested(self, data):
 		request_id = data['request_id']

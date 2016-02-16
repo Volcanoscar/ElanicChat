@@ -229,3 +229,31 @@ class ModelsProvider:
 
 		self.updateMessageField(message['message_id'], params)
 		return self.getMessage(message['message_id'])
+
+	def getTestOfferForResponse(self, message_id, response):
+		messages_collection = self.db.messages
+		message = messages_collection.find_one({'type': 2})
+		if message is None:
+			return None
+
+		message['_id'] = message_id
+		message['message_id'] = message_id
+
+		if response:
+			message['offer_response'] = OFFER_ACCEPTED
+		else:
+			message['offer_response'] = OFFER_DECLINED
+		return message
+
+	def getTestOfferForCancellation(self, message_id):
+		messages_collection = self.db.messages
+		message = messages_collection.find_one({'type': 2})
+		if message is None:
+			return None
+
+		message['_id'] = message_id
+		message['message_id'] = message_id
+		message['offer_response'] = OFFER_CANCELED
+
+		return message
+
