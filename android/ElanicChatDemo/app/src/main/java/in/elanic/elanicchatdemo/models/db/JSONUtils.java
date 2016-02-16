@@ -210,6 +210,8 @@ public class JSONUtils {
                 return Constants.OFFER_DECLINED_STRING;
             case Constants.OFFER_EXPIRED:
                 return Constants.OFFER_EXPIRED_STRING;
+            case Constants.OFFER_CANCELED:
+                return Constants.OFFER_CANCELED_STRING;
         }
 
         return "";

@@ -9,6 +9,7 @@ date_format = "%Y-%m-%d %H:%M:%S.%f"
 OFFER_ACCEPTED = 2
 OFFER_DECLINED = 3
 OFFER_EXPIRED = 4
+OFFER_CANCELED = 5
 
 # m.db.messages.delete_many( {"created_at" : {"$type" : 2} }) to find or delete by type
 
@@ -59,6 +60,12 @@ class ModelsProvider:
 			message['content'] = 'You accepted the offer'
 		elif response == OFFER_DECLINED:
 			message['content'] = 'You declined the offer'
+		elif response == OFFER_CANCELED:
+			sender = self.getUser(offer_message['sender_id'])
+			username = "Sender"
+			if sender is not None:
+				username = "@" + sender['username']
+			message['content'] = username + ' canceled the offer'
 		else:
 			message['content'] = 'You responded to the offer'
 
@@ -92,6 +99,8 @@ class ModelsProvider:
 			message['content'] = username + ' accepted the offer'
 		elif response == OFFER_DECLINED:
 			message['content'] = username + ' declined the offer'
+		elif response == OFFER_CANCELED:
+			message['content'] = 'You canceled the offer'	
 		else:
 			message['content'] = username + ' responded to the offer'
 
@@ -210,6 +219,13 @@ class ModelsProvider:
 			params['offer_response'] = OFFER_ACCEPTED
 		else:
 			params['offer_response'] = OFFER_DECLINED
+
+		self.updateMessageField(message['message_id'], params)
+		return self.getMessage(message['message_id'])
+
+	def cancelOffer(self, message):
+		params = dict()
+		params['offer_response'] = OFFER_CANCELED
 
 		self.updateMessageField(message['message_id'], params)
 		return self.getMessage(message['message_id'])

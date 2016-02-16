@@ -21,6 +21,7 @@ REQUEST_GET_PRODUCTS = 6
 REQUEST_GET_USERS_AND_PRODUCTS = 7
 REQUEST_RESPOND_TO_OFFER = 8
 REQUEST_MARK_AS_READ = 9
+REQUEST_CANCEL_OFFER = 10
 
 RESPONSE_NEW_MESSAGE = 3
 RESPONSE_USER = 4
@@ -177,7 +178,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		elif request_type == REQUEST_RESPOND_TO_OFFER:
 			self.onRespondToOfferRequested(data)
 		elif request_type == REQUEST_MARK_AS_READ:
-			self.onMarkAsReadRequested(data)	
+			self.onMarkAsReadRequested(data)
+		elif request_type == REQUEST_CANCEL_OFFER:
+			self.onCancelOfferRequested(data)		
 		else:
 			self.write_message(json.dumps( {'success' : False,
 				"request_type" : data['request_type'], "error" : "Invalid request_type" } ))
@@ -343,7 +346,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 	def onRespondToOfferRequested(self, data):
 		request_id = data['request_id']
 		message_id = data['message_id']
-		response = data['offer_response']
+		response = data.get('offer_response')
+
+		if response is None:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_RESPOND_TO_OFFER, "error" : "Response not provided"}))
+			return
 
 		message = self.db_provider.getMessage(message_id)
 		if not message:
@@ -396,8 +405,64 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : new_message}))
 
 		# send to the other user
-		self.sendMessage(new_message, new_message['sender_id'])
+		self.sendMessage([new_message, sender_offer_event_message], new_message['sender_id'])
+
+	def onCancelOfferRequested(self, data):
+		request_id = data['request_id']
+		message_id = data['message_id']
+
+		message = self.db_provider.getMessage(message_id)
+		if not message:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_CANCEL_OFFER, "error" : "No such offer found"}))
+			return
+
+		# check if the user has some relation with the offer or not
+		userId = self.id
+		if message['sender_id'] != userId:
+			# message is not related to the user
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_CANCEL_OFFER, "error" : "Offer is not created by the user"}))
+			return
+
+		# check type of the message
+		if message['type'] != 2:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_CANCEL_OFFER, "error" : "Offer is not available"}))
+			return
+
+		# TODO: check if offer is expired
+		offer_response = message.get('offer_response')
+		if not offer_response:
+			offer_response = 1
+
+		if offer_response > 1:	
+			# user has alreday responded to the offer
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"request_type" : REQUEST_CANCEL_OFFER, "error" : "User has already responded to the offer"}))
+			return
+
+		new_message = self.db_provider.cancelOffer(message)
+		receiver_offer_event_message = self.db_provider.createReceiverOfferEvent(new_message)
+		sender_offer_event_message = self.db_provider.createSenderOfferEvent(new_message)
+
+		new_message = self.db_provider.sanitizeEntity(new_message)
+		receiver_offer_event_message = self.db_provider.sanitizeEntity(receiver_offer_event_message)
+
+		# Make offer event
+
 		self.sendMessage(sender_offer_event_message, new_message['sender_id'])
+
+		self.write_message(json.dumps( {'success' : True,
+				"request_id" : request_id,
+				"request_type" : REQUEST_CANCEL_OFFER, "message" : new_message}))
+
+		# send to the other user
+		self.sendMessages([new_message, receiver_offer_event_message], new_message['receiver_id'])
 
 	def onMarkAsReadRequested(self, data):
 		request_id = data['request_id']
@@ -434,6 +499,19 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 				"request_type" : REQUEST_MARK_AS_READ, "data" : retVal}))
 		return
 
+	def sendMessages(self, messages, receiver_id):
+		if receiver_id in clients:
+			data = []
+			for message in messages:
+				message['delivered_at'] = datetime.datetime.now()
+				message = ModelsProvider.sanitizeEntity(message)
+				data.append(message)
+
+			response = {"success" : True, "response_type" : RESPONSE_NEW_MESSAGE, "data" : data, 
+						'sync_timestamp' : ModelsProvider.getSyncTime()}
+			clients[receiver_id]["object"].write_message(json.dumps(response))
+			return True
+		return False
 
 	def sendMessage(self, data, receiver_id):
 		if receiver_id in clients:

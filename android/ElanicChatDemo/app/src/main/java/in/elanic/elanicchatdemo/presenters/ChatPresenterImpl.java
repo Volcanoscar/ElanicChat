@@ -252,6 +252,43 @@ public class ChatPresenterImpl implements ChatPresenter {
     }
 
     @Override
+    public void confirmOfferCancellation(int position) {
+        if (position < 0 || mMessages == null || mMessages.size() <= position) {
+            return;
+        }
+
+        Message message = mMessages.get(position);
+        if (message == null || message.getType() != Constants.TYPE_OFFER_MESSAGE ||
+                message.getOffer_response() == null || message.getOffer_response() != Constants.OFFER_ACTIVE) {
+            return;
+        }
+
+        mChatView.confirmOfferCancellation(position);
+    }
+
+    @Override
+    public void cancelOffer(int position) {
+        if (position < 0 || mMessages == null || mMessages.size() <= position) {
+            return;
+        }
+
+        Message message = mMessages.get(position);
+        if (message == null || message.getType() != Constants.TYPE_OFFER_MESSAGE ||
+                message.getOffer_response() == null || message.getOffer_response() != Constants.OFFER_ACTIVE) {
+            return;
+        }
+
+        try {
+            JSONObject jsonRequest = WSSHelper.createOfferCancellationRequest(message);
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
+
+            mChatView.showProgressDialog(true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void scrollToLatestOffer() {
 
         if (mMessages == null || mMessages.size() == 0 || latestOffer == null) {
@@ -447,7 +484,11 @@ public class ChatPresenterImpl implements ChatPresenter {
             addMessageToChat(matchIndex, message);
         }
 
-        mChatView.showSnackbar("Offer Response successful");
+        if (message.getOffer_response() != null && message.getOffer_response() == Constants.OFFER_CANCELED) {
+            mChatView.showSnackbar("Offer canceled successfully");
+        } else {
+            mChatView.showSnackbar("Offer Response successful");
+        }
     }
 
     private void onOfferResponseFailed() {

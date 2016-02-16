@@ -462,6 +462,12 @@ public class WSSHelper {
         return jsonObject;
     }
 
+    public static JSONObject createOfferCancellationRequest(Message message) throws JSONException {
+        JSONObject jsonObject = createWSRequest(Constants.REQUEST_CANCEL_OFFER);
+        jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
+        return jsonObject;
+    }
+
     public void clearPendingRequests() {
         mWSRequestProvider.clearPendingRequests();
     }

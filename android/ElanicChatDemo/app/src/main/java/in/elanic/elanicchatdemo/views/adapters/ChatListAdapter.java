@@ -153,6 +153,8 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 }
             } else if (response == Constants.OFFER_EXPIRED) {
                 viewHolder.showOfferIsExpired();
+            } else if (response == Constants.OFFER_CANCELED) {
+                viewHolder.showOfferIsCanceled();
             }
 
             viewHolder.offerLayout.setVisibility(View.VISIBLE);
@@ -228,6 +230,13 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         public void showOfferIsDeclined() {
             offerResponseView.setText(R.string.offer_declined);
+            setLeftDrawable(R.drawable.ic_block_grey_400_18dp, offerResponseView);
+            offerResponseView.setTextColor(inactiveColor);
+            offerValidityView.setVisibility(View.INVISIBLE);
+        }
+
+        public void showOfferIsCanceled() {
+            offerResponseView.setText(R.string.offer_canceled);
             setLeftDrawable(R.drawable.ic_block_grey_400_18dp, offerResponseView);
             offerResponseView.setTextColor(inactiveColor);
             offerValidityView.setVisibility(View.INVISIBLE);

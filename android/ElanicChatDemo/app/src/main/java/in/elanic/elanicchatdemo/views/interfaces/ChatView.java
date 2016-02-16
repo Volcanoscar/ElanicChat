@@ -13,6 +13,7 @@ public interface ChatView {
 
     void setData(List<Message> data);
     void confirmOfferResponse(int position, boolean accept);
+    void confirmOfferCancellation(int position);
     void showProgressDialog(boolean show);
     void showSnackbar(CharSequence message);
 

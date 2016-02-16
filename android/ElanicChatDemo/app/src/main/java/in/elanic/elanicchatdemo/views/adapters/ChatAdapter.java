@@ -214,6 +214,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
 //                        hasResponded = false;
                         break;
+
+                    case Constants.OFFER_CANCELED:
+                        viewHolder.mOfferStatusView.setText(R.string.offer_canceled);
+                        viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_block_grey_400_24dp);
+                        viewHolder.mOfferTimeView.setVisibility(View.GONE);
+                        break;
                 }
             }
 
@@ -316,6 +322,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         viewHolder.showStatus(true);
 //                        hasResponded = false;
                         break;
+
+                    case Constants.OFFER_CANCELED:
+                        viewHolder.mOfferStatusView.setText(R.string.offer_canceled);
+                        viewHolder.setRightDrawable(R.drawable.ic_block_grey_600_18dp,
+                                viewHolder.mOfferStatusView);
+                        viewHolder.mOfferTimeView.setText("");
+                        viewHolder.showStatus(true);
+//                        hasResponded = false;
+                        break;
                 }
             }
 
@@ -389,6 +404,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public MyOfferViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            mOfferStatusImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mCallback != null) {
+                        mCallback.cancelOffer(getAdapterPosition());
+                    }
+                }
+            });
         }
 
         public void setLeftDrawable(@DrawableRes int res, TextView view) {
@@ -503,5 +526,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public interface ActionCallback {
         void respondToOffer(int position, boolean accept);
+        void cancelOffer(int position);
     }
 }

@@ -24,5 +24,8 @@ public interface ChatPresenter {
     void confirmResponseToOffer(int position, boolean accept);
     void respondToOffer(int position, boolean accept);
 
+    void confirmOfferCancellation(int position);
+    void cancelOffer(int position);
+
     void scrollToLatestOffer();
 }

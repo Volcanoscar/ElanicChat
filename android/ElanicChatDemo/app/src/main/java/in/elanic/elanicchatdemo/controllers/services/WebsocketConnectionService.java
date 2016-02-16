@@ -276,9 +276,11 @@ public class WebsocketConnectionService extends Service {
                 onOfferResponseSuccessful(jsonResponse);
             } else if (requestType == Constants.REQUEST_MARK_AS_READ) {
                 onMarkAsReadRequestCompleted(jsonResponse);
+            } else if (requestType == Constants.REQUEST_CANCEL_OFFER) {
+                onCancelOfferSuccessful(jsonResponse);
             }
 
-            int responseType = mWSSHelper.getResponseType(jsonResponse);
+            int responseType = WSSHelper.getResponseType(jsonResponse);
             Log.i(TAG, "response type: " + responseType);
             if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
                 Log.i(TAG, "response_new_message");
@@ -416,6 +418,22 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void onOfferResponseSuccessful(JSONObject jsonResponse) throws JSONException {
+        if (DEBUG) {
+            Log.i(TAG, "update local message in db");
+        }
+
+        Message message = mWSSHelper.updateMessageInDB(jsonResponse);
+        mWSSHelper.createChatItem(message);
+        if (message == null) {
+            Log.e(TAG, "unable to update message to db");
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
+            return;
+        }
+
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_COMPLETED, message));
+    }
+
+    private void onCancelOfferSuccessful(JSONObject jsonResponse) throws JSONException {
         if (DEBUG) {
             Log.i(TAG, "update local message in db");
         }

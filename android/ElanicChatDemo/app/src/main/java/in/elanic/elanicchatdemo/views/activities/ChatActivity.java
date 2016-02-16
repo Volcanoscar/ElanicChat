@@ -145,6 +145,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             public void respondToOffer(int position, boolean accept) {
                 mPresenter.confirmResponseToOffer(position, accept);
             }
+
+            @Override
+            public void cancelOffer(int position) {
+                mPresenter.confirmOfferCancellation(position);
+            }
         });
 
         offerView.setOnClickListener(new View.OnClickListener() {
@@ -300,6 +305,21 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         mPresenter.respondToOffer(position, accept);
+                    }
+                }).show();
+    }
+
+    @Override
+    public void confirmOfferCancellation(final int position) {
+        new MaterialDialog.Builder(this)
+                .title("Cancel Offer")
+                .content("Are you sure you want to cancel this offer?")
+                .positiveText("Yes, Cancel Offer")
+                .negativeText("No")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        mPresenter.cancelOffer(position);
                     }
                 }).show();
     }
