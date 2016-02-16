@@ -6,7 +6,7 @@ import in.elanic.elanicchatdemo.models.db.ChatItem;
 /**
  * Created by Jay Rambhia on 2/4/16.
  */
-public class UIBuyChatItem {
+public class UIChatItem {
 
     private in.elanic.elanicchatdemo.models.db.ChatItem chatItem;
     private Product product;
@@ -18,7 +18,7 @@ public class UIBuyChatItem {
     private String displayText;
     private int otherOffers;
 
-    public UIBuyChatItem(ChatItem chatItem) {
+    public UIChatItem(ChatItem chatItem) {
         this.chatItem = chatItem;
         this.product = chatItem.getProduct();
         this.seller = chatItem.getSeller();

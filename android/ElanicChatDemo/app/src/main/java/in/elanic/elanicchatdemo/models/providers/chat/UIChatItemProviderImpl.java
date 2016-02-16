@@ -10,9 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import in.elanic.elanicchatdemo.models.UIBuyChatItem;
+import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -24,23 +23,23 @@ import rx.functions.Func0;
 /**
  * Created by Jay Rambhia on 2/4/16.
  */
-public class UIBuyChatItemProviderImpl implements UIBuyChatItemProvider {
+public class UIChatItemProviderImpl implements UIChatItemProvider {
 
     private MessageProvider messageProvider;
 
-    public UIBuyChatItemProviderImpl(DaoSession daoSession) {
+    public UIChatItemProviderImpl(DaoSession daoSession) {
         messageProvider = new MessageProviderImpl(daoSession.getMessageDao());
     }
 
     @Override
-    public Observable<List<UIBuyChatItem>> getUIBuyChats(@NonNull final List<ChatItem> chats,
+    public Observable<List<UIChatItem>> getUIBuyChats(@NonNull final List<ChatItem> chats,
                                                          @NonNull final String userId) {
-        return Observable.defer(new Func0<Observable<List<UIBuyChatItem>>>() {
+        return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
-            public Observable<List<UIBuyChatItem>> call() {
-                List<UIBuyChatItem> uiChats = new ArrayList<>();
+            public Observable<List<UIChatItem>> call() {
+                List<UIChatItem> uiChats = new ArrayList<>();
                 for (ChatItem chat : chats) {
-                    UIBuyChatItem uiChat = new UIBuyChatItem(chat);
+                    UIChatItem uiChat = new UIChatItem(chat);
                     uiChat.setUnreadMessages((int)getUnreadMessages(chat, userId));
                     uiChat.setLatestMessage(getLatestSimpleMessage(chat));
                     uiChat.setDisplayOffer(getLatestOffer(chat));
@@ -55,10 +54,11 @@ public class UIBuyChatItemProviderImpl implements UIBuyChatItemProvider {
     }
 
     @Override
-    public Observable<List<UIBuyChatItem>> getUISellChats(@NonNull final List<ChatItem> chats, @NonNull final String userId) {
-        return Observable.defer(new Func0<Observable<List<UIBuyChatItem>>>() {
+    public Observable<List<UIChatItem>> getUISellChats(@NonNull final List<ChatItem> chats,
+                                                          @NonNull final String userId) {
+        return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
-            public Observable<List<UIBuyChatItem>> call() {
+            public Observable<List<UIChatItem>> call() {
                 HashMap<String, List<ChatItem>> productMap = new HashMap<>();
                 for (ChatItem chat : chats) {
 
@@ -76,7 +76,7 @@ public class UIBuyChatItemProviderImpl implements UIBuyChatItemProvider {
                 }
 
 
-                List<UIBuyChatItem> uiChats = new ArrayList<>();
+                List<UIChatItem> uiChats = new ArrayList<>();
 
                 Iterator<Map.Entry<String, List<ChatItem>>> it = productMap.entrySet().iterator();
                 while (it.hasNext()) {
@@ -84,7 +84,7 @@ public class UIBuyChatItemProviderImpl implements UIBuyChatItemProvider {
                     String productId = pair.getKey();
                     List<ChatItem> items = pair.getValue();
 
-                    UIBuyChatItem uiChat = new UIBuyChatItem(items.get(0));
+                    UIChatItem uiChat = new UIChatItem(items.get(0));
 
                     List<Message> offers = new ArrayList<>();
                     List<Message> messages = new ArrayList<>();
@@ -144,15 +144,15 @@ public class UIBuyChatItemProviderImpl implements UIBuyChatItemProvider {
     }
 
     @Override
-    public Observable<List<UIBuyChatItem>> getUISellChatsForProduct(@NonNull final String productId,
+    public Observable<List<UIChatItem>> getUISellChatsForProduct(@NonNull final String productId,
                                                                     @NonNull final List<ChatItem> chats,
                                                                     @NonNull final String userId) {
-        return Observable.defer(new Func0<Observable<List<UIBuyChatItem>>>() {
+        return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
-            public Observable<List<UIBuyChatItem>> call() {
-                List<UIBuyChatItem> uiChats = new ArrayList<>();
+            public Observable<List<UIChatItem>> call() {
+                List<UIChatItem> uiChats = new ArrayList<>();
                 for (ChatItem chat : chats) {
-                    UIBuyChatItem uiChat = new UIBuyChatItem(chat);
+                    UIChatItem uiChat = new UIChatItem(chat);
                     uiChat.setUnreadMessages((int)getUnreadMessages(productId, chat.getBuyer_id(), chat.getSeller_id()));
                     uiChat.setLatestMessage(getLatestSimpleMessage(productId, chat.getBuyer_id()));
                     uiChat.setDisplayOffer(getLatestOffer(productId, chat.getBuyer_id()));
@@ -191,9 +191,9 @@ public class UIBuyChatItemProviderImpl implements UIBuyChatItemProvider {
         return messageProvider.getLatestSimpleMessage(productId, buyerId);
     }
 
-    private Comparator<UIBuyChatItem> comparator = new Comparator<UIBuyChatItem>() {
+    private Comparator<UIChatItem> comparator = new Comparator<UIChatItem>() {
         @Override
-        public int compare(UIBuyChatItem lhs, UIBuyChatItem rhs) {
+        public int compare(UIChatItem lhs, UIChatItem rhs) {
             if (lhs.getLatestMessage() == null) {
                 return 1;
             }

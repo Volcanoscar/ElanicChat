@@ -6,12 +6,12 @@ import android.util.Log;
 
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.UIBuyChatItem;
+import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
-import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.UIChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 import rx.Observable;
 import rx.Subscriber;
@@ -30,12 +30,12 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
 
     protected ChatListSectionView mChatListSectionView;
     private ChatItemProvider mChatItemProvider;
-    private UIBuyChatItemProvider uiChatItemProvider;
+    private UIChatItemProvider uiChatItemProvider;
     private List<ChatItem> mItems;
-    protected List<UIBuyChatItem> uiItems;
+    protected List<UIChatItem> uiItems;
 
     public ChatListSectionPresenterImpl(ChatListSectionView mChatListSectionView,
-                                        ChatItemProvider mChatItemProvider, UIBuyChatItemProvider chatItemProvider) {
+                                        ChatItemProvider mChatItemProvider, UIChatItemProvider chatItemProvider) {
         this.mChatListSectionView = mChatListSectionView;
         this.mChatItemProvider = mChatItemProvider;
         this.uiChatItemProvider = chatItemProvider;
@@ -70,11 +70,11 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
             Log.i(TAG, "item seller id: " + item.getSeller_id());
         }
 
-        Observable<List<UIBuyChatItem>> observable = loadUIChats(mUserId, mItems, uiChatItemProvider);
+        Observable<List<UIChatItem>> observable = loadUIChats(mUserId, mItems, uiChatItemProvider);
                 /*uiChatItemProvider.getUIBuyChats(mItems, mUserId);*/
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<List<UIBuyChatItem>>() {
+                .subscribe(new Subscriber<List<UIChatItem>>() {
                     @Override
                     public void onCompleted() {
 
@@ -86,10 +86,10 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
                     }
 
                     @Override
-                    public void onNext(List<UIBuyChatItem> uiBuyChatItems) {
-                        uiItems = uiBuyChatItems;
+                    public void onNext(List<UIChatItem> uiChatItems) {
+                        uiItems = uiChatItems;
                         mChatListSectionView.setData(uiItems);
-                        onUIChatsLoaded(uiBuyChatItems);
+                        onUIChatsLoaded(uiChatItems);
                     }
                 });
 
@@ -133,8 +133,8 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     }
 
     public abstract List<ChatItem> loadChats(@NonNull String userId, @NonNull ChatItemProvider provider);
-    public abstract Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
+    public abstract Observable<List<UIChatItem>> loadUIChats(@NonNull String userId,
                                                                 @NonNull List<ChatItem> chatItems,
-                                                                @NonNull UIBuyChatItemProvider provider);
-    protected abstract void onUIChatsLoaded(List<UIBuyChatItem> uiChats);
+                                                                @NonNull UIChatItemProvider provider);
+    protected abstract void onUIChatsLoaded(List<UIChatItem> uiChats);
 }

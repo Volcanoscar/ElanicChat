@@ -17,7 +17,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.UIBuyChatItem;
+import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
@@ -30,7 +30,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private LayoutInflater mInflater;
     private Context mContext;
-    private List<UIBuyChatItem> mItems;
+    private List<UIChatItem> mItems;
     private Callback mCallback;
     private String userId;
 
@@ -57,7 +57,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ChatItemViewHolder viewHolder = (ChatItemViewHolder)holder;
-        UIBuyChatItem item = mItems.get(position);
+        UIChatItem item = mItems.get(position);
         Product product = item.getProduct();
         User receiver = item.getChatItem().getBuyer();
 
@@ -184,7 +184,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.showUserList = showUserList;
     }
 
-    public void setItems(List<UIBuyChatItem> mItems) {
+    public void setItems(List<UIChatItem> mItems) {
         this.mItems = mItems;
     }
 

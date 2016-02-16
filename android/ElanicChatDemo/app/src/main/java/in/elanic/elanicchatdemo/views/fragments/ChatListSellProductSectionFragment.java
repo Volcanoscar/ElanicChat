@@ -16,7 +16,7 @@ import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.components.ApplicationComponent;
 import in.elanic.elanicchatdemo.components.DaggerChatListSectionViewComponent;
 import in.elanic.elanicchatdemo.models.Constants;
-import in.elanic.elanicchatdemo.models.UIBuyChatItem;
+import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.modules.ChatListSectionViewModule;
 import in.elanic.elanicchatdemo.views.activities.ChatActivity;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSellProductSectionView;
@@ -74,7 +74,7 @@ public class ChatListSellProductSectionFragment extends ChatListSectionFragment
     }
 
     @Override
-    public void setData(List<UIBuyChatItem> data) {
+    public void setData(List<UIChatItem> data) {
         if (mAdapter != null) {
             mAdapter.showUserList(true);
         }

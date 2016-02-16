@@ -4,19 +4,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.UIBuyChatItem;
+import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
-import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.UIChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
 import in.elanic.elanicchatdemo.utils.ProductUtils;
-import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSellProductSectionView;
 import rx.Observable;
 
@@ -30,13 +28,13 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     private ProductProvider productProvider;
     private ChatListSellProductSectionView chatListSellProductSectionView;
 
-    private UIBuyChatItem bestOfferChatItem;
+    private UIChatItem bestOfferChatItem;
 
     public ChatListSellProductSectionPresenterImpl(ChatListSellProductSectionView chatListSectionView,
                                                    ProductProvider productProvider,
                                                    ChatItemProvider chatItemProvider,
-                                                   UIBuyChatItemProvider uiBuyChatItemProvider) {
-        super(chatListSectionView, chatItemProvider, uiBuyChatItemProvider);
+                                                   UIChatItemProvider uiChatItemProvider) {
+        super(chatListSectionView, chatItemProvider, uiChatItemProvider);
         this.chatListSellProductSectionView = chatListSectionView;
         this.productProvider = productProvider;
     }
@@ -72,14 +70,14 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
     }
 
     @Override
-    public Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
+    public Observable<List<UIChatItem>> loadUIChats(@NonNull String userId,
                                                        @NonNull List<ChatItem> chatItems,
-                                                       @NonNull UIBuyChatItemProvider provider) {
+                                                       @NonNull UIChatItemProvider provider) {
         return provider.getUISellChatsForProduct(mProductId, chatItems, userId);
     }
 
     @Override
-    protected void onUIChatsLoaded(List<UIBuyChatItem> uiChats) {
+    protected void onUIChatsLoaded(List<UIChatItem> uiChats) {
         // Load product
         Product product = productProvider.getProduct(mProductId);
         if (product == null) {
@@ -92,7 +90,7 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
         int bestOfferPrice = 0;
         int bestOfferIndex = -1;
         for (int i=0; i<uiChats.size(); i++) {
-            UIBuyChatItem chatItem = uiChats.get(i);
+            UIChatItem chatItem = uiChats.get(i);
             Message offer = chatItem.getDisplayOffer();
             if (offer != null && offer.getOffer_response() != null
                     && offer.getOffer_response() == Constants.OFFER_ACTIVE

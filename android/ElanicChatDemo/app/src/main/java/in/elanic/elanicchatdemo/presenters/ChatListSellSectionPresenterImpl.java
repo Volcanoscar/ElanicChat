@@ -5,11 +5,10 @@ import android.util.Log;
 
 import java.util.List;
 
-import in.elanic.elanicchatdemo.models.UIBuyChatItem;
+import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
-import in.elanic.elanicchatdemo.models.providers.chat.ChatProvider;
-import in.elanic.elanicchatdemo.models.providers.chat.UIBuyChatItemProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.UIChatItemProvider;
 import in.elanic.elanicchatdemo.views.interfaces.ChatListSectionView;
 import rx.Observable;
 
@@ -21,8 +20,8 @@ public class ChatListSellSectionPresenterImpl extends ChatListSectionPresenterIm
 
     public ChatListSellSectionPresenterImpl(ChatListSectionView mChatListSectionView,
                                             ChatItemProvider mChatProvider,
-                                            UIBuyChatItemProvider uiBuyChatItemProvider) {
-        super(mChatListSectionView, mChatProvider, uiBuyChatItemProvider);
+                                            UIChatItemProvider uiChatItemProvider) {
+        super(mChatListSectionView, mChatProvider, uiChatItemProvider);
     }
 
     @Override
@@ -32,14 +31,14 @@ public class ChatListSellSectionPresenterImpl extends ChatListSectionPresenterIm
     }
 
     @Override
-    public Observable<List<UIBuyChatItem>> loadUIChats(@NonNull String userId,
+    public Observable<List<UIChatItem>> loadUIChats(@NonNull String userId,
                                                        @NonNull List<ChatItem> chatItems,
-                                                       @NonNull UIBuyChatItemProvider provider) {
+                                                       @NonNull UIChatItemProvider provider) {
         return provider.getUISellChats(chatItems, userId);
     }
 
     @Override
-    protected void onUIChatsLoaded(List<UIBuyChatItem> uiChats) {
+    protected void onUIChatsLoaded(List<UIChatItem> uiChats) {
         // Do nothing here
     }
 
