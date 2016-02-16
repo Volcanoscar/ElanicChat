@@ -116,7 +116,7 @@ class StartChatApiHandler(tornado.web.RequestHandler):
 
 		response = {'success' : True, 'product' : self.db_provider.sanitizeEntity(product),
 					'seller' : self.db_provider.sanitizeEntity(receiver),
-					'buyer' : user}
+					'buyer' : self.db_provider.sanitizeEntity(user)}
 
 		print "response", response
 		self.write(json.dumps(response))

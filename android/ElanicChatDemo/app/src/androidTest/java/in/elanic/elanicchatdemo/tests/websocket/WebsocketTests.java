@@ -57,7 +57,8 @@ public class WebsocketTests {
 
         DaggerTestWebsocketTestsComponent.builder()
                 .applicationComponent(app.component())
-                .websocketApiProviderModule(new WebsocketApiProviderModule(WebsocketApiProviderModule.API_SOCKET_IO_BLOCKING))
+                .websocketApiProviderModule(
+                        new WebsocketApiProviderModule(WebsocketApiProviderModule.API_WS_BLOCKING))
                 .build()
                 .inject(this);
 
