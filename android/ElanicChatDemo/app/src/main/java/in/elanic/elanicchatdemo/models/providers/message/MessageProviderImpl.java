@@ -83,7 +83,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setReceiver(receiver);
         message.setIs_deleted(false);
         message.setCreated_at(date);
-        message.setUpdated_at(date);
+//        message.setUpdated_at(date);
         message.setType(Constants.TYPE_SIMPLE_MESSAGE);
         message.setProduct(product);
         message.setOffer_price(0);
@@ -109,7 +109,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setReceiver(receiver);
         message.setIs_deleted(false);
         message.setCreated_at(date);
-        message.setUpdated_at(date);
+//        message.setUpdated_at(date);
         message.setType(Constants.TYPE_OFFER_MESSAGE);
         message.setProduct(product);
         message.setOffer_price(price);

@@ -80,7 +80,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         mWSSHelper = new WSSHelper(mDaoSession);
-        clearPendingRequests();
+//        clearPendingRequests();
 
     }
 

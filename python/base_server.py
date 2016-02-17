@@ -402,15 +402,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		receiver_offer_event_message = self.db_provider.sanitizeEntity(receiver_offer_event_message)
 
 		# Make offer event
-
+		print "receiver_offer_event_message", receiver_offer_event_message
 		self.sendMessage(receiver_offer_event_message, new_message['receiver_id'])
-
+		print "new_message", new_message
 		self.write_message(json.dumps( {'success' : True,
 				"request_id" : request_id,
 				"request_type" : REQUEST_RESPOND_TO_OFFER, "message" : new_message}))
 
 		# send to the other user
-		self.sendMessage([new_message, sender_offer_event_message], new_message['sender_id'])
+		self.sendMessages([new_message, sender_offer_event_message], new_message['sender_id'])
 
 	def testRespondToOfferRequest(self, data):
 		request_id = data['request_id']
