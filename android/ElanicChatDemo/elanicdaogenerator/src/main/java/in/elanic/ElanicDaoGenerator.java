@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 6;
+    public static final int DB_VERSION = 7;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
@@ -90,6 +90,9 @@ public class ElanicDaoGenerator {
 
         // Added in Version 6
         message.addStringProperty("local_id");
+
+        // Added in Version 7
+        message.addStringProperty("offer_earning_data");
 
         // Added in Version 5
         Entity chatItem = schema.addEntity("ChatItem");

@@ -4,12 +4,18 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
@@ -17,6 +23,7 @@ import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
 import in.elanic.elanicchatdemo.features.chat.view.ChatView;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
@@ -32,6 +39,11 @@ import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 import in.elanic.elanicchatdemo.utils.ProductUtils;
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -63,11 +75,18 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     private EventBus mEventBus;
 
+    // Offer commission and earnings
+    private ChatApiProvider chatApiProvider;
+    private JsonObject commissionDetails;
+    private HashMap<Integer, JsonObject> commissionMap;
+    private Subscription offerEarnSubscription;
+
     private static final boolean DEBUG = true;
 
-    public ChatPresenterImpl(ChatView mChatView, DaoSession mDaoSession) {
+    public ChatPresenterImpl(ChatView mChatView, DaoSession mDaoSession, ChatApiProvider chatApiProvider) {
         this.mChatView = mChatView;
         this.mDaoSession = mDaoSession;
+        this.chatApiProvider = chatApiProvider;
 
         mUserProvider = new UserProviderImpl(this.mDaoSession.getUserDao());
         mMessageProvider = new MessageProviderImpl(this.mDaoSession.getMessageDao());
@@ -179,14 +198,14 @@ public class ChatPresenterImpl implements ChatPresenter {
     }
 
     @Override
-    public void sendOffer(CharSequence price) {
+    public boolean sendOffer(CharSequence price) {
         if (price == null || price.length() == 0) {
             Log.e(TAG, "offer price is invalid");
-            return;
+            return false;
         }
 
         if (!areDetailsAvailable()) {
-            return;
+            return false;
         }
 
         int mPrice = 0;
@@ -194,10 +213,25 @@ public class ChatPresenterImpl implements ChatPresenter {
             mPrice = Integer.valueOf(String.valueOf(price));
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            return;
+            return false;
         }
 
-        Message message = mMessageProvider.createNewOffer(mPrice, mSender, mReceiver, mProduct);
+        if (mPrice > mProduct.getSelling_price()) {
+            mChatView.showOfferError("Offer price must be less than Post's listed price");
+        }
+
+        if (commissionMap == null) {
+//            mChatView.showOfferError("Calculating your earning. Please wait");
+            return false;
+        }
+
+        JsonObject commission = commissionMap.get(mPrice);
+        if (commission == null) {
+//            mChatView.showOfferError("Calculating your earning. Please wait");
+            return false;
+        }
+
+        Message message = mMessageProvider.createNewOffer(mPrice, mSender, mReceiver, mProduct, commission);
 
         if (DEBUG) {
             Log.i(TAG, "receiver_id: " + message.getReceiver_id());
@@ -213,14 +247,123 @@ public class ChatPresenterImpl implements ChatPresenter {
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
             sendMessageToWSService(jsonRequest.toString());
+            return true;
+
         } catch (JSONException e) {
             e.printStackTrace();
+            mChatView.showSnackbar("Unable to create offer. Please try again");
+            return false;
         }
+
     }
 
     @Override
     public String getUserId() {
         return mSenderId;
+    }
+
+    @Override
+    public void offerPriceEditStarted() {
+        commissionDetails = null;
+        showNoOfferEarning();
+        mChatView.showOfferError("");
+
+        if (offerEarnSubscription != null && !offerEarnSubscription.isUnsubscribed()) {
+            offerEarnSubscription.unsubscribe();
+        }
+    }
+
+    private void showNoOfferEarning() {
+        mChatView.showOfferEarningProgressbar(false);
+        mChatView.setOfferEarning("");
+    }
+
+    @Override
+    public void onOfferPriceChanged(@NonNull String price) {
+
+        Log.i(TAG, "on offer price changed: " + price);
+
+        if (price.isEmpty()) {
+            showNoOfferEarning();
+            return;
+        }
+
+        final int priceValue;
+        try {
+            priceValue = Integer.valueOf(price);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            showNoOfferEarning();
+            return;
+        }
+
+        if (priceValue > mProduct.getSelling_price()) {
+            showNoOfferEarning();
+            mChatView.showOfferError("Offer price must be less than Post's listed price");
+            return;
+        }
+
+        if (commissionMap != null && !commissionMap.isEmpty()) {
+            JsonObject commissionElement = commissionMap.get(priceValue);
+            if (commissionElement != null) {
+                setCommissionElement(priceValue, commissionElement);
+                return;
+            }
+        }
+
+        if (offerEarnSubscription != null && !offerEarnSubscription.isUnsubscribed()) {
+            offerEarnSubscription.unsubscribe();
+            offerEarnSubscription = null;
+        }
+
+        mChatView.showOfferEarningProgressbar(true);
+
+        Observable<JsonObject> observable = chatApiProvider.getEarning(mProductId, price);
+        offerEarnSubscription = observable.subscribeOn(Schedulers.io())
+                .delaySubscription(500, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<JsonObject>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        showNoOfferEarning();
+                    }
+
+                    @Override
+                    public void onNext(JsonObject jsonObject) {
+                        if (DEBUG) {
+                            Log.d(TAG, "json response: " + jsonObject.toString());
+                        }
+                        boolean success = jsonObject.get(JSONUtils.KEY_SUCCESS).getAsBoolean();
+                        if (!success) {
+                            // throw error
+                            showNoOfferEarning();
+                            mChatView.showOfferError("Unable to get commission data");
+                            return;
+                        }
+
+                        setCommissionElement(priceValue, jsonObject.getAsJsonObject(JSONUtils.KEY_DATA));
+                    }
+                });
+    }
+
+    private void setCommissionElement(int price, JsonObject commission) {
+        commissionDetails = commission;
+        if (commissionMap == null) {
+            commissionMap = new HashMap<>();
+        }
+
+        commissionMap.put(price, commission);
+        mChatView.showOfferEarningProgressbar(false);
+
+        int earning = commission.get(JSONUtils.KEY_EARN).getAsInt();
+        mChatView.setOfferEarning("You earn Rs. " + earning);
+        mChatView.showOfferError("");
     }
 
     @Override

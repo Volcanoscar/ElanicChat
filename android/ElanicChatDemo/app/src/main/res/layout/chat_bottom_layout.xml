@@ -20,7 +20,6 @@
         android:text="@string/make_an_offer"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:visibility="gone"
         android:id="@+id/close_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -37,12 +36,13 @@
 
     <android.support.v7.widget.CardView
         android:id="@+id/input_view"
-        android:layout_marginTop="74dp"
+        android:layout_marginTop="68dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_width="match_parent"
         app:contentPadding="12dp"
         app:cardCornerRadius="8dp"
+        app:cardElevation="0dp"
         android:layout_height="wrap_content">
 
         <TextView
@@ -62,7 +62,40 @@
             android:textColor="@color/black_60_percent"
             android:text="Rs. 600"/>
 
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_gravity="right|center_vertical"/>
+
     </android.support.v7.widget.CardView>
+
+    <TextView
+        android:id="@+id/offer_error_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/MediumFontTextView"
+        android:textSize="12sp"
+        android:textColor="@color/theme_app"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginTop="126dp"
+        android:layout_marginBottom="120dp"
+        android:text="@string/product_sold_out"/>
+
+    <TextView
+        android:id="@+id/info_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        style="@style/MediumFontTextView"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"
+        android:layout_marginTop="85dp"
+        android:layout_marginBottom="120dp"
+        android:textColor="@color/black_40_percent"
+        android:text="@string/product_sold_out"/>
 
     <in.elanic.elanicchatdemo.features.shared.widgets.NumbersLayout
         android:id="@+id/numbers_layout"

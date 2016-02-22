@@ -134,6 +134,12 @@ public class NumbersLayout extends FlowLayout {
         }
     }
 
+    public void clearInput() {
+        if (numberBuilder.length() > 0) {
+            numberBuilder.delete(0, numberBuilder.length());
+        }
+    }
+
     public String getInput() {
         return numberBuilder.toString();
     }

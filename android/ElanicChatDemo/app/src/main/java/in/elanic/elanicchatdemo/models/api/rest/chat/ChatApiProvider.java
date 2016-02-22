@@ -1,6 +1,9 @@
 package in.elanic.elanicchatdemo.models.api.rest.chat;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.google.gson.JsonObject;
 
 import java.util.List;
 
@@ -17,4 +20,6 @@ public interface ChatApiProvider {
     Observable<ChatItem> startChat(String userId, String productId);
     Observable<DualList<User, Product>> getDetails(@Nullable List<String> userIds,
                                                    @Nullable List<String> productIds);
+    Observable<JsonObject> getEarning(@NonNull String offerId);
+    Observable<JsonObject> getEarning(@NonNull String postId, @NonNull String price);
 }

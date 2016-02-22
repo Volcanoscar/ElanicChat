@@ -2,7 +2,6 @@ package in.elanic.elanicchatdemo.features.chat;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
@@ -12,26 +11,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.transition.ChangeBounds;
 import android.transition.ChangeTransform;
-import android.transition.Slide;
 import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.transition.TransitionSet;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -65,10 +58,10 @@ import in.elanic.elanicchatdemo.features.chat.view.ChatView;
 import in.elanic.elanicchatdemo.features.shared.widgets.ChatBottomLayout;
 import in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.utils.CustomAnimationUtils;
-import in.elanic.elanicchatdemo.features.shared.utils.OfferInputTransition;
 
 public class ChatActivity extends AppCompatActivity implements ChatView {
 
@@ -100,6 +93,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     private ChatAdapter mAdapter;
 
     private Handler handler;
+    private static final int ANIMATION_DURATION = 300;
+    private static final int OFFER_CALL_DELAY = 800;
 
     @Inject
     ChatPresenter mPresenter;
@@ -148,8 +143,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
         setupToolbar();
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true));
+        mRecyclerView.setItemAnimator(null);
         recyclerViewBottomPadding = getResources().getDimensionPixelOffset(R.dimen.chat_recyclerview_bottom_padding);
-        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
+//        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
 
         mAdapter = new ChatAdapter(this, mPresenter.getUserId());
         mAdapter.setHasStableIds(true);
@@ -210,26 +206,42 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         bottomOfferLayout.setCallback(new ChatBottomLayout.Callback() {
             @Override
             public void onSendOfferRequested(CharSequence price) {
-                mPresenter.sendOffer(price);
-                hideOfferBottomLayout();
+                boolean sent = mPresenter.sendOffer(price);
+                if (sent) {
+                    bottomOfferLayout.setInputText("Rs. ");
+                    bottomOfferLayout.clearInput();
+                    bottomOfferLayout.setEarningText("");
+                    hideOfferBottomLayout(true);
+                }
+//                hideOfferBottomLayout(true);
             }
 
             @Override
             public void onPriceChanged(CharSequence price) {
                 // TODO calculate commission and stuff
+                mPresenter.offerPriceEditStarted();
+                handler.removeCallbacks(offerPriceEditRunnable);
+                handler.postDelayed(offerPriceEditRunnable, OFFER_CALL_DELAY);
+//                handler
             }
 
             @Override
             public void onCloseRequested() {
-                hideOfferBottomLayout();
+                hideOfferBottomLayout(true);
             }
         });
+
+        bottomOfferLayout.setInputText("Rs. ");
+
+        /*bottomOfferLayout.showInfoView(R.string.seller_blocked);
+        showBottomOfferLayout(false);*/
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
         DaggerChatViewComponent.builder()
                 .applicationComponent(applicationComponent)
                 .chatViewModule(new ChatViewModule(this))
+                .chatApiProviderModule(new ChatApiProviderModule())
                 .build()
                 .inject(this);
     }
@@ -268,7 +280,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     public void onBackPressed() {
 
         if (bottomOfferLayout.getVisibility() == View.VISIBLE) {
-            hideOfferBottomLayout();
+            // TODO check if it can be dimissed or not
+            hideOfferBottomLayout(true);
             return;
         }
 
@@ -370,12 +383,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     public void onOfferFABClicked() {
 
         if (bottomOfferLayout.getVisibility() == View.VISIBLE) {
-            hideOfferBottomLayout();
+            //TODO Check if it can be dimissed or not
+            hideOfferBottomLayout(true);
             return;
         }
 
 //        showBottomLayout();
-        showBottomOfferLayout();
+        showBottomOfferLayout(true);
     }
 
     @Override
@@ -427,6 +441,21 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     }
 
     @Override
+    public void setOfferEarning(CharSequence text) {
+        bottomOfferLayout.setEarningText(text);
+    }
+
+    @Override
+    public void showOfferEarningProgressbar(boolean show) {
+        bottomOfferLayout.showProgressBar(show);
+    }
+
+    @Override
+    public void showOfferError(CharSequence text) {
+        bottomOfferLayout.showErrorText(text);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_chat, menu);
         return true;
@@ -459,32 +488,32 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .show();
     }
 
-    private void showBottomOfferLayout() {
+    private void showBottomOfferLayout(boolean animate) {
         hideKeyboard();
 
         bottomOfferLayout.setVisibility(View.VISIBLE);
 
-        ObjectAnimator yAnim = ObjectAnimator.ofFloat(bottomOfferLayout, "translationY",
-                bottomOfferLayout.getHeight(), 0);
-        yAnim.setDuration(500);
-        yAnim.start();
-        yAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                Log.i(TAG, "value: " + animation.getAnimatedValue());
-            }
-        });
+        if (animate) {
+            ObjectAnimator yAnim = ObjectAnimator.ofFloat(bottomOfferLayout, "translationY",
+                    bottomOfferLayout.getHeight(), 0);
+            yAnim.setDuration(ANIMATION_DURATION);
+            yAnim.start();
 
-        // Move FAB to top of bottom offer layout
-        if (Build.VERSION.SDK_INT >= 19) {
-            Transition transition;
-            if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 19) {
-                transition = new ChangeBounds();
-            } else {
-                transition = new FABOfferTransitionSet();
+            // Move FAB to top of bottom offer layout
+            if (Build.VERSION.SDK_INT >= 19) {
+                Transition transition;
+                if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 19) {
+                    transition = new ChangeBounds();
+                } else {
+                    transition = new FABOfferTransitionSet();
+                }
+                transition.setDuration(ANIMATION_DURATION);
+                TransitionManager.beginDelayedTransition(rootView, transition);
+                transition.removeTarget(R.id.recyclerview);
+
             }
-            transition.setDuration(500);
-            TransitionManager.beginDelayedTransition(rootView, transition);
+        } else {
+            bottomOfferLayout.setTranslationY(0);
         }
 
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)offerFAB.getLayoutParams();
@@ -505,46 +534,63 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         mRecyclerView.setPadding(0, 0, 0, 0);
     }
 
-    private void hideOfferBottomLayout() {
+    @Override
+    public void hideOfferBottomLayout(boolean animate) {
 
-        ObjectAnimator yAnim = ObjectAnimator.ofFloat(bottomOfferLayout, "translationY", 0,
-                bottomOfferLayout.getHeight());
-        yAnim.setDuration(500);
-        yAnim.start();
-        yAnim.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
+        if (animate) {
+
+            ObjectAnimator yAnim = ObjectAnimator.ofFloat(bottomOfferLayout, "translationY", 0,
+                    bottomOfferLayout.getHeight());
+            yAnim.setDuration(ANIMATION_DURATION);
+            yAnim.start();
+            yAnim.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    bottomOfferLayout.setVisibility(View.INVISIBLE);
+                    RelativeLayout.LayoutParams rParams = (RelativeLayout.LayoutParams) mRecyclerView.getLayoutParams();
+                    if (Build.VERSION.SDK_INT >= 17) {
+                        rParams.removeRule(RelativeLayout.ABOVE);
+                    } else {
+                        rParams.addRule(RelativeLayout.ABOVE, 0);
+                    }
+                    mRecyclerView.setLayoutParams(rParams);
+                    mRecyclerView.setPadding(0, 0, 0, recyclerViewBottomPadding);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+
+
+            // Move FAB back
+            if (Build.VERSION.SDK_INT >= 19) {
+                Transition transition;
+                if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 19) {
+                    transition = new ChangeBounds();
+                } else {
+                    transition = new FABOfferTransitionSet();
+                }
+                transition.setDuration(ANIMATION_DURATION);
+                transition.excludeChildren(R.id.recyclerview, true);
+                TransitionManager.beginDelayedTransition(rootView, transition);
+//                transition.removeTarget(R.id.recyclerview);
 
             }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                bottomOfferLayout.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
-
-
-        // Move FAB back
-        if (Build.VERSION.SDK_INT >= 19) {
-            Transition transition;
-            if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 19) {
-                transition = new ChangeBounds();
-            } else {
-                transition = new FABOfferTransitionSet();
-            }
-            transition.setDuration(500);
-
-            TransitionManager.beginDelayedTransition(rootView, transition);
+        } else {
+            bottomOfferLayout.setTranslationY(bottomOfferLayout.getHeight());
+            bottomOfferLayout.setVisibility(View.INVISIBLE);
         }
 
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)offerFAB.getLayoutParams();
@@ -559,14 +605,16 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         offerFAB.setImageResource(R.drawable.ic_add_white_18dp);
         offerFAB.setRotation(0);
 
-        RelativeLayout.LayoutParams rParams = (RelativeLayout.LayoutParams)mRecyclerView.getLayoutParams();
-        if (Build.VERSION.SDK_INT >= 17) {
-            rParams.removeRule(RelativeLayout.ABOVE);
-        } else {
-            rParams.addRule(RelativeLayout.ABOVE, 0);
+        if (!animate) {
+            RelativeLayout.LayoutParams rParams = (RelativeLayout.LayoutParams) mRecyclerView.getLayoutParams();
+            if (Build.VERSION.SDK_INT >= 17) {
+                rParams.removeRule(RelativeLayout.ABOVE);
+            } else {
+                rParams.addRule(RelativeLayout.ABOVE, 0);
+            }
+            mRecyclerView.setLayoutParams(rParams);
+            mRecyclerView.setPadding(0, 0, 0, recyclerViewBottomPadding);
         }
-        mRecyclerView.setLayoutParams(rParams);
-        mRecyclerView.setPadding(0, 0, 0, recyclerViewBottomPadding);
     }
 
     public void hideKeyboard() {
@@ -593,4 +641,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                     .addTransition(new ChangeTransform());
         }
     }
+
+    private Runnable offerPriceEditRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mPresenter != null && bottomOfferLayout != null) {
+                mPresenter.onOfferPriceChanged(bottomOfferLayout.getInput());
+            }
+        }
+    };
 }

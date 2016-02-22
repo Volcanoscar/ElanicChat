@@ -159,6 +159,95 @@ class GetDetails(tornado.web.RequestHandler):
 		self.write(json.dumps(response))
 		self.finish()
 
+class GetEarning(tornado.web.RequestHandler):
+	def initialize(self, db_provider):
+		self.db_provider = db_provider
+
+	@tornado.web.asynchronous
+	def get(self):
+		productId = self.get_argument('post_id', default=None, strip=False)
+		offerId = self.get_argument('offer_id', default=None, strip=False)
+		price = self.get_argument('price', default=None, strip=False)
+
+		print productId, 'productId'
+		print offerId, 'offerId'
+		print price, 'price'
+
+		if offerId is None or len(offerId) == 0:
+
+			# check if product and price are available
+			if productId is None or len(productId)==0:
+				response = {'success':False, 'code':501}
+				self.write(json.dumps(response))
+				self.finish()
+				return
+
+			if price is None or len(price)==0 or price.isdigit() is False:
+				response = {'success': False, 'code': 501}
+				self.write(json.dumps(response))
+				self.finish()
+				return
+
+		else:
+
+			# get details from offer
+			offer = self.db_provider.getMessage(offerId)
+			print offer, 'offer'
+
+			if offer is None or offer.get('type') != 2:
+				response = {'success':False, 'code':404}
+				self.write(json.dumps(response))
+				self.finish()
+				return
+
+			price = offer.get('offer_price')
+			if price is None:
+				response = {'success':False, 'code':502}
+				self.write(json.dumps(response))
+				self.finish()
+				return
+
+			productId = offer.get('product_id')
+			if productId is None:
+				response = {'success':False, 'code':502}
+				self.write(json.dumps(response))
+				self.finish()
+				return
+		
+
+		product = self.db_provider.getProduct(productId)
+		print product, "product"
+
+		if product is None:
+			response = {'success':False, 'code':502}
+			self.write(json.dumps(response))
+			self.finish()
+			return
+
+		price = int(price)
+		commission = price/10
+		delivery = 60
+		extra = 0
+		earn = price - commission - delivery
+
+		data = {
+				'price' : product['selling_price'],
+				'offer_price' : price,
+				'commission' : commission,
+				'delivery' : delivery,
+				'extra' : extra,
+				'earn' : earn}
+
+		if offerId is not None:
+			data['offer_id'] = offerId
+
+		if productId is not None:
+			data['product_id'] = productId
+
+		response = {'success' : True, 'data' : data, 'post_id' : productId}
+		self.write(json.dumps(response))
+		self.finish()
+
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
@@ -646,7 +735,8 @@ app = tornado.web.Application([
 	url(r'/ws', WebSocketHandler, dict(db_provider=db_provider), name="ws"),
 	url(r'/api/login', LoginApiHandler, dict(db_provider=db_provider), name="login"),
 	url(r'/api/start_chat', StartChatApiHandler, dict(db_provider=db_provider), name='start_chat'),
-	url(r'/api/get_details', GetDetails, dict(db_provider=db_provider), name="get_details")
+	url(r'/api/get_details', GetDetails, dict(db_provider=db_provider), name="get_details"),
+	url(r'/api/get_earning', GetEarning, dict(db_provider=db_provider), name="get_earning")
 	])
 
 if __name__ == "__main__":

@@ -55,5 +55,11 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
             WSRequestDao.createTable(db, true);
             Log.i(TAG, "added WS Request item table to database");
         }
+
+        if (oldVersion < 7) {
+            Log.i(TAG, "upgrading from version 6 to 7");
+            db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_earning_data.columnName + " TEXT;");
+            Log.i(TAG, "added offer_earning_data in message table");
+        }
     }
 }

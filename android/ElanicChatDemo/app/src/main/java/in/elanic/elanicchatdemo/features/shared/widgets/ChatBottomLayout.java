@@ -3,11 +3,14 @@ package in.elanic.elanicchatdemo.features.shared.widgets;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.CardView;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import butterknife.Bind;
@@ -22,6 +25,11 @@ public class ChatBottomLayout extends FrameLayout {
     @Bind(R.id.close_button) FloatingActionButton closeButton;
     @Bind(R.id.offer_input_view) TextView inputView;
     @Bind(R.id.numbers_layout) NumbersLayout numbersLayout;
+    @Bind(R.id.info_view) TextView infoView;
+    @Bind(R.id.input_view) CardView inputLayout;
+    @Bind(R.id.progress_bar) ProgressBar progressBar;
+    @Bind(R.id.offer_earn_view) TextView earnView;
+    @Bind(R.id.offer_error_view) TextView errorView;
 
     private Callback callback;
 
@@ -84,10 +92,60 @@ public class ChatBottomLayout extends FrameLayout {
         });
 
         inputView.setText("");
+        infoView.setText("");
+        infoView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
+        errorView.setVisibility(View.GONE);
+        earnView.setVisibility(View.GONE);
+        closeButton.setVisibility(View.GONE);
     }
 
     public void setCallback(Callback callback) {
         this.callback = callback;
+    }
+
+    public void setInputText(CharSequence text) {
+        inputView.setText(text);
+    }
+
+    public void clearInput() {
+        numbersLayout.clearInput();
+    }
+
+    public void showInfoView(@StringRes int resId) {
+        infoView.setText(resId);
+        infoView.setVisibility(View.VISIBLE);
+        numbersLayout.setVisibility(View.GONE);
+        inputLayout.setVisibility(View.GONE);
+    }
+
+    public void showInput() {
+        infoView.setVisibility(View.GONE);
+        numbersLayout.setVisibility(View.VISIBLE);
+        inputLayout.setVisibility(View.VISIBLE);
+    }
+
+    public String getInput() {
+        return numbersLayout.getInput();
+    }
+
+    public void setEarningText(CharSequence text) {
+        earnView.setVisibility(text.length() > 0 ?View.VISIBLE : View.GONE);
+        earnView.setText(text);
+    }
+
+    public void showErrorText(CharSequence text) {
+        errorView.setVisibility(text.length() > 0 ? View.VISIBLE : View.GONE);
+        errorView.setText(text);
+    }
+
+    public void showProgressBar(boolean show) {
+        if (show) {
+            progressBar.setVisibility(View.VISIBLE);
+            earnView.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     public interface Callback {

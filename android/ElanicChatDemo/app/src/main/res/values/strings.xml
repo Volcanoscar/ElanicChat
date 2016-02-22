@@ -15,4 +15,8 @@
     <string name="offer_buy_now">Buy Now</string>
 
     <string name="make_an_offer">Make an Offer</string>
+    
+    <string name="product_sold_out">Product got sold to another user</string>
+    <string name="product_unavailable">Product is currently not available</string>
+    <string name="seller_blocked">Seller has blocked you from making any more offers</string>
 </resources>

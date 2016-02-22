@@ -28,4 +28,9 @@ public interface ChatView {
     void setUsername(@NonNull CharSequence text);
 
     void scrollToPosition(int position);
+
+    void setOfferEarning(CharSequence text);
+    void showOfferEarningProgressbar(boolean show);
+    void showOfferError(CharSequence text);
+    void hideOfferBottomLayout(boolean animate);
 }

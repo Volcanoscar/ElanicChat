@@ -18,8 +18,11 @@ public interface ChatPresenter {
 
     void loadData();
     void sendMessage(String content);
-    void sendOffer(CharSequence price);
+    boolean sendOffer(CharSequence price);
     String getUserId();
+
+    void offerPriceEditStarted();
+    void onOfferPriceChanged(String price);
 
     void confirmResponseToOffer(int position, boolean accept);
     void respondToOffer(int position, boolean accept);

@@ -1,5 +1,6 @@
 package in.elanic.elanicchatdemo.models.api.rest.chat;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -157,6 +158,16 @@ public class RetrofitChatApiProvider implements ChatApiProvider {
                 return Observable.just(new DualList<>(users, posts));
             }
         });
+    }
+
+    @Override
+    public Observable<JsonObject> getEarning(@NonNull String offerId) {
+        return mService.getEarning(offerId);
+    }
+
+    @Override
+    public Observable<JsonObject> getEarning(@NonNull String postId, @NonNull String price) {
+        return mService.getEarning(postId, price);
     }
 
 }

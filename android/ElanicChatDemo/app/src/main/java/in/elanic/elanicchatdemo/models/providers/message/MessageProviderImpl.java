@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.gson.JsonObject;
+
 import java.util.Date;
 import java.util.List;
 
@@ -94,7 +96,8 @@ public class MessageProviderImpl implements MessageProvider {
 
     @Override
     public Message createNewOffer(int price, @NonNull User sender,
-                                  @NonNull User receiver, @NonNull Product product) {
+                                  @NonNull User receiver, @NonNull Product product,
+                                  @NonNull JsonObject commission) {
         Message message = new Message();
 
         Date date = new Date();
@@ -113,6 +116,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setType(Constants.TYPE_OFFER_MESSAGE);
         message.setProduct(product);
         message.setOffer_price(price);
+        message.setOffer_earning_data(commission.toString());
 
         mDao.insert(message);
         return message;

@@ -5,6 +5,7 @@ import dagger.Provides;
 import in.elanic.elanicchatdemo.features.chat.view.ChatView;
 import in.elanic.elanicchatdemo.features.chat.presenter.ChatPresenter;
 import in.elanic.elanicchatdemo.features.chat.presenter.ChatPresenterImpl;
+import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 
 /**
@@ -26,7 +27,7 @@ public class ChatViewModule {
     }
 
     @Provides
-    public ChatPresenter providePresenter(ChatView view, DaoSession daoSession) {
-        return new ChatPresenterImpl(view, daoSession);
+    public ChatPresenter providePresenter(ChatView view, DaoSession daoSession, ChatApiProvider chatApiProvider) {
+        return new ChatPresenterImpl(view, daoSession, chatApiProvider);
     }
 }
