@@ -122,6 +122,43 @@ class StartChatApiHandler(tornado.web.RequestHandler):
 		self.write(json.dumps(response))
 		self.finish()
 
+class GetDetails(tornado.web.RequestHandler):
+	def initialize(self, db_provider):
+		self.db_provider = db_provider
+
+	@tornado.web.asynchronous
+	def post(self):
+		userIds = self.get_argument('user_ids', default=None, strip=False)
+		productIds = self.get_argument('post_ids', default=None, strip=False)
+
+		users = []
+		posts = []
+
+		if userIds is not None:
+			for userId in userIds.split(","):
+				userId = userId.strip()
+				if len(userId) == 0:
+					continue
+				user = self.db_provider.getUser(userId)
+				if user is not None:
+					user = ModelsProvider.sanitizeEntity(user)
+					users.append(user)
+
+		if productIds is not None:
+			for productId in productIds.split(","):
+				productId = productId.strip()
+				if len(productId) == 0:
+					continue
+				prodct = self.db_provider.getProduct(productId)
+				if prodct is not None:
+					product = ModelsProvider.sanitizeEntity(product)
+					posts.append(product)
+
+		response = {'success':True, 'users':users, 'posts':posts}
+		print "response", response
+		self.write(json.dumps(response))
+		self.finish()
+
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
@@ -608,7 +645,8 @@ db_provider = ModelsProvider()
 app = tornado.web.Application([
 	url(r'/ws', WebSocketHandler, dict(db_provider=db_provider), name="ws"),
 	url(r'/api/login', LoginApiHandler, dict(db_provider=db_provider), name="login"),
-	url(r'/api/start_chat', StartChatApiHandler, dict(db_provider=db_provider), name='start_chat')
+	url(r'/api/start_chat', StartChatApiHandler, dict(db_provider=db_provider), name='start_chat'),
+	url(r'/api/get_details', GetDetails, dict(db_provider=db_provider), name="get_details")
 	])
 
 if __name__ == "__main__":

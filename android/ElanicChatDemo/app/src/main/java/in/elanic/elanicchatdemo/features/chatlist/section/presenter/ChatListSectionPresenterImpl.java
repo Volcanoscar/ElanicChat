@@ -10,9 +10,11 @@ import in.elanic.elanicchatdemo.features.chatlist.section.view.ChatListSectionVi
 import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.chat.UIChatItemProvider;
+import in.elanic.elanicchatdemo.utils.DateUtils;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -125,6 +127,28 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         }
 
         return false;
+    }
+
+    @Override
+    public void onOfferActionRequested(int position) {
+        if (position < 0 || uiItems == null || uiItems.size() <= position) {
+            return;
+        }
+
+        UIChatItem uiChatItem = uiItems.get(position);
+        Message offer = uiChatItem.getDisplayOffer();
+        if (offer == null || offer.getOffer_response() == null) {
+            return;
+        }
+
+        // Check if expired
+        if (offer.getOffer_response() == Constants.OFFER_EXPIRED || DateUtils.isOfferExpired(offer)) {
+            return;
+        }
+
+        if (offer.getOffer_response() == Constants.OFFER_ACTIVE) {
+            // do something
+        }
     }
 
     @Override

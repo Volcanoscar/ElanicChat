@@ -78,7 +78,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
 
         Message message = mItems.get(position);
         boolean isMyMessage = message.getSender_id().equals(myUserId);
@@ -162,6 +162,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             viewHolder.showBuyNowOption(false);
 
+            // remove cancel offer listener
+            viewHolder.mOfferStatusImageView.setOnClickListener(null);
+            viewHolder.mOfferStatusImageView.setEnabled(false);
+
             if (response != null) {
                 switch (response) {
                     case Constants.OFFER_ACTIVE:
@@ -170,6 +174,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
                             viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
                             viewHolder.mOfferTimeView.setVisibility(View.VISIBLE);
+
+                            viewHolder.mOfferStatusImageView.setEnabled(true);
+                            viewHolder.mOfferStatusImageView.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if (mCallback != null) {
+                                        mCallback.cancelOffer(position);
+                                    }
+                                }
+                            });
 
                         } else {
                             viewHolder.mOfferStatusView.setText(R.string.offer_expired);
@@ -254,7 +268,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             boolean isExpired;
 //            boolean hasResponded = false;
 
-            isExpired = !(expiryDate != null && new Date().compareTo(expiryDate) < 0);
+            isExpired = DateUtils.isOfferExpired(message);
 
             if (response != null) {
                 switch (response) {
@@ -404,14 +418,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public MyOfferViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
-            mOfferStatusImageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mCallback != null) {
-                        mCallback.cancelOffer(getAdapterPosition());
-                    }
-                }
-            });
         }
 
         public void setLeftDrawable(@DrawableRes int res, TextView view) {

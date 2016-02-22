@@ -63,6 +63,11 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
             public void onItemClicked(int position) {
                 mPresenter.openChat(position);
             }
+
+            @Override
+            public void onOfferAction(int position) {
+                mPresenter.onOfferActionRequested(position);
+            }
         });
 
         mRecyclerView.setVisibility(View.GONE);

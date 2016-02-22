@@ -312,7 +312,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.setProductTitle(product.getTitle());
         mChatView.setSpecifications(ProductUtils.getProductSpecification(product));
         mChatView.setPrice("Listed at Rs. " + product.getSelling_price());
-        mChatView.setOfferPrice("");
+        mChatView.setOfferPrice("", "");
         mChatView.showProductLayout(true);
     }
 
@@ -322,12 +322,12 @@ public class ChatPresenterImpl implements ChatPresenter {
                 (offer.getOffer_response() == Constants.OFFER_ACTIVE
                         || offer.getOffer_price() == Constants.OFFER_ACCEPTED)
                 && offer.getOffer_price() != null) {
-            mChatView.setOfferPrice("ACTIVE OFFER\nRs. " + offer.getOffer_price());
+            mChatView.setOfferPrice("ACTIVE OFFER", "Rs. " + offer.getOffer_price());
 
             latestOffer = offer;
 
         } else {
-            mChatView.setOfferPrice("");
+            mChatView.setOfferPrice("", "");
 
             latestOffer = null;
         }

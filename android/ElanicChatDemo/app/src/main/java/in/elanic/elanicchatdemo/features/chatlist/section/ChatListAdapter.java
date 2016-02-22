@@ -16,6 +16,7 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
+import in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -38,6 +39,8 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private int activeColor;
     private int inactiveColor;
+    private int semiActiveColor;
+    private int megaActiveColor;
 
     public ChatListAdapter(Context context, String userId) {
         mContext = context;
@@ -46,7 +49,9 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         Resources res = context.getResources();
         activeColor = ContextCompat.getColor(context, R.color.black_80_percent);
+        semiActiveColor = ContextCompat.getColor(context, R.color.black_60_percent);
         inactiveColor = ContextCompat.getColor(context, R.color.black_40_percent);
+        megaActiveColor = ContextCompat.getColor(context, R.color.colorAccent);
     }
 
     @Override
@@ -55,7 +60,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         ChatItemViewHolder viewHolder = (ChatItemViewHolder)holder;
         UIChatItem item = mItems.get(position);
         Product product = item.getProduct();
@@ -89,6 +94,11 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             viewHolder.timeView.setText("");
         }
 
+        // Remove offer response onClickListener
+        viewHolder.offerResponseView.setOnClickListener(null);
+        viewHolder.offerResponseView.setClickable(false);
+        viewHolder.offerResponseView.setEnabled(false);
+
         if (latestOffer != null) {
 
             boolean isBuyer = !latestOffer.getSeller_id().equals(userId);
@@ -102,8 +112,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             viewHolder.offerValidityView.setVisibility(View.VISIBLE);
 
             Date expiryDate = latestOffer.getOffer_expiry();
-
-            boolean isExpired = !(expiryDate != null && new Date().compareTo(expiryDate) < 0);
+            boolean isExpired = DateUtils.isOfferExpired(latestOffer);
 
             if (response == Constants.OFFER_DECLINED) {
 
@@ -117,18 +126,31 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
                     if (isMyOffer) {
                         viewHolder.offerResponseView.setText(R.string.offer_pending);
-                        viewHolder.setLeftDrawable(R.drawable.ic_alarm_on_grey_800_18dp, viewHolder.offerResponseView);
+                        viewHolder.setLeftDrawable(R.drawable.ic_alarm_on_grey_600_18dp, viewHolder.offerResponseView);
+                        viewHolder.offerResponseView.setTextColor(semiActiveColor);
                     } else {
                         if (isBuyer) {
                             viewHolder.offerResponseView.setText(R.string.offer_buy_now);
-                            viewHolder.setLeftDrawable(R.drawable.ic_shopping_basket_grey_800_18dp, viewHolder.offerResponseView);
+                            viewHolder.setLeftDrawable(R.drawable.ic_shopping_basket_theme_24dp, viewHolder.offerResponseView);
+                            viewHolder.offerResponseView.setTextColor(megaActiveColor);
+
                         } else {
                             viewHolder.offerResponseView.setText(R.string.offer_accept);
                             viewHolder.setLeftDrawable(R.drawable.ic_done_grey_800_18dp, viewHolder.offerResponseView);
+                            viewHolder.offerResponseView.setTextColor(activeColor);
                         }
-                    }
 
-                    viewHolder.offerResponseView.setTextColor(activeColor);
+                        // add offer response click listener
+                        viewHolder.offerResponseView.setEnabled(true);
+                        viewHolder.offerResponseView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (mCallback != null) {
+                                    mCallback.onOfferAction(position);
+                                }
+                            }
+                        });
+                    }
 
                     viewHolder.offerValidityView.setText(DateUtils.getRemainingTime(expiryDate));
                     viewHolder.offerValidityView.setVisibility(View.VISIBLE);
@@ -141,12 +163,13 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
                     if (isBuyer) {
                         viewHolder.offerResponseView.setText(R.string.offer_buy_now);
-                        viewHolder.setLeftDrawable(R.drawable.ic_shopping_basket_grey_800_18dp, viewHolder.offerResponseView);
+                        viewHolder.setLeftDrawable(R.drawable.ic_shopping_basket_theme_24dp, viewHolder.offerResponseView);
+                        viewHolder.offerResponseView.setTextColor(megaActiveColor);
                     } else {
                         viewHolder.offerResponseView.setText(R.string.offer_accepted);
                         viewHolder.setLeftDrawable(R.drawable.ic_done_grey_800_18dp, viewHolder.offerResponseView);
+                        viewHolder.offerResponseView.setTextColor(activeColor);
                     }
-                    viewHolder.offerResponseView.setTextColor(activeColor);
 
                     viewHolder.offerValidityView.setText(DateUtils.getRemainingTime(expiryDate));
                     viewHolder.offerValidityView.setVisibility(View.VISIBLE);
@@ -158,7 +181,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             }
 
             viewHolder.offerLayout.setVisibility(View.VISIBLE);
-            viewHolder.offerPriceView.setText("OFFER\nRs." + latestOffer.getOffer_price());
+            viewHolder.offerPriceView.setSubText("Rs." + latestOffer.getOffer_price());
 
         } else {
             viewHolder.offerLayout.setVisibility(View.GONE);
@@ -200,7 +223,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         @Bind(R.id.unread_message_view) TextView unreadMessageView;
 
         @Bind(R.id.offer_layout) ViewGroup offerLayout;
-        @Bind(R.id.offer_price_view) TextView offerPriceView;
+        @Bind(R.id.offer_price_view) VerticalTwoTextView offerPriceView;
         @Bind(R.id.offer_response_view) TextView offerResponseView;
         @Bind(R.id.offer_valid_view) TextView offerValidityView;
 
@@ -213,6 +236,13 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     if (mCallback != null) {
                         mCallback.onItemClicked(getAdapterPosition());
                     }
+                }
+            });
+
+            offerLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // do nothing
                 }
             });
         }
@@ -245,5 +275,6 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public interface Callback {
         void onItemClicked(int position);
+        void onOfferAction(int position);
     }
 }

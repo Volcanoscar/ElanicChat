@@ -1,80 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="56dp"
     android:background="@color/colorPrimary">
 
     <ImageView
         android:id="@+id/imageview"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="12dp"
+        android:layout_gravity="center_vertical"
         android:layout_centerVertical="true"
         android:scaleType="centerCrop"
+        android:background="@color/white_60_percent"
         android:src="@mipmap/ic_launcher"/>
 
-    <TextView
+    <in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView
+        style="@style/MediumFontTextView"
+        android:id="@+id/title_view"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:paddingRight="8dp"
+        android:text="Title"
+        app:subtext="Listed at Rs. 800"
+        app:subtextTopMargin="3dp"
+        android:textColor="@color/white_80_percent"
+        app:subtextColor="@color/white_80_percent"
+        android:textSize="14sp"
+        app:subtextSize="12sp" />
+
+    <in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView
         android:id="@+id/offer_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_alignParentRight="true"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/transparent_ripple"
+        android:padding="8dp"
         android:layout_marginRight="8dp"
         android:maxLines="2"
-        android:paddingRight="8dp"
-        android:gravity="center"
-        android:text="BEST OFFER\nRs. 600"
-        android:textColor="@color/white_80_percent"
-        android:textSize="14sp" />
-
-    <TextView
-        android:id="@+id/title_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@id/imageview"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="4dp"
-        android:layout_toRightOf="@id/imageview"
-        android:layout_toLeftOf="@id/offer_view"
-        android:maxLines="2"
-        android:paddingRight="8dp"
-        android:text="Title"
+        android:gravity="center_horizontal"
+        android:text="BEST OFFER"
+        app:subtext="Rs. 600"
+        app:subtextTopMargin="2dp"
         android:textColor="@color/white_100_percent"
-        android:textSize="16sp" />
+        app:subtextColor="@color/white_100_percent"
+        app:subtextFontStyle="medium"
+        android:textSize="12sp"
+        app:subtextSize="16sp"/>
 
-    <TextView
-        android:visibility="gone"
-        android:id="@+id/specs_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/title_view"
-        android:layout_marginBottom="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_toLeftOf="@id/offer_view"
-        android:layout_toRightOf="@id/imageview"
-        android:drawablePadding="4dp"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:paddingRight="8dp"
-        android:text="Size: M | Brand : Blue Lagoon YOLO YOYO"
-        android:textColor="@color/white_60_percent"
-        android:textSize="12sp"/>
-
-
-    <TextView
-        android:id="@+id/price_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@id/imageview"
-        android:layout_marginRight="8dp"
-        android:layout_marginBottom="4dp"
-        android:layout_toRightOf="@id/imageview"
-        android:text="Listed at Rs 1200"
-        android:textColor="@color/white_60_percent"
-        android:textSize="12sp" />
-
-</RelativeLayout>
+</LinearLayout>

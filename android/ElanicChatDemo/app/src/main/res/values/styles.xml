@@ -6,6 +6,36 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorControlHighlight">@color/white_40_percent</item>
     </style>
+
+    <style name="MediumFontTextView">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <declare-styleable name="CircleImageView">
+        <attr name="borderThickness" format="dimension"/>
+        <attr name="borderColor" format="color"/>
+        <attr name="borderOverlay" format="boolean"/>
+    </declare-styleable>
+
+    <!-- Two TextView Attributes -->
+    <attr name="subtextSize" format="dimension"/>
+    <attr name="subtextColor" format="color"/>
+    <attr name="subtext" format="string"/>
+    <attr name="subtextFontStyle">
+        <flag name="regular" value="0x01"/>
+        <flag name="medium" value="0x02"/>
+        <flag name="light" value="0x03"/>
+    </attr>
+
+    <declare-styleable name="VerticalTwoTextView">
+        <attr name="subtextSize"/>
+        <attr name="subtextColor"/>
+        <attr name="subtextTopMargin" format="dimension"/>
+        <attr name="subtext"/>
+        <attr name="subtextFontStyle"/>
+    </declare-styleable>
 
 </resources>

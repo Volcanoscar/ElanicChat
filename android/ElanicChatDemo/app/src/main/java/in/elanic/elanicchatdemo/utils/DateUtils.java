@@ -1,6 +1,10 @@
 package in.elanic.elanicchatdemo.utils;
 
+import android.support.annotation.NonNull;
+
 import java.util.Date;
+
+import in.elanic.elanicchatdemo.models.db.Message;
 
 /**
  * Created by Jay Rambhia on 2/4/16.
@@ -37,5 +41,9 @@ public class DateUtils {
         }
 
         return "";
+    }
+
+    public static boolean isOfferExpired(@NonNull Message message) {
+        return !(message.getOffer_expiry() != null && new Date().compareTo(message.getOffer_expiry()) < 0);
     }
 }

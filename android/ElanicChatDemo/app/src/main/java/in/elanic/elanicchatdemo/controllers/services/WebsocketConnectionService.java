@@ -21,14 +21,24 @@ import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.DualList;
+import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.Product;
+import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 /**
  * Created by Jay Rambhia on 29/12/15.
@@ -37,11 +47,14 @@ public class WebsocketConnectionService extends Service {
 
     private static final String TAG = "WSService";
 
-    @Inject
-    DaoSession mDaoSession;
-    @Inject
-    WebsocketApi mWebSocketApi;
+    @Inject DaoSession mDaoSession;
+    @Inject WebsocketApi mWebSocketApi;
+    @Inject ChatApiProvider chatApiProvider;
+
+
     private WSSHelper mWSSHelper;
+
+    private CompositeSubscription _subsriptions;
 
     private EventBus mEventBus;
 
@@ -90,6 +103,7 @@ public class WebsocketConnectionService extends Service {
                 .websocketConnectionServiceModule(new WebsocketConnectionServiceModule())
                 .websocketApiProviderModule(new WebsocketApiProviderModule(
                         WebsocketApiProviderModule.API_WS_NON_BLOCKONG))
+                .chatApiProviderModule(new ChatApiProviderModule())
                 .build()
                 .inject(this);
     }
@@ -109,6 +123,11 @@ public class WebsocketConnectionService extends Service {
         if (mPreferenceProvider.getSyncTimestamp() != -1) {
             mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
         }
+
+        if (_subsriptions != null && !_subsriptions.isUnsubscribed()) {
+            _subsriptions.unsubscribe();
+        }
+
         disconnectWSConnectionRequested();
         unregisterForEvents();
         Log.i(TAG, "onDestroy");
@@ -323,7 +342,9 @@ public class WebsocketConnectionService extends Service {
         boolean fetchNewUsers = (newUserIds != null && !newUserIds.isEmpty());
         boolean fetchNewProducts = (newProductIds != null && !newProductIds.isEmpty());
 
-        if (fetchNewUsers && fetchNewProducts) {
+        // Moving to REST API to get user and product details
+
+        /*if (fetchNewUsers && fetchNewProducts) {
             fetchUsersAndProductsData(newUserIds, newProductIds);
         } else if (fetchNewUsers) {
             fetchUsersData(newUserIds);
@@ -331,21 +352,64 @@ public class WebsocketConnectionService extends Service {
             fetchProductsData(newProductIds);
         } else {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+        }*/
+
+        if (fetchNewUsers || fetchNewProducts) {
+
+            fetchUsersAndProductsDataREST(newUserIds, newProductIds);
+
+        } else {
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
         }
     }
 
+    @Deprecated
     private void fetchUsersData(@NonNull List<String> userIds) {
         sendDataRequested(WSSHelper.createFetchUsersDataRequest(userIds));
     }
 
+    @Deprecated
     private void fetchProductsData(@NonNull List<String> productIds) {
         sendDataRequested(WSSHelper.createFetchProductsDataRequest(productIds));
     }
 
+    @Deprecated
     private void fetchUsersAndProductsData(@NonNull List<String> userIds, @NonNull List<String> productIds) {
         sendDataRequested(WSSHelper.createFetchUsersAndProductsDataRequest(userIds, productIds));
     }
 
+    private void fetchUsersAndProductsDataREST(@Nullable List<String> userIds,
+                                               @Nullable List<String> productIds) {
+
+        Observable<DualList<User, Product>> observable = chatApiProvider.getDetails(userIds, productIds);
+
+        if (_subsriptions == null || _subsriptions.isUnsubscribed()) {
+            _subsriptions = new CompositeSubscription();
+        }
+
+        Subscription subscription = observable.subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(new Subscriber<DualList<User, Product>>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onNext(DualList<User, Product> data) {
+                        onUsersAndProductsDataFetched(data.getT(), data.getV());
+                    }
+                });
+
+        _subsriptions.add(subscription);
+    }
+
+    @Deprecated
     private void onUserDataFetched(JSONObject jsonResponse) throws JSONException {
         JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
         if (users.length() == 0) {
@@ -359,6 +423,7 @@ public class WebsocketConnectionService extends Service {
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
 
+    @Deprecated
     private void onProductsDataFetched(JSONObject jsonResponse) throws JSONException {
         JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
         if (products.length() == 0) {
@@ -372,6 +437,7 @@ public class WebsocketConnectionService extends Service {
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
     }
 
+    @Deprecated
     private void onUsersAndPrdouctsDataFetched(JSONObject jsonResponse) throws JSONException {
         JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_PRODUCTS);
         JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_USERS);
@@ -384,7 +450,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         if (users.length() != 0) {
-            mWSSHelper.saveUsersToDB(mWSSHelper.parseNewUsers(users));
+            mWSSHelper.saveUsersToDB(WSSHelper.parseNewUsers(users));
         } else {
             if (DEBUG) {
                 Log.e(TAG, "empty users array");
@@ -392,6 +458,28 @@ public class WebsocketConnectionService extends Service {
         }
 
         if (users.length() > 0 || products.length() > 0) {
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+        }
+    }
+
+    private void onUsersAndProductsDataFetched(@NonNull List<User> users, @NonNull List<Product> products) {
+        if (products.size() != 0) {
+            mWSSHelper.saveProductsToDB(products);
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "empty products array");
+            }
+        }
+
+        if (users.size() != 0) {
+            mWSSHelper.saveUsersToDB(users);
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "empty users array");
+            }
+        }
+
+        if (users.size() > 0 || products.size() > 0) {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
         }
     }

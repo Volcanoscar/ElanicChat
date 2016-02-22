@@ -28,6 +28,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +50,7 @@ import in.elanic.elanicchatdemo.features.chat.dagger.ChatViewModule;
 import in.elanic.elanicchatdemo.features.chat.dagger.DaggerChatViewComponent;
 import in.elanic.elanicchatdemo.features.chat.presenter.ChatPresenter;
 import in.elanic.elanicchatdemo.features.chat.view.ChatView;
+import in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
@@ -66,12 +68,10 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Bind(R.id.profile_imageview) ImageView profileView;
     @Bind(R.id.username_view) TextView usernameView;
 
-    @Bind(R.id.product_layout) RelativeLayout productLayout;
-    @Bind(R.id.title_view) TextView titleView;
-    @Bind(R.id.offer_view) TextView offerView;
+    @Bind(R.id.product_layout) LinearLayout productLayout;
+    @Bind(R.id.title_view) VerticalTwoTextView titleView;
+    @Bind(R.id.offer_view) VerticalTwoTextView offerView;
     @Bind(R.id.imageview) ImageView imageView;
-    @Bind(R.id.specs_view) TextView specsView;
-    @Bind(R.id.price_view) TextView priceView;
 
     @Bind(R.id.send_fab) FloatingActionButton sendFAB;
     @Bind(R.id.offer_fab) FloatingActionButton offerFAB;
@@ -376,12 +376,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
     @Override
     public void setPrice(@NonNull CharSequence text) {
-        priceView.setText(text);
+        titleView.setSubText(text);
     }
 
     @Override
-    public void setOfferPrice(@NonNull CharSequence text) {
+    public void setOfferPrice(@NonNull CharSequence text, @NonNull CharSequence subtext) {
         offerView.setText(text);
+        offerView.setSubText(subtext);
     }
 
     @Override
@@ -391,7 +392,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
     @Override
     public void setSpecifications(@NonNull CharSequence text) {
-        specsView.setText(text);
+//        specsView.setText(text);
     }
 
     @Override

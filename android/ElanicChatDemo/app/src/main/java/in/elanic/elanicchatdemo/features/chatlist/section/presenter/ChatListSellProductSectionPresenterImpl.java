@@ -104,7 +104,7 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
 
         if (bestOfferIndex != -1) {
             bestOfferChatItem = uiChats.get(bestOfferIndex);
-            chatListSellProductSectionView.setOfferPrice("BEST OFFER\n Rs. " + bestOfferPrice);
+            chatListSellProductSectionView.setOfferPrice("BEST OFFER", "Rs. " + bestOfferPrice);
         }
     }
 
@@ -112,7 +112,7 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
         chatListSellProductSectionView.setTitle(product.getTitle());
         chatListSellProductSectionView.setSpecifications(ProductUtils.getProductSpecification(product));
         chatListSellProductSectionView.setPrice("Listed at Rs. " + product.getSelling_price());
-        chatListSellProductSectionView.setOfferPrice("");
+        chatListSellProductSectionView.setOfferPrice("", "");
         chatListSellProductSectionView.showProductLayout(true);
     }
 

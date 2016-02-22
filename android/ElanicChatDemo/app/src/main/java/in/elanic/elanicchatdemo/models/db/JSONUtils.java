@@ -67,6 +67,7 @@ public class JSONUtils {
     public static final String KEY_REQUEST_ID = "request_id";
     public static final String KEY_BUYER = "buyer";
     public static final String KEY_SELLER = "seller";
+    public static final String KEY_POSTS = "posts";
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private static final String TAG = "JSONUtils";

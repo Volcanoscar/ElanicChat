@@ -83,7 +83,8 @@
             android:id="@+id/offer_status_imageview"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:padding="2dp"
+            android:padding="4dp"
+            android:background="@drawable/transparent_ripple"
             android:layout_below="@id/divider1"
             android:layout_alignParentRight="true"
             android:src="@drawable/ic_close_grey_400_24dp"/>

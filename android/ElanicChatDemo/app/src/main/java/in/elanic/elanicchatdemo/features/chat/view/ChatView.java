@@ -20,7 +20,7 @@ public interface ChatView {
     void showProductLayout(boolean status);
     void setProductTitle(@NonNull CharSequence text);
     void setPrice(@NonNull CharSequence text);
-    void setOfferPrice(@NonNull CharSequence text);
+    void setOfferPrice(@NonNull CharSequence text, @NonNull CharSequence subtext);
     void setImage(@NonNull String url);
     void setSpecifications(@NonNull CharSequence text);
 
