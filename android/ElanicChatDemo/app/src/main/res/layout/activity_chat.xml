@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/root_view"
     android:background="@color/white_100_percent"
     tools:context=".features.chat.ChatActivity">
 
@@ -55,7 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/recyclerview"
-        android:layout_marginBottom="58dp"/>
+        android:paddingBottom="@dimen/chat_recyclerview_bottom_padding"/>
 
     <FrameLayout
         android:layout_alignParentBottom="true"
@@ -74,7 +75,9 @@
         android:layout_marginBottom="12dp"
         android:layout_marginRight="12dp"
         android:src="@drawable/ic_add_white_18dp"
-        app:fabSize="mini"/>
+        app:fabSize="mini"
+        android:elevation="8dp"
+        tools:ignore="RelativeOverlap" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/send_fab"
@@ -101,12 +104,13 @@
         android:inputType="textCapSentences|textShortMessage"
         android:id="@+id/edittext"/>
 
-    <FrameLayout
+    <in.elanic.elanicchatdemo.features.shared.widgets.ChatBottomLayout
+        android:visibility="visible"
+        android:id="@+id/bottom_offer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/chat_bottom_layout"
         android:layout_alignParentBottom="true"
-        android:gravity="bottom"
-        android:id="@+id/bottom_layout"
-        android:visibility="gone"/>
+        tools:ignore="UnusedAttribute"/>
 
 </RelativeLayout>

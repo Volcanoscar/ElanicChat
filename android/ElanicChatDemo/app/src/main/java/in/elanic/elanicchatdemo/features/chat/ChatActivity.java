@@ -1,5 +1,9 @@
 package in.elanic.elanicchatdemo.features.chat;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -15,15 +19,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.transition.ChangeBounds;
+import android.transition.ChangeTransform;
 import android.transition.Slide;
+import android.transition.Transition;
+import android.transition.TransitionManager;
+import android.transition.TransitionSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -50,6 +62,7 @@ import in.elanic.elanicchatdemo.features.chat.dagger.ChatViewModule;
 import in.elanic.elanicchatdemo.features.chat.dagger.DaggerChatViewComponent;
 import in.elanic.elanicchatdemo.features.chat.presenter.ChatPresenter;
 import in.elanic.elanicchatdemo.features.chat.view.ChatView;
+import in.elanic.elanicchatdemo.features.shared.widgets.ChatBottomLayout;
 import in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -60,7 +73,11 @@ import in.elanic.elanicchatdemo.features.shared.utils.OfferInputTransition;
 public class ChatActivity extends AppCompatActivity implements ChatView {
 
     private static final String TAG = "ChatActivity";
+    @Bind(R.id.root_view) ViewGroup rootView;
+
     @Bind(R.id.recyclerview) RecyclerView mRecyclerView;
+    private int recyclerViewBottomPadding;
+
     @Bind(R.id.edittext) EditText mEditText;
     @Bind(R.id.toolbar) Toolbar mToolbar;
     @Bind(R.id.snackbar_container) FrameLayout mSnackbarContainer;
@@ -76,11 +93,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Bind(R.id.send_fab) FloatingActionButton sendFAB;
     @Bind(R.id.offer_fab) FloatingActionButton offerFAB;
 
-    @Bind(R.id.bottom_layout) FrameLayout bottomLayout;
+    @Bind(R.id.bottom_offer_layout) ChatBottomLayout bottomOfferLayout;
+    private int PRE_TRANSLATION_Y = 1000;
 
     private MaterialDialog mProgressDialog;
     private ChatAdapter mAdapter;
-    private ChatBottomLayout chatBottomLayout;
 
     private Handler handler;
 
@@ -131,12 +148,17 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
         setupToolbar();
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true));
+        recyclerViewBottomPadding = getResources().getDimensionPixelOffset(R.dimen.chat_recyclerview_bottom_padding);
+        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
 
         mAdapter = new ChatAdapter(this, mPresenter.getUserId());
         mAdapter.setHasStableIds(true);
 
         mRecyclerView.setAdapter(mAdapter);
         mPresenter.loadData();
+
+        bottomOfferLayout.setVisibility(View.INVISIBLE);
+        bottomOfferLayout.setTranslationY(PRE_TRANSLATION_Y);
 
         mAdapter.setCallback(new ChatAdapter.ActionCallback() {
             @Override
@@ -185,22 +207,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         });
 
 
-        chatBottomLayout = ChatBottomLayout.newInstance(new Bundle());
-        if (Build.VERSION.SDK_INT >= 21) {
-            chatBottomLayout.setEnterTransition(new Slide(Gravity.BOTTOM));
-            chatBottomLayout.setExitTransition(new Slide(Gravity.BOTTOM));
-        }
-
-        if (Build.VERSION.SDK_INT >= 19) {
-            chatBottomLayout.setSharedElementEnterTransition(new OfferInputTransition());
-            chatBottomLayout.setSharedElementReturnTransition(new OfferInputTransition());
-        }
-
-        chatBottomLayout.setCallback(new ChatBottomLayout.Callback() {
+        bottomOfferLayout.setCallback(new ChatBottomLayout.Callback() {
             @Override
             public void onSendOfferRequested(CharSequence price) {
                 mPresenter.sendOffer(price);
-                hideBottomLayout();
+                hideOfferBottomLayout();
             }
 
             @Override
@@ -210,7 +221,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
             @Override
             public void onCloseRequested() {
-                hideBottomLayout();
+                hideOfferBottomLayout();
             }
         });
     }
@@ -256,8 +267,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Override
     public void onBackPressed() {
 
-        if (bottomLayout.getVisibility() == View.VISIBLE) {
-            hideBottomLayout();
+        if (bottomOfferLayout.getVisibility() == View.VISIBLE) {
+            hideOfferBottomLayout();
             return;
         }
 
@@ -357,11 +368,14 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
     @OnClick(R.id.offer_fab)
     public void onOfferFABClicked() {
-        if (bottomLayout.getVisibility() == View.VISIBLE) {
+
+        if (bottomOfferLayout.getVisibility() == View.VISIBLE) {
+            hideOfferBottomLayout();
             return;
         }
 
-        showBottomLayout();
+//        showBottomLayout();
+        showBottomOfferLayout();
     }
 
     @Override
@@ -445,30 +459,114 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 .show();
     }
 
-    private void showBottomLayout() {
-
-        bottomLayout.setVisibility(View.VISIBLE);
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.addSharedElement(offerFAB, "offer_fab_transition");
-        ft.replace(R.id.bottom_layout, chatBottomLayout);
-        ft.commit();
-
-        CustomAnimationUtils.animateOut(offerFAB, View.GONE);
+    private void showBottomOfferLayout() {
         hideKeyboard();
+
+        bottomOfferLayout.setVisibility(View.VISIBLE);
+
+        ObjectAnimator yAnim = ObjectAnimator.ofFloat(bottomOfferLayout, "translationY",
+                bottomOfferLayout.getHeight(), 0);
+        yAnim.setDuration(500);
+        yAnim.start();
+        yAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Log.i(TAG, "value: " + animation.getAnimatedValue());
+            }
+        });
+
+        // Move FAB to top of bottom offer layout
+        if (Build.VERSION.SDK_INT >= 19) {
+            Transition transition;
+            if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 19) {
+                transition = new ChangeBounds();
+            } else {
+                transition = new FABOfferTransitionSet();
+            }
+            transition.setDuration(500);
+            TransitionManager.beginDelayedTransition(rootView, transition);
+        }
+
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)offerFAB.getLayoutParams();
+        if (Build.VERSION.SDK_INT >= 17) {
+            params.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        } else {
+            params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
+        }
+
+        params.topMargin = (int) (getResources().getDisplayMetrics().density * 16);
+        params.addRule(RelativeLayout.ALIGN_TOP, R.id.bottom_offer_layout);
+        offerFAB.setLayoutParams(params);
+        offerFAB.setRotation(45);
+
+        RelativeLayout.LayoutParams rParams = (RelativeLayout.LayoutParams)mRecyclerView.getLayoutParams();
+        rParams.addRule(RelativeLayout.ABOVE, R.id.bottom_offer_layout);
+        mRecyclerView.setLayoutParams(rParams);
+        mRecyclerView.setPadding(0, 0, 0, 0);
     }
 
-    private void hideBottomLayout() {
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.bottom_layout, new Fragment());
-        ft.commit();
+    private void hideOfferBottomLayout() {
 
-        handler.postDelayed(new Runnable() {
+        ObjectAnimator yAnim = ObjectAnimator.ofFloat(bottomOfferLayout, "translationY", 0,
+                bottomOfferLayout.getHeight());
+        yAnim.setDuration(500);
+        yAnim.start();
+        yAnim.addListener(new Animator.AnimatorListener() {
             @Override
-            public void run() {
-                bottomLayout.setVisibility(View.GONE);
-                CustomAnimationUtils.animateIn(offerFAB, View.VISIBLE);
+            public void onAnimationStart(Animator animation) {
+
             }
-        }, 200);
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                bottomOfferLayout.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+
+
+        // Move FAB back
+        if (Build.VERSION.SDK_INT >= 19) {
+            Transition transition;
+            if (Build.VERSION.SDK_INT < 21 && Build.VERSION.SDK_INT >= 19) {
+                transition = new ChangeBounds();
+            } else {
+                transition = new FABOfferTransitionSet();
+            }
+            transition.setDuration(500);
+
+            TransitionManager.beginDelayedTransition(rootView, transition);
+        }
+
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)offerFAB.getLayoutParams();
+        if (Build.VERSION.SDK_INT >= 17) {
+            params.removeRule(RelativeLayout.ALIGN_TOP);
+        } else {
+            params.addRule(RelativeLayout.ALIGN_TOP, 0);
+        }
+
+        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        offerFAB.setLayoutParams(params);
+        offerFAB.setImageResource(R.drawable.ic_add_white_18dp);
+        offerFAB.setRotation(0);
+
+        RelativeLayout.LayoutParams rParams = (RelativeLayout.LayoutParams)mRecyclerView.getLayoutParams();
+        if (Build.VERSION.SDK_INT >= 17) {
+            rParams.removeRule(RelativeLayout.ABOVE);
+        } else {
+            rParams.addRule(RelativeLayout.ABOVE, 0);
+        }
+        mRecyclerView.setLayoutParams(rParams);
+        mRecyclerView.setPadding(0, 0, 0, recyclerViewBottomPadding);
     }
 
     public void hideKeyboard() {
@@ -479,5 +577,20 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         imm = null;
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private class FABOfferTransitionSet extends TransitionSet {
+
+        public FABOfferTransitionSet() {
+            init();
+        }
+
+
+        private void init() {
+            setOrdering(ORDERING_TOGETHER);
+            addTransition(new ChangeBounds())
+                    .addTransition(new ChangeTransform());
+        }
     }
 }

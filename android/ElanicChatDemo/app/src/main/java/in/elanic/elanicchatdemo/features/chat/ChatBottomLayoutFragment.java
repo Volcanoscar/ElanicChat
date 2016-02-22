@@ -17,7 +17,7 @@ import in.elanic.elanicchatdemo.features.shared.widgets.NumbersLayout;
 /**
  * Created by Jay Rambhia on 2/15/16.
  */
-public class ChatBottomLayout extends Fragment {
+public class ChatBottomLayoutFragment extends Fragment {
 
     @Bind(R.id.close_button) FloatingActionButton closeButton;
     @Bind(R.id.offer_input_view) TextView inputView;
@@ -25,13 +25,13 @@ public class ChatBottomLayout extends Fragment {
 
     private Callback callback;
 
-    public static ChatBottomLayout newInstance(Bundle args) {
-        ChatBottomLayout fragment = new ChatBottomLayout();
+    public static ChatBottomLayoutFragment newInstance(Bundle args) {
+        ChatBottomLayoutFragment fragment = new ChatBottomLayoutFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
-    public ChatBottomLayout() {
+    public ChatBottomLayoutFragment() {
 
     }
 
