@@ -5,8 +5,8 @@ import dagger.Provides;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.socketio.BlockingSocketIOProvider;
 import in.elanic.elanicchatdemo.models.api.websocket.websocket.BlockingWebsocketProvider;
-import in.elanic.elanicchatdemo.models.api.websocket.websocket.RxSokcetIOProvider;
-import in.elanic.elanicchatdemo.models.api.websocket.socketio.RxWebsocketProvider;
+import in.elanic.elanicchatdemo.models.api.websocket.socketio.RxSokcetIOProvider;
+import in.elanic.elanicchatdemo.models.api.websocket.websocket.RxWebsocketProvider;
 
 /**
  * Created by admin on 1/11/16.

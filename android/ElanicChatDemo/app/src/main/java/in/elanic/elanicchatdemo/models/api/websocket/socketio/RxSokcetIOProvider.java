@@ -1,4 +1,4 @@
-package in.elanic.elanicchatdemo.models.api.websocket.websocket;
+package in.elanic.elanicchatdemo.models.api.websocket.socketio;
 
 import android.util.Log;
 
