@@ -116,6 +116,11 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     @Override
     public boolean openIfChatExists(String productId) {
         // Check in already loaded chats
+
+        if (uiItems == null) {
+            return false;
+        }
+
         for(int i=0; i<uiItems.size(); i++) {
             ChatItem item = uiItems.get(i).getChatItem();
             Product product = item.getProduct();

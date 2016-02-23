@@ -4,6 +4,7 @@ import dagger.Module;
 import dagger.Provides;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProviderImpl;
 import in.elanic.elanicchatdemo.models.providers.user.UserProviderImpl;
 import in.elanic.elanicchatdemo.features.chatlist.container.presenter.ChatListPresenter;
@@ -34,6 +35,7 @@ public class ChatListViewModule {
         return new ChatListPresenterImpl(view,
                 new ProductProviderImpl(daoSession.getProductDao()),
                 new UserProviderImpl(daoSession.getUserDao()),
+                new ChatItemProviderImpl(daoSession.getChatItemDao()),
                 mChatApiProvider);
     }
 }

@@ -69,6 +69,7 @@ public class JSONUtils {
     public static final String KEY_SELLER = "seller";
     public static final String KEY_POSTS = "posts";
     public static final String KEY_EARN = "earn";
+    public static final String KEY_OFFER_EARNING_DATA = "offer_earning_data";
 
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private static final String TAG = "JSONUtils";
@@ -95,6 +96,10 @@ public class JSONUtils {
         json.put(KEY_IS_DELETED, message.getIs_deleted());
         json.put(KEY_PRODUCT_ID, message.getProduct_id());
         json.put(KEY_OFFER_PRICE, message.getOffer_price());
+
+        if (message.getOffer_earning_data() != null) {
+            json.put(KEY_OFFER_EARNING_DATA, message.getOffer_earning_data());
+        }
 
         return json;
     }
@@ -136,6 +141,10 @@ public class JSONUtils {
 
         if (jsonObject.has(KEY_IS_READ)) {
             message.setIs_read(jsonObject.getBoolean(KEY_IS_READ));
+        }
+
+        if (jsonObject.has(KEY_OFFER_EARNING_DATA)) {
+            message.setOffer_earning_data(jsonObject.getString(KEY_OFFER_EARNING_DATA));
         }
 
         message.setOffer_response(jsonObject.optInt(KEY_OFFER_RESPONSE, -1));

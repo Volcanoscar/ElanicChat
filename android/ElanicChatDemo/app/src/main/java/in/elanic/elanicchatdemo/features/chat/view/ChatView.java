@@ -12,6 +12,7 @@ import in.elanic.elanicchatdemo.models.db.Message;
 public interface ChatView {
 
     void setData(List<Message> data);
+    void updateMessageAtIndex(int position);
     void confirmOfferResponse(int position, boolean accept);
     void confirmOfferCancellation(int position);
     void showProgressDialog(boolean show);

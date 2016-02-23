@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.features.chat;
 import android.content.Context;
 import android.content.res.Resources;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -219,20 +220,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             });
 
                             if (!isBuyer) {
-                                if (message.getOffer_earning_data() != null) {
-
-                                    JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
-                                    JsonElement element = earningData.get(JSONUtils.KEY_EARN);
-                                    if (element != null) {
-                                        int earning = element.getAsInt();
-                                        viewHolder.mOfferEarnView.setText("You'll earn Rs. " + earning);
-                                        viewHolder.mOfferEarnView.setVisibility(View.VISIBLE);
-                                    }
-
-
-                                } else {
-                                    // TODO get offer earning data
-                                }
+                                viewHolder.showEarnings(message);
                             }
 
                         } else {
@@ -264,20 +252,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
 
                             if (!isBuyer) {
-                                if (message.getOffer_earning_data() != null) {
-
-                                    JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
-                                    JsonElement element = earningData.get(JSONUtils.KEY_EARN);
-                                    if (element != null) {
-                                        int earning = element.getAsInt();
-                                        viewHolder.mOfferEarnView.setText("You'll earn Rs. " + earning);
-                                        viewHolder.mOfferEarnView.setVisibility(View.VISIBLE);
-                                    }
-
-
-                                } else {
-                                    // TODO get offer earning data
-                                }
+                                viewHolder.showEarnings(message);
                             }
 
                         } else {
@@ -307,16 +282,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_grey_400_18dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
                         if (!isBuyer) {
-                            if (message.getOffer_earning_data() != null) {
-
-                                JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
-                                JsonElement element = earningData.get(JSONUtils.KEY_EARN);
-                                if (element != null) {
-                                    int earning = element.getAsInt();
-                                    viewHolder.mOfferEarnView.setText("You'll earn Rs. " + earning);
-                                    viewHolder.mOfferEarnView.setVisibility(View.VISIBLE);
-                                }
-                            }
+                            viewHolder.showEarnings(message);
                         }
 
                         break;
@@ -332,6 +298,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             StringBuilder sb = new StringBuilder();
             sb.append("Rs. ");
             sb.append(String.valueOf(message.getOffer_price()));
+
+            // hide offer earn view
+            viewHolder.mOfferEarnView.setVisibility(View.GONE);
 
             viewHolder.mOfferView.setText(sb.toString());
             viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
@@ -351,7 +320,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             if (isBuyer) {
                                 viewHolder.showBuyNowButton(true);
                             } else {
+                                Log.i(TAG, "should show earning");
                                 viewHolder.showStatus(false);
+                                viewHolder.showEarnings(message);
                             }
 
                             viewHolder.setLeftDrawable(R.drawable.ic_timer_grey_400_18dp,
@@ -385,6 +356,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             } else {
                                 viewHolder.mOfferStatusView.setText(R.string.offer_accepted);
                                 viewHolder.showStatus(false);
+                                viewHolder.showEarnings(message);
                             }
 
                             viewHolder.setLeftDrawable(R.drawable.ic_timer_grey_400_18dp,
@@ -522,6 +494,26 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public void showMessageIsBeingSent() {
             setRightDrawable(R.drawable.ic_access_time_grey_400_12dp, mTimeView);
         }
+
+        public void showEarnings(@NonNull Message message) {
+            if (message.getOffer_earning_data() != null) {
+
+                JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
+                JsonElement element = earningData.get(JSONUtils.KEY_EARN);
+                if (element != null) {
+                    int earning = element.getAsInt();
+                    mOfferEarnView.setText("You'll earn Rs. " + earning);
+                    mOfferEarnView.setVisibility(View.VISIBLE);
+                }
+
+                return;
+            }
+
+            // TODO call commission api
+            if (mCallback != null) {
+                mCallback.getCommissionDetails(getAdapterPosition());
+            }
+        }
     }
 
     public class OtherOfferViewHolder extends RecyclerView.ViewHolder {
@@ -534,6 +526,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @Bind(R.id.offer_time_view) TextView mOfferTimeView;
         @Bind(R.id.offer_status) TextView mOfferStatusView;
         @Bind(R.id.time_view) TextView mTimeView;
+        @Bind(R.id.offer_earn_view) TextView mOfferEarnView;
 
         public OtherOfferViewHolder(View itemView) {
             super(itemView);
@@ -581,6 +574,31 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mOfferStatusView.setVisibility(View.GONE);
             mOfferTimeView.setVisibility(View.VISIBLE);
         }
+
+        public void showEarnings(@NonNull Message message) {
+
+            Log.i(TAG, "View holder earning method: " + (message != null));
+
+            if (message.getOffer_earning_data() != null) {
+
+                Log.i(TAG, "show earnings");
+
+                JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
+                JsonElement element = earningData.get(JSONUtils.KEY_EARN);
+                if (element != null) {
+                    int earning = element.getAsInt();
+                    mOfferEarnView.setText("You'll earn Rs. " + earning);
+                    mOfferEarnView.setVisibility(View.VISIBLE);
+                }
+
+                return;
+            }
+
+            if (mCallback != null) {
+                mCallback.getCommissionDetails(getAdapterPosition());
+                Log.i(TAG, "get commission from server: " + getAdapterPosition());
+            }
+        }
     }
 
     public class EventViewHolder extends RecyclerView.ViewHolder {
@@ -607,5 +625,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public interface ActionCallback {
         void respondToOffer(int position, boolean accept);
         void cancelOffer(int position);
+        void getCommissionDetails(int position);
     }
 }

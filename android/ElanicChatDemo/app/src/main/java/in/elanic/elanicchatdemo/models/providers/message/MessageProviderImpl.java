@@ -97,7 +97,7 @@ public class MessageProviderImpl implements MessageProvider {
     @Override
     public Message createNewOffer(int price, @NonNull User sender,
                                   @NonNull User receiver, @NonNull Product product,
-                                  @NonNull JsonObject commission) {
+                                  @Nullable JsonObject commission) {
         Message message = new Message();
 
         Date date = new Date();
@@ -116,7 +116,9 @@ public class MessageProviderImpl implements MessageProvider {
         message.setType(Constants.TYPE_OFFER_MESSAGE);
         message.setProduct(product);
         message.setOffer_price(price);
-        message.setOffer_earning_data(commission.toString());
+        if (commission != null) {
+            message.setOffer_earning_data(commission.toString());
+        }
 
         mDao.insert(message);
         return message;

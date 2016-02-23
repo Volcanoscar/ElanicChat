@@ -166,6 +166,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             public void cancelOffer(int position) {
                 mPresenter.confirmOfferCancellation(position);
             }
+
+            @Override
+            public void getCommissionDetails(int position) {
+                mPresenter.getCommissionDetailsForOffer(position);
+            }
         });
 
         offerView.setOnClickListener(new View.OnClickListener() {
@@ -309,6 +314,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     public void setData(List<Message> data) {
         mAdapter.setItems(data);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void updateMessageAtIndex(int position) {
+        if (mAdapter != null && mAdapter.getItemCount() > position) {
+            mAdapter.notifyItemChanged(position);
+        }
     }
 
     @Override

@@ -20,7 +20,7 @@ public interface MessageProvider {
     List<Message> getAllMessages(@NonNull String user1, @NonNull String user2, @NonNull String productId);
     List<Message> getMessages(@Nullable Date timestamp, String user1, String user2, String productId);
     Message createNewMessage(@NonNull String content, @NonNull User sender, @NonNull User receiver, @NonNull Product product);
-    Message createNewOffer(int price, @NonNull User sender,@NonNull User receiver, @NonNull Product product, @NonNull JsonObject commission);
+    Message createNewOffer(int price, @NonNull User sender,@NonNull User receiver, @NonNull Product product, @Nullable JsonObject commission);
     boolean updateMessage(@NonNull Message message);
     boolean updateLocalMessage(@NonNull Message message);
     boolean addNewMessage(@NonNull Message message);

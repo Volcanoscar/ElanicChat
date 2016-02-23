@@ -64,6 +64,8 @@ public class ChatPresenterImpl implements ChatPresenter {
     private String mProductId;
     private String chatId;
 
+    private boolean initialized = false;
+
     private User mSender;
     private User mReceiver;
     private User buyer;
@@ -76,6 +78,7 @@ public class ChatPresenterImpl implements ChatPresenter {
     private EventBus mEventBus;
 
     // Offer commission and earnings
+    private boolean isSeller;
     private ChatApiProvider chatApiProvider;
     private JsonObject commissionDetails;
     private HashMap<Integer, JsonObject> commissionMap;
@@ -100,6 +103,12 @@ public class ChatPresenterImpl implements ChatPresenter {
         chatId = extras.getString(Constants.EXTRA_CHAT_ITEM_ID);
 
         chatItem = chatItemProvider.getChatItem(chatId);
+
+        if (chatItem == null) {
+            Log.e(TAG, "chat item is not available: " + chatId);
+            return;
+        }
+
         mProductId = chatItem.getProduct_id();
         mSenderId = extras.getString(Constants.EXTRA_SENDER_ID);
         mSender = mUserProvider.getUser(mSenderId);
@@ -127,11 +136,17 @@ public class ChatPresenterImpl implements ChatPresenter {
         setProduct(mProduct);
         buyer = mProduct.getUser_id().equals(mSenderId) ? mReceiver : mSender;
         getLatestOffer(mProduct, buyer);
+
+        isSeller = !(mSender.getUser_id().equals(buyer.getUser_id()));
+
+        initialized = true;
     }
 
     @Override
     public void detachView() {
-        mMessages.clear();
+        if (mMessages != null) {
+            mMessages.clear();
+        }
     }
 
     @Override
@@ -163,6 +178,9 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     @Override
     public void loadData() {
+        if (!initialized) {
+            return;
+        }
         mMessages = mMessageProvider.getAllMessages(mSenderId, mReceiverId, mProductId);
         mChatView.setData(mMessages);
     }
@@ -220,15 +238,18 @@ public class ChatPresenterImpl implements ChatPresenter {
             mChatView.showOfferError("Offer price must be less than Post's listed price");
         }
 
-        if (commissionMap == null) {
+        JsonObject commission = null;
+        if (isSeller) {
+            if (commissionMap == null) {
 //            mChatView.showOfferError("Calculating your earning. Please wait");
-            return false;
-        }
+                return false;
+            }
 
-        JsonObject commission = commissionMap.get(mPrice);
-        if (commission == null) {
+            commission = commissionMap.get(mPrice);
+            if (commission == null) {
 //            mChatView.showOfferError("Calculating your earning. Please wait");
-            return false;
+                return false;
+            }
         }
 
         Message message = mMessageProvider.createNewOffer(mPrice, mSender, mReceiver, mProduct, commission);
@@ -294,6 +315,10 @@ public class ChatPresenterImpl implements ChatPresenter {
         } catch (NumberFormatException e) {
             e.printStackTrace();
             showNoOfferEarning();
+            return;
+        }
+
+        if (!isSeller) {
             return;
         }
 
@@ -443,6 +468,59 @@ public class ChatPresenterImpl implements ChatPresenter {
                     mChatView.scrollToPosition(i);
                     break;
                 }
+            }
+        }
+    }
+
+    @Override
+    public void getCommissionDetailsForOffer(int position) {
+        if (!isSeller) {
+            return;
+        }
+
+        if (position < 0 || mMessages == null || mMessages.size() <= position) {
+            return;
+        }
+
+        final Message offer = mMessages.get(position);
+        if (offer.getType() != Constants.TYPE_OFFER_MESSAGE) {
+            return;
+        }
+
+        Observable<JsonObject> observable = chatApiProvider.getEarning(offer.getMessage_id());
+        Subscription subscription = observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<JsonObject>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(JsonObject jsonObject) {
+                        boolean success = jsonObject.get(JSONUtils.KEY_SUCCESS).getAsBoolean();
+                        if (!success) {
+                            return;
+                        }
+
+                        onOfferCommissionDetailsReceived(offer,
+                                jsonObject.getAsJsonObject(JSONUtils.KEY_DATA));
+                    }
+                });
+    }
+
+    private void onOfferCommissionDetailsReceived(Message offer, JsonObject commission) {
+        if (offer != null) {
+            offer.setOffer_earning_data(commission.toString());
+            mMessageProvider.updateMessage(offer);
+            int index = mMessages.indexOf(offer);
+            if (index != -1) {
+                mChatView.updateMessageAtIndex(index);
             }
         }
     }

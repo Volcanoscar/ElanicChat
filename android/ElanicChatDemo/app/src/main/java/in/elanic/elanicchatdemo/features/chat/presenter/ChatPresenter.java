@@ -31,4 +31,6 @@ public interface ChatPresenter {
     void cancelOffer(int position);
 
     void scrollToLatestOffer();
+
+    void getCommissionDetailsForOffer(int position);
 }

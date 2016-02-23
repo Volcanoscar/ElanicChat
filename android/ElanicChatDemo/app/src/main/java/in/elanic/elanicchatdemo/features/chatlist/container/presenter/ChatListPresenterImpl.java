@@ -15,6 +15,7 @@ import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
 import rx.Observable;
@@ -36,6 +37,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     private ChatApiProvider mChatApiProvider;
     private ProductProvider mProductProvider;
     private UserProvider mUserProvider;
+    private ChatItemProvider mChatItemProvider;
 
     private EventBus mEventBus;
     private String mUserId;
@@ -49,12 +51,14 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     public ChatListPresenterImpl(ChatListView mChatListView,
                                  ProductProvider mProductProvider,
                                  UserProvider mUserProvider,
+                                 ChatItemProvider mChatItemProvider,
                                  ChatApiProvider mChatApiProvider) {
 
         this.mChatListView = mChatListView;
         this.mChatApiProvider = mChatApiProvider;
         this.mProductProvider = mProductProvider;
         this.mUserProvider = mUserProvider;
+        this.mChatItemProvider = mChatItemProvider;
 
         mHandler = new Handler();
     }
@@ -175,6 +179,10 @@ public class ChatListPresenterImpl implements ChatListPresenter {
                     @Override
                     public void onNext(ChatItem chatItem) {
                         mChatListView.showProgressDialog(false);
+
+                        // add chat item to db
+                        mChatItemProvider.addOrUpdateChatItem(chatItem);
+
                         // add sender to db
                         mUserProvider.addOrUpdateUser(chatItem.getBuyer());
                         mUserProvider.addOrUpdateUser(chatItem.getSeller());
