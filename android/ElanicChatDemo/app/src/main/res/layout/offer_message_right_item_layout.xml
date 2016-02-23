@@ -33,15 +33,28 @@
 
         <TextView
             android:id="@+id/offer_view"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="72dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginRight="8dp"
+            android:textColor="@color/white_100_percent"
+            android:textSize="16sp"
+            android:text="Rs 66660"/>
+
+        <TextView
+            android:id="@+id/offer_earn_view"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
             android:layout_marginRight="8dp"
             android:layout_toLeftOf="@id/offer_time_view"
-            android:textColor="@color/white_100_percent"
-            android:textSize="16sp"
-            android:text="Rs 600"/>
+            android:layout_toRightOf="@id/offer_view"
+            android:textColor="@color/white_80_percent"
+            android:textSize="14sp"
+            android:text="you'll earn Rs. 55550"/>
 
         <View
             android:id="@+id/divider1"

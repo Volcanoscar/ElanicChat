@@ -1,8 +1,12 @@
 package in.elanic.elanicchatdemo.controllers.services;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -18,6 +22,7 @@ import javax.inject.Inject;
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
+import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.Constants;
@@ -34,6 +39,7 @@ import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
+import in.elanic.elanicchatdemo.utils.NetworkUtils;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -51,7 +57,6 @@ public class WebsocketConnectionService extends Service {
     @Inject WebsocketApi mWebSocketApi;
     @Inject ChatApiProvider chatApiProvider;
 
-
     private WSSHelper mWSSHelper;
 
     private CompositeSubscription _subsriptions;
@@ -65,7 +70,11 @@ public class WebsocketConnectionService extends Service {
     private PreferenceProvider mPreferenceProvider;
     private long mSyncTimestamp;
 
+    private Handler handler;
     private Runnable mConnectionRunnable;
+    private static final int BROADCAST_CONNECTION_DELAY = 5000; // 5sec
+    private static final int RETRY_CONNECTION_SHORT_DELAY = 30000; // 30 sec
+    private static final int RETRY_CONNECTION_LONG_DELAY = 60 * 60 * 1000; // 1 hour
 
     @Nullable
     @Override
@@ -77,6 +86,8 @@ public class WebsocketConnectionService extends Service {
     public void onCreate() {
         super.onCreate();
         setupComponent(ELChatApp.get(this).component());
+
+        handler = new Handler();
 
         mConnectionRunnable = new Runnable() {
             @Override
@@ -114,7 +125,10 @@ public class WebsocketConnectionService extends Service {
         createWSConnectionRequested();
         registerForEvents();
 
-//        new Thread(mConnectionRunnable).start();
+        if (mUserId == null || mUserId.isEmpty()) {
+            return START_NOT_STICKY;
+        }
+
         return START_STICKY;
     }
 
@@ -132,6 +146,19 @@ public class WebsocketConnectionService extends Service {
         unregisterForEvents();
         Log.i(TAG, "onDestroy");
         super.onDestroy();
+    }
+
+    // Restart the service
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Intent restartService = new Intent(getApplicationContext(),
+                this.getClass());
+        restartService.setPackage(getPackageName());
+        PendingIntent restartServicePI = PendingIntent.getService(
+                getApplicationContext(), 1, restartService,
+                PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmService = (AlarmManager)getApplicationContext().getSystemService(ALARM_SERVICE);
+        alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, restartServicePI);
     }
 
     private void registerForEvents() {
@@ -167,6 +194,15 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
+        // check for network connection
+        if (!NetworkUtils.isConnected(this)) {
+            if (DEBUG) {
+                Log.e(TAG, "network not available");
+            }
+
+            return;
+        }
+
         mWebSocketApi.connect(mUserId);
         mWebSocketApi.setCallback(new WebsocketCallback() {
             @Override
@@ -176,6 +212,9 @@ public class WebsocketConnectionService extends Service {
                 }
 
                 checkIncompleteRequests();
+                sendWSConnectedEvent();
+
+                // TODO send request for sync
             }
 
             @Override
@@ -183,6 +222,8 @@ public class WebsocketConnectionService extends Service {
                 if (DEBUG) {
                     Log.e(TAG, "ws disconnected");
                 }
+
+                sendWSDisconnectedEvent();
             }
 
             @Override
@@ -199,6 +240,8 @@ public class WebsocketConnectionService extends Service {
                 if (DEBUG) {
                     Log.e(TAG, "ws error", error);
                 }
+
+                sendWSDisconnectedEvent();
             }
         });
 
@@ -222,9 +265,18 @@ public class WebsocketConnectionService extends Service {
             mWSSHelper.createAndSaveRequest(mUserId, data);
         } catch (JSONException e) {
             e.printStackTrace();
+            // TODO send error event
         }
 
-        mWebSocketApi.sendData(data);
+        if (mWebSocketApi.isConnected()) {
+            mWebSocketApi.sendData(data);
+            return;
+        }
+
+        if (DEBUG) {
+            Log.i(TAG, "ws connection not available. Create new connection");
+        }
+        createWSConnectionRequested();
     }
 
     private void processServerResponse(String data) {
@@ -360,6 +412,7 @@ public class WebsocketConnectionService extends Service {
 
         } else {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+            // TODO send notification
         }
     }
 
@@ -481,6 +534,7 @@ public class WebsocketConnectionService extends Service {
 
         if (users.size() > 0 || products.size() > 0) {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
+            // TODO send notification
         }
     }
 
@@ -566,6 +620,14 @@ public class WebsocketConnectionService extends Service {
     //////////////// EVENTS //////////////////
     /////////////////////////////////////////
 
+    private void sendWSConnectedEvent() {
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_CONNECTED));
+    }
+
+    private void sendWSDisconnectedEvent() {
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_DISCONNECTED));
+    }
+
     public void onEvent(WSRequestEvent event) {
         switch (event.getEvent()) {
             case WSRequestEvent.EVENT_CONNECT:
@@ -588,6 +650,28 @@ public class WebsocketConnectionService extends Service {
                 markMessagesAsRead(event.getData());
                 break;
         }
+
+    }
+
+    public void onEvent(NetworkConnectivityEvent event) {
+        switch (event.getEvent()) {
+            case NetworkConnectivityEvent.EVENT_NETWORK_CONNECTED:
+                // call the runnable
+                handler.removeCallbacks(mConnectionRunnable);
+                handler.postDelayed(mConnectionRunnable, BROADCAST_CONNECTION_DELAY);
+
+                break;
+
+            case NetworkConnectivityEvent.EVENT_NETWORK_DISCONNECTED:
+                break;
+        }
+    }
+
+    //////////////////////////////////////////////////
+    /////////////// NOTIFICATIONS ///////////////////
+    ////////////////////////////////////////////////
+
+    private void generateNotifications() {
 
     }
 }

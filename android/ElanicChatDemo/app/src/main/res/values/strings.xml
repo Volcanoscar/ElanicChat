@@ -10,6 +10,7 @@
     <string name="offer_expired">Expired</string>
     <string name="offer_invalid">Invalid</string>
     <string name="offer_canceled">Canceled</string>
+    <string name="offer_sending">Sending</string>
 
     <string name="offer_waiting_response">Waiting For Response</string>
     <string name="offer_buy_now">Buy Now</string>

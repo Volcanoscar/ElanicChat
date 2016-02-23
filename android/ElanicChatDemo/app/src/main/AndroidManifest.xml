@@ -27,7 +27,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".features.chatlist.container.ChatListActivity" />
-        <activity android:name=".features.chatlist.container.ProductListContainerActivity"></activity>
+        <activity android:name=".features.chatlist.container.ProductListContainerActivity"/>
+
+
+        <receiver android:name=".controllers.services.NetworkConnectivityBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

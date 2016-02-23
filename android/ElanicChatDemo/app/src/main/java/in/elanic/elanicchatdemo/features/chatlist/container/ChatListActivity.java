@@ -123,9 +123,9 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
 
     @Override
     protected void onDestroy() {
-        if (mServiceIntent != null) {
+        /*if (mServiceIntent != null) {
             stopService(mServiceIntent);
-        }
+        }*/
 
         mPresenter.detachView();
 

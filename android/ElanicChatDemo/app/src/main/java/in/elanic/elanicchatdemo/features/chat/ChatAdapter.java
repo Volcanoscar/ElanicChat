@@ -12,6 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+
 import java.util.Date;
 import java.util.List;
 
@@ -19,6 +24,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.utils.DateUtils;
@@ -49,6 +55,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int myChatColor;
     private int otherChatColor;
 
+    private JsonParser parser;
+
     public ChatAdapter(Context context, String userId) {
         mContext = context;
         mInflater = LayoutInflater.from(context);
@@ -57,6 +65,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         myChatColor = ContextCompat.getColor(context, R.color.white_100_percent);
         otherChatColor = ContextCompat.getColor(context, R.color.grey_800);
 
+        parser = new JsonParser();
     }
 
     @Override
@@ -157,14 +166,38 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Date expiryDate = message.getOffer_expiry();
             boolean isExpired;
 //            boolean hasResponded = false;
+            boolean isSent = true;
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
+
+            if (isMyMessage) {
+                if (message.getRead_at() != null) {
+                    viewHolder.showMessageIsRead();
+                } else if (message.getDelivered_at() != null) {
+                    viewHolder.showMessageIsDelivered();
+                } else if (message.getUpdated_at() != null) {
+                    viewHolder.showMessageIsSent();
+                } else {
+                    viewHolder.showMessageIsBeingSent();
+                    isSent = false;
+                }
+            } else {
+                viewHolder.setRightDrawable(0, viewHolder.mTimeView);
+            }
 
             isExpired = !(expiryDate != null && new Date().compareTo(expiryDate) < 0);
+
+            if (isMyMessage && expiryDate == null && !isSent) {
+                response = Constants.OFFER_NOT_SENT;
+            }
 
             viewHolder.showBuyNowOption(false);
 
             // remove cancel offer listener
             viewHolder.mOfferStatusImageView.setOnClickListener(null);
             viewHolder.mOfferStatusImageView.setEnabled(false);
+
+            // hide offer earn view
+            viewHolder.mOfferEarnView.setVisibility(View.GONE);
 
             if (response != null) {
                 switch (response) {
@@ -184,6 +217,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     }
                                 }
                             });
+
+                            if (!isBuyer) {
+                                if (message.getOffer_earning_data() != null) {
+
+                                    JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
+                                    JsonElement element = earningData.get(JSONUtils.KEY_EARN);
+                                    if (element != null) {
+                                        int earning = element.getAsInt();
+                                        viewHolder.mOfferEarnView.setText("You'll earn Rs. " + earning);
+                                        viewHolder.mOfferEarnView.setVisibility(View.VISIBLE);
+                                    }
+
+
+                                } else {
+                                    // TODO get offer earning data
+                                }
+                            }
 
                         } else {
                             viewHolder.mOfferStatusView.setText(R.string.offer_expired);
@@ -213,6 +263,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
                             viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
 
+                            if (!isBuyer) {
+                                if (message.getOffer_earning_data() != null) {
+
+                                    JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
+                                    JsonElement element = earningData.get(JSONUtils.KEY_EARN);
+                                    if (element != null) {
+                                        int earning = element.getAsInt();
+                                        viewHolder.mOfferEarnView.setText("You'll earn Rs. " + earning);
+                                        viewHolder.mOfferEarnView.setVisibility(View.VISIBLE);
+                                    }
+
+
+                                } else {
+                                    // TODO get offer earning data
+                                }
+                            }
+
                         } else {
 
                             viewHolder.mOfferStatusView.setText(R.string.offer_expired);
@@ -234,24 +301,30 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_block_grey_400_24dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
                         break;
+
+                    case Constants.OFFER_NOT_SENT:
+                        viewHolder.mOfferStatusView.setText(R.string.offer_sending);
+                        viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_grey_400_18dp);
+                        viewHolder.mOfferTimeView.setVisibility(View.GONE);
+                        if (!isBuyer) {
+                            if (message.getOffer_earning_data() != null) {
+
+                                JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
+                                JsonElement element = earningData.get(JSONUtils.KEY_EARN);
+                                if (element != null) {
+                                    int earning = element.getAsInt();
+                                    viewHolder.mOfferEarnView.setText("You'll earn Rs. " + earning);
+                                    viewHolder.mOfferEarnView.setVisibility(View.VISIBLE);
+                                }
+                            }
+                        }
+
+                        break;
+
+
                 }
             }
 
-            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
-
-            if (isMyMessage) {
-                if (message.getRead_at() != null) {
-                    viewHolder.showMessageIsRead();
-                } else if (message.getDelivered_at() != null) {
-                    viewHolder.showMessageIsDelivered();
-                } else if (message.getUpdated_at() != null) {
-                    viewHolder.showMessageIsSent();
-                } else {
-                    viewHolder.showMessageIsBeingSent();
-                }
-            } else {
-                viewHolder.setRightDrawable(0, viewHolder.mTimeView);
-            }
 
 
         } else if (holder instanceof OtherOfferViewHolder) {
@@ -414,6 +487,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @Bind(R.id.time_view) TextView mTimeView;
         @Bind(R.id.offer_status_imageview) ImageView mOfferStatusImageView;
         @Bind(R.id.offer_buy_now_button) TextView mBuyNowButton;
+        @Bind(R.id.offer_earn_view) TextView mOfferEarnView;
 
         public MyOfferViewHolder(View itemView) {
             super(itemView);
