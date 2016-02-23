@@ -3,8 +3,8 @@ package in.elanic.elanicchatdemo.features.chat.presenter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.Pair;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.json.JSONException;
@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
@@ -202,7 +201,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         addMessageToChat(0, message);
 
-        try {
+        /*try {
 
             // TODO move this to WSService
             JSONObject jsonRequest = new JSONObject();
@@ -210,6 +209,13 @@ public class ChatPresenterImpl implements ChatPresenter {
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
             sendMessageToWSService(jsonRequest.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }*/
+
+        try {
+            Pair<String, String> request = WSSHelper.createSendMessageRequest(message);
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -226,7 +232,7 @@ public class ChatPresenterImpl implements ChatPresenter {
             return false;
         }
 
-        int mPrice = 0;
+        int mPrice;
         try {
             mPrice = Integer.valueOf(String.valueOf(price));
         } catch (NumberFormatException e) {
@@ -260,7 +266,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         addMessageToChat(0, message);
 
-        try {
+        /*try {
 
             // TODO move this to WSService
             JSONObject jsonRequest = new JSONObject();
@@ -270,6 +276,16 @@ public class ChatPresenterImpl implements ChatPresenter {
             sendMessageToWSService(jsonRequest.toString());
             return true;
 
+        } catch (JSONException e) {
+            e.printStackTrace();
+            mChatView.showSnackbar("Unable to create offer. Please try again");
+            return false;
+        }*/
+
+        try {
+            Pair<String, String> request = WSSHelper.createOfferMessageRequest(message);
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
+            return true;
         } catch (JSONException e) {
             e.printStackTrace();
             mChatView.showSnackbar("Unable to create offer. Please try again");
@@ -407,11 +423,19 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         Message message = mMessages.get(position);
-        try {
+        /*try {
             JSONObject jsonRequest = WSSHelper.createOfferResponseRequest(message, accept);
             mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
 
             mChatView.showProgressDialog(true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }*/
+
+        try {
+            Pair<String, String> pair = WSSHelper.createOfferResponse(message, accept);
+            mChatView.showProgressDialog(true);
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, pair.first, pair.second));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -512,6 +536,8 @@ public class ChatPresenterImpl implements ChatPresenter {
                                 jsonObject.getAsJsonObject(JSONUtils.KEY_DATA));
                     }
                 });
+
+        // TODO Add this to subcriptions
     }
 
     private void onOfferCommissionDetailsReceived(Message offer, JsonObject commission) {
@@ -577,10 +603,6 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.setData(mMessages);
 
         getLatestOffer(mProduct, buyer);
-    }
-
-    private void sendMessageToWSService(String data) {
-        EventBus.getDefault().post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, data));
     }
 
     private void fetchNewMessagesFromDB() {
@@ -654,7 +676,6 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         if (data == null || data.isEmpty()) {
             fetchNewMessagesFromDB();
-            return;
         }
 
         // This is not happening
@@ -715,6 +736,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.showSnackbar("Offer Response failed");
     }
 
+    @SuppressWarnings("unused")
     public void onEventMainThread(WSResponseEvent event) {
         switch (event.getEvent()) {
             case WSResponseEvent.EVENT_NEW_MESSAGES:

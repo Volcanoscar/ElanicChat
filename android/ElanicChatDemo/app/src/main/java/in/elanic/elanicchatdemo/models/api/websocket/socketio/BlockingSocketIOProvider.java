@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.api.websocket.socketio;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
@@ -32,10 +34,7 @@ public class BlockingSocketIOProvider implements WebsocketApi {
     private WebsocketCallback mCallback;
 
     @Override
-    public boolean connect(String userId) {
-        if (userId == null || userId.isEmpty()) {
-            return false;
-        }
+    public boolean connect(@NonNull String userId, @NonNull String url) {
 
         mUserId = userId;
 
@@ -104,7 +103,7 @@ public class BlockingSocketIOProvider implements WebsocketApi {
     }
 
     @Override
-    public void sendData(String data) {
+    public void sendData(@NonNull String data) {
         if (mSocket != null) {
             try {
                 mSocket.emit("send_message", new JSONObject(data));
@@ -115,8 +114,13 @@ public class BlockingSocketIOProvider implements WebsocketApi {
     }
 
     @Override
-    public void setCallback(WebsocketCallback callback) {
+    public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
+    }
+
+    @Override
+    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+        // TODO add stuff here
     }
 
     Emitter.Listener onConnected = new Emitter.Listener() {

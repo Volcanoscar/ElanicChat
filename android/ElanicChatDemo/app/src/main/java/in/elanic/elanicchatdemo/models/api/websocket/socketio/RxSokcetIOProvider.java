@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.api.websocket.socketio;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
@@ -33,22 +35,44 @@ public class RxSokcetIOProvider implements WebsocketApi {
     private static final String TAG = "RxSocketIOProvider";
     private Socket mSocket;
     private String mUserId;
+    private String mUrl;
+
+    private SocketIOListenerFactory listenerFactory;
 
     private WebsocketCallback mCallback;
 
-    @Override
-    public boolean connect(String userId) {
-        if (userId == null || userId.isEmpty()) {
-            return false;
-        }
+    private boolean DEBUG = true;
 
+    private static final String[] socketIOEvents = {
+            SocketIOConstants.EVENT_GET_MESSAGES,
+            SocketIOConstants.EVENT_GET_QUOTATIONS,
+            SocketIOConstants.EVENT_CONFIRM_SEND_CHAT,
+            SocketIOConstants.EVENT_REVOKE_SEND_CHAT,
+            SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER,
+            SocketIOConstants.EVENT_REVOKE_MAKE_OFFER,
+            SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
+            SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER,
+            SocketIOConstants.EVENT_CONFIRM_DENY_OFFER,
+            SocketIOConstants.EVENT_REVOKE_DENY_OFFER,
+            SocketIOConstants.EVENT_CONFIRM_BUY_NOW,
+            SocketIOConstants.EVENT_REVOKE_BUY_NOW,
+            SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER
+    };
+
+    public RxSokcetIOProvider() {
+        listenerFactory = new SocketIOListenerFactory(socketIOEvents);
+        listenerFactory.generate();
+    }
+
+    @Override
+    public boolean connect(@NonNull String userId, @NonNull String url) {
         mUserId = userId;
 
         if (mSocket != null && mSocket.connected()) {
             disconnect();
         }
 
-        Observable<Socket> observable = createConnection();
+        Observable<Socket> observable = createConnection(url);
         Subscription subscription = observable.subscribeOn(Schedulers.io())
                 .subscribe(new Subscriber<Socket>() {
                     @Override
@@ -71,7 +95,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
         return true;
     }
 
-    private Observable<Socket> createConnection() {
+    private Observable<Socket> createConnection(final String url) {
         return Observable.defer(new Func0<Observable<Socket>>() {
             @Override
             public Observable<Socket> call() {
@@ -82,7 +106,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
                     IO.Options mOptions = new IO.Options();
                     mOptions.query="userId="+mUserId;
-                    socket = IO.socket(Constants.BASE_URL, mOptions);
+                    socket = IO.socket(url, mOptions);
 
                     socket.io().on(Manager.EVENT_TRANSPORT, new Emitter.Listener() {
                         @Override
@@ -110,7 +134,23 @@ public class RxSokcetIOProvider implements WebsocketApi {
                 socket.on(Socket.EVENT_DISCONNECT, onDisconnected);
                 socket.on(Socket.EVENT_ERROR, onError);
 
-                socket.on("send_message", onSendMessage);
+                // Attach custom events
+                listenerFactory.connect(socket, eventCallback);
+                /*socket.on(SocketIOConstants.EVENT_GET_MESSAGES, onGetMessages);
+                socket.on(SocketIOConstants.EVENT_GET_QUOTATIONS, onGetQuotations);
+
+                socket.on(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT, onConfirmSendChat);
+                socket.on(SocketIOConstants.EVENT_REVOKE_SEND_CHAT, onRevokeSendChat);
+                socket.on(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER, onConfirmMakeOffer);
+                socket.on(SocketIOConstants.EVENT_REVOKE_MAKE_OFFER, onRevokeMakeOffer);
+
+                socket.on(SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER, onConfirmAcceptOffer);
+                socket.on(SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER, onRevokeAcceptOffer);
+                socket.on(SocketIOConstants.EVENT_CONFIRM_DENY_OFFER, onConfirmDenyOffer);
+                socket.on(SocketIOConstants.EVENT_REVOKE_DENY_OFFER, onRevokeDenyOffer);
+
+                socket.on(SocketIOConstants.EVENT_CONFIRM_BUY_NOW, onConfirmBuyNow);
+                socket.on(SocketIOConstants.EVENT_REVOKE_BUY_NOW, onRevokeBuyNow);*/
 
                 socket.connect();
 
@@ -133,7 +173,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
     }
 
     @Override
-    public void sendData(String data) {
+    @Deprecated
+    public void sendData(@NonNull String data) {
         if (mSocket != null) {
             try {
                 mSocket.emit("send_message", new JSONObject(data));
@@ -144,9 +185,41 @@ public class RxSokcetIOProvider implements WebsocketApi {
     }
 
     @Override
-    public void setCallback(WebsocketCallback callback) {
+    public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
     }
+
+    @Override
+    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+        if (mSocket != null && mSocket.connected()) {
+            mSocket.emit(event, data, requestId);
+        }
+    }
+
+    private void logResponse(@NonNull String event, Object... args) {
+        if (DEBUG) {
+
+            Log.d(TAG, "event: " + event);
+
+            if (args == null) {
+                Log.e(TAG, "null args");
+                return;
+            }
+
+            for(Object arg : args) {
+                Log.i(TAG, "type: " + arg.getClass().getSimpleName() + ", value: " + arg);
+            }
+
+        }
+    }
+
+    private SocketIOListenerFactory.EventCallback eventCallback = new SocketIOListenerFactory.EventCallback() {
+        @Override
+        public void onEvent(@NonNull String event, Object... args) {
+            logResponse(event, args);
+        }
+    };
+
 
     Emitter.Listener onConnected = new Emitter.Listener() {
         @Override
@@ -176,14 +249,115 @@ public class RxSokcetIOProvider implements WebsocketApi {
         }
     };
 
-    Emitter.Listener onSendMessage = new Emitter.Listener() {
+    /*Emitter.Listener onGetMessages = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            if (mCallback != null) {
-                JSONObject jsonObject = (JSONObject)args[0];
-                Log.i(TAG, "onSendMessage: " + jsonObject);
-                mCallback.onMessageReceived(jsonObject.toString());
-            }
+
         }
     };
+
+    Emitter.Listener onGetQuotations = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmSendChat = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeSendChat = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmMakeOffer = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeMakeOffer = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmAcceptOffer = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeAcceptOffer = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmDenyOffer = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeDenyOffer = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmSetDeliveredOn = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeSetDeliveredOn = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmSetQuotationReadAt = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeSetQuotationReadAt = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onConfirmBuyNow = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };
+
+    Emitter.Listener onRevokeBuyNow = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+
+        }
+    };*/
 }

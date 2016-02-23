@@ -1,5 +1,8 @@
 package in.elanic.elanicchatdemo.models.api.websocket.websocket;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
@@ -24,7 +27,7 @@ public class BlockingWebsocketProvider implements WebsocketApi {
     private String mUserId;
 
     @Override
-    public boolean connect(String userId) {
+    public boolean connect(@NonNull String userId, @NonNull String url) {
         mUserId = userId;
 
         if (mWebsocket != null && mWebsocket.isOpen()) {
@@ -33,7 +36,7 @@ public class BlockingWebsocketProvider implements WebsocketApi {
 
 
         try {
-            mWebsocket = createConnection();
+            mWebsocket = createConnection(url);
             attachListeners(mWebsocket);
             return true;
         } catch (IOException e) {
@@ -45,10 +48,10 @@ public class BlockingWebsocketProvider implements WebsocketApi {
         return false;
     }
 
-    private WebSocket createConnection() throws IOException, WebSocketException {
+    private WebSocket createConnection(final String url) throws IOException, WebSocketException {
 
         WebSocket webSocket = new WebSocketFactory()
-                .createSocket(Constants.WS_URL + "?Id=" + mUserId, 3000);
+                .createSocket(url + "?Id=" + mUserId, 3000);
         return webSocket.connect();
     }
 
@@ -69,7 +72,7 @@ public class BlockingWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    public void sendData(String data) {
+    public void sendData(@NonNull String data) {
         if (mWebsocket == null || !mWebsocket.isOpen()) {
             throw new RuntimeException("Websocket connection is not available");
         }
@@ -77,8 +80,13 @@ public class BlockingWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    public void setCallback(WebsocketCallback callback) {
+    public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
+    }
+
+    @Override
+    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+        // TODO move things here
     }
 
     private class WSListener extends WebSocketAdapter {

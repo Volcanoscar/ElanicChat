@@ -13,10 +13,19 @@ public class WSRequestEvent {
 
     private int mEvent;
     private String mData;
+    private String mWSEvent;
 
+
+    @Deprecated
     public WSRequestEvent(int mEvent, String mData) {
         this.mEvent = mEvent;
         this.mData = mData;
+    }
+
+    public WSRequestEvent(int mEvent, String mData, String mWSEvent) {
+        this.mEvent = mEvent;
+        this.mData = mData;
+        this.mWSEvent = mWSEvent;
     }
 
     public WSRequestEvent(int mEvent) {
@@ -29,5 +38,9 @@ public class WSRequestEvent {
 
     public String getData() {
         return mData;
+    }
+
+    public String getWSEvent() {
+        return mWSEvent;
     }
 }

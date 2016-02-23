@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.controllers.services;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.util.Log;
+import android.util.Pair;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import in.elanic.elanicchatdemo.models.api.websocket.socketio.SocketIOConstants;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
@@ -428,6 +430,13 @@ public class WSSHelper {
         return createChatItems(items);
     }
 
+    public String createRequest(@NonNull String userId, @NonNull String event, @NonNull String data) {
+        String requestId = String.valueOf(new Date().getTime());
+        mWSRequestProvider.createRequest(requestId, event, data, userId);
+        return requestId;
+    }
+
+    @Deprecated
     public boolean createAndSaveRequest(String userId, String request) throws JSONException {
         JSONObject jsonRequest = new JSONObject(request);
         String requestId = jsonRequest.getString(JSONUtils.KEY_REQUEST_ID);
@@ -455,6 +464,24 @@ public class WSSHelper {
         return mWSRequestProvider.getIncompleteRequests();
     }
 
+    public static Pair<String, String> createSendMessageRequest(@NonNull Message message) throws JSONException {
+        JSONObject jsonObject = JSONUtils.toJSON(message);
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SEND_CHAT);
+    }
+
+    public static Pair<String, String> createOfferMessageRequest(@NonNull Message message) throws JSONException {
+        JSONObject jsonObject = JSONUtils.toJSON(message);
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_MAKE_OFFER);
+    }
+
+    public static Pair<String, String> createOfferResponse(@NonNull Message message, boolean accept) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
+        return new Pair<>(jsonObject.toString(),
+                accept ? SocketIOConstants.EVENT_ACCEPT_OFFER : SocketIOConstants.EVENT_DENY_OFFER);
+    }
+
+    @Deprecated
     public static JSONObject createOfferResponseRequest(Message message, boolean accept) throws JSONException {
         JSONObject jsonObject = createWSRequest(Constants.REQUEST_RESPOND_TO_OFFER);
         jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());

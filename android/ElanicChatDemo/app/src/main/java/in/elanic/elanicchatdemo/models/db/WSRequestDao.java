@@ -31,6 +31,7 @@ public class WSRequestDao extends AbstractDao<WSRequest, String> {
         public final static Property Created_at = new Property(5, java.util.Date.class, "created_at", false, "CREATED_AT");
         public final static Property Updated_at = new Property(6, java.util.Date.class, "updated_at", false, "UPDATED_AT");
         public final static Property Is_deleted = new Property(7, Boolean.class, "is_deleted", false, "IS_DELETED");
+        public final static Property Event_name = new Property(8, String.class, "event_name", false, "EVENT_NAME");
     };
 
 
@@ -53,7 +54,8 @@ public class WSRequestDao extends AbstractDao<WSRequest, String> {
                 "\"IS_COMPLETED\" INTEGER," + // 4: is_completed
                 "\"CREATED_AT\" INTEGER," + // 5: created_at
                 "\"UPDATED_AT\" INTEGER," + // 6: updated_at
-                "\"IS_DELETED\" INTEGER);"); // 7: is_deleted
+                "\"IS_DELETED\" INTEGER," + // 7: is_deleted
+                "\"EVENT_NAME\" TEXT);"); // 8: event_name
     }
 
     /** Drops the underlying database table. */
@@ -106,6 +108,11 @@ public class WSRequestDao extends AbstractDao<WSRequest, String> {
         if (is_deleted != null) {
             stmt.bindLong(8, is_deleted ? 1L: 0L);
         }
+ 
+        String event_name = entity.getEvent_name();
+        if (event_name != null) {
+            stmt.bindString(9, event_name);
+        }
     }
 
     /** @inheritdoc */
@@ -125,7 +132,8 @@ public class WSRequestDao extends AbstractDao<WSRequest, String> {
             cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0, // is_completed
             cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // created_at
             cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // updated_at
-            cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0 // is_deleted
+            cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0, // is_deleted
+            cursor.isNull(offset + 8) ? null : cursor.getString(offset + 8) // event_name
         );
         return entity;
     }
@@ -141,6 +149,7 @@ public class WSRequestDao extends AbstractDao<WSRequest, String> {
         entity.setCreated_at(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
         entity.setUpdated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
         entity.setIs_deleted(cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0);
+        entity.setEvent_name(cursor.isNull(offset + 8) ? null : cursor.getString(offset + 8));
      }
     
     /** @inheritdoc */

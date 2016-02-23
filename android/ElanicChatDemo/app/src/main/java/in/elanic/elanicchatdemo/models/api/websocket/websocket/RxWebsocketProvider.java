@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.api.websocket.websocket;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.neovisionaries.ws.client.WebSocket;
@@ -9,6 +11,9 @@ import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +21,7 @@ import java.util.Map;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
+import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -36,18 +42,14 @@ public class RxWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    public boolean connect(String userId) {
-        if (userId == null || userId.isEmpty()) {
-            return false;
-        }
-
+    public boolean connect(@NonNull String userId, @NonNull String url) {
         mUserId = userId;
 
         if (mWebsocket != null && mWebsocket.isOpen()) {
             disconnect();
         }
 
-        Observable<WebSocket> observable = createConnection();
+        Observable<WebSocket> observable = createConnection(url);
         Subscription subscription = observable.subscribeOn(Schedulers.io())
                 .subscribe(new Subscriber<WebSocket>() {
                     @Override
@@ -70,13 +72,13 @@ public class RxWebsocketProvider implements WebsocketApi {
         return true;
     }
 
-    private Observable<WebSocket> createConnection() {
+    private Observable<WebSocket> createConnection(final String url) {
         return Observable.defer(new Func0<Observable<WebSocket>>() {
             @Override
             public Observable<WebSocket> call() {
                 try {
                     WebSocket webSocket = new WebSocketFactory()
-                            .createSocket(Constants.WS_URL + "?Id=" + mUserId, 3000);
+                            .createSocket(url + "?Id=" + mUserId, 3000);
                     return Observable.just(webSocket.connect());
                 } catch (IOException e) {
                     return Observable.error(e);
@@ -104,7 +106,8 @@ public class RxWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    public void sendData(String data) {
+    @Deprecated
+    public void sendData(@NonNull String data) {
         if (mWebsocket == null) {
             Log.e(TAG, "websocket is null");
             return;
@@ -114,8 +117,19 @@ public class RxWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    public void setCallback(WebsocketCallback callback) {
+    public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
+    }
+
+    @Override
+    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+        try {
+            JSONObject request = new JSONObject(data);
+            request.put(JSONUtils.KEY_REQUEST_TYPE, event);
+            request.put(JSONUtils.KEY_REQUEST_ID, requestId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private class WSListener extends WebSocketAdapter {

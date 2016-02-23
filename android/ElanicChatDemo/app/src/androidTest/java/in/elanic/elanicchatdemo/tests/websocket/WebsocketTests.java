@@ -46,6 +46,8 @@ public class WebsocketTests {
     private static final String TAG = "WebsocketTests";
     @Inject
     WebsocketApi mWebsocketApi;
+    @Inject
+    String URL;
     private Instrumentation mInstrumentation;
 
     private static final String USER_ID = "7461";
@@ -74,12 +76,12 @@ public class WebsocketTests {
 
     @Test
     public void connect() {
-        assertEquals("Websocket connection", mWebsocketApi.connect(USER_ID), true);
+        assertEquals("Websocket connection", mWebsocketApi.connect(USER_ID, URL), true);
     }
 
     @Test
     public void sendData() {
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
 
         JSONObject jsonObject = new JSONObject();
 
@@ -176,7 +178,7 @@ public class WebsocketTests {
             throw new RuntimeException(e);
         }
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonObject.toString());
 
         try {
@@ -283,7 +285,7 @@ public class WebsocketTests {
             throw new RuntimeException(e);
         }
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonObject.toString());
 
         try {
@@ -374,7 +376,7 @@ public class WebsocketTests {
             throw new RuntimeException(e);
         }
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonObject.toString());
 
         try {
@@ -477,7 +479,7 @@ public class WebsocketTests {
             throw new RuntimeException(e);
         }
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonObject.toString());
 
         try {
@@ -579,7 +581,7 @@ public class WebsocketTests {
             throw new RuntimeException(e);
         }
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonObject.toString());
 
         try {
@@ -658,7 +660,7 @@ public class WebsocketTests {
             }
         });
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonRequest.toString());
 
         try {
@@ -737,7 +739,7 @@ public class WebsocketTests {
             }
         });
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonRequest.toString());
 
         try {
@@ -818,7 +820,7 @@ public class WebsocketTests {
             }
         });
 
-        mWebsocketApi.connect(USER_ID);
+        mWebsocketApi.connect(USER_ID, URL);
         mWebsocketApi.sendData(jsonRequest.toString());
 
         try {

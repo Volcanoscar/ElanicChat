@@ -1,5 +1,6 @@
 package in.elanic.elanicchatdemo.models.providers.request;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.Date;
@@ -43,6 +44,26 @@ public class WSRequestProviderImpl implements WSRequestProvider {
         WSRequest wsRequest = new WSRequest();
         wsRequest.setRequest_id(requestId);
         wsRequest.setRequest_type(requestType);
+        wsRequest.setContent(content);
+        wsRequest.setCreated_at(timestamp);
+        wsRequest.setUpdated_at(timestamp);
+        wsRequest.setIs_completed(false);
+        wsRequest.setIs_deleted(false);
+        wsRequest.setUser_id(userId);
+
+        mDao.insert(wsRequest);
+
+        return wsRequest;
+    }
+
+    @Override
+    public WSRequest createRequest(@NonNull String requestId, @NonNull String event,
+                                   @NonNull String content, @NonNull String userId) {
+        Date timestamp = new Date();
+
+        WSRequest wsRequest = new WSRequest();
+        wsRequest.setRequest_id(requestId);
+        wsRequest.setEvent_name(event);
         wsRequest.setContent(content);
         wsRequest.setCreated_at(timestamp);
         wsRequest.setUpdated_at(timestamp);

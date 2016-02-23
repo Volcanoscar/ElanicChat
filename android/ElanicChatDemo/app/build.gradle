@@ -6,11 +6,9 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "in.elanic.elanicchatdemo"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
 
         buildConfigField"String", "LOCAL_IP", '\"' + getLocalIp('en0') + '\"'
 
@@ -26,6 +24,20 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    productFlavors {
+
+        ws {
+            applicationId "in.elanic.elanicchatdemo"
+            versionName "elanic_chat_ws"
+        }
+
+        sio {
+            applicationId "in.elanic.elanicchatdemo_sio"
+            versionName "elanic_chat_sio"
+        }
+
     }
 }
 

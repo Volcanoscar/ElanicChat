@@ -30,6 +30,7 @@ import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
+import in.elanic.elanicchatdemo.models.api.websocket.socketio.SocketIOConstants;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -55,6 +56,7 @@ public class WebsocketConnectionService extends Service {
 
     @Inject DaoSession mDaoSession;
     @Inject WebsocketApi mWebSocketApi;
+    @Inject String URL;
     @Inject ChatApiProvider chatApiProvider;
 
     private WSSHelper mWSSHelper;
@@ -176,6 +178,7 @@ public class WebsocketConnectionService extends Service {
         mEventBus = null;
     }
 
+    @SuppressWarnings("unused")
     private void clearPendingRequests() {
         mWSSHelper.clearPendingRequests();
     }
@@ -203,7 +206,7 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
-        mWebSocketApi.connect(mUserId);
+        mWebSocketApi.connect(mUserId, URL);
         mWebSocketApi.setCallback(new WebsocketCallback() {
             @Override
             public void onConnected() {
@@ -252,6 +255,7 @@ public class WebsocketConnectionService extends Service {
         mWebSocketApi.setCallback(null);
     }
 
+    /*@Deprecated
     private void sendDataRequested(String data) {
 
         if (data == null || data.isEmpty()) {
@@ -270,6 +274,23 @@ public class WebsocketConnectionService extends Service {
 
         if (mWebSocketApi.isConnected()) {
             mWebSocketApi.sendData(data);
+            return;
+        }
+
+        if (DEBUG) {
+            Log.i(TAG, "ws connection not available. Create new connection");
+        }
+        createWSConnectionRequested();
+    }*/
+
+    private void sendData(@NonNull String data, @NonNull String event, @Nullable String requestId) {
+
+        if (requestId == null) {
+            requestId = mWSSHelper.createRequest(mUserId, event, data);
+        }
+
+        if (mWebSocketApi.isConnected()) {
+            mWebSocketApi.sendData(data, event, requestId);
             return;
         }
 
@@ -315,13 +336,16 @@ public class WebsocketConnectionService extends Service {
             } else if (requestType == Constants.REQUEST_GET_ALL_MESSAGES) {
                 onNewMessagesArrived(jsonResponse);
                 return;
-            } else if (requestType == Constants.REQUEST_GET_USER) {
+            /*} else if (requestType == Constants.REQUEST_GET_USER) {
                 onUserDataFetched(jsonResponse);
                 return;
             } else if (requestType == Constants.REQUEST_GET_PRODUCTS) {
                 onProductsDataFetched(jsonResponse);
             } else if (requestType == Constants.REQUEST_GET_USERS_AND_PRODUCTS) {
-                onUsersAndPrdouctsDataFetched(jsonResponse);
+                onUsersAndPrdouctsDataFetched(jsonResponse);*/
+
+                // TODO this is going to get removed
+
             } else if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
                 onOfferResponseSuccessful(jsonResponse);
             } else if (requestType == Constants.REQUEST_MARK_AS_READ) {
@@ -335,13 +359,11 @@ public class WebsocketConnectionService extends Service {
             if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
                 Log.i(TAG, "response_new_message");
                 onNewMessagesArrived(jsonResponse);
-                return;
             }
 
 
         } catch (JSONException e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -355,14 +377,11 @@ public class WebsocketConnectionService extends Service {
 
         if (message == null) {
             Log.e(TAG, "sent message is null");
+            Log.e(TAG, "unable to save message to db");
             return;
         }
 
         mWSSHelper.createChatItem(message);
-        if (message == null) {
-            Log.e(TAG, "unable to save message to db");
-            return;
-        }
 
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGE_SENT, message));
     }
@@ -416,7 +435,7 @@ public class WebsocketConnectionService extends Service {
         }
     }
 
-    @Deprecated
+    /*@Deprecated
     private void fetchUsersData(@NonNull List<String> userIds) {
         sendDataRequested(WSSHelper.createFetchUsersDataRequest(userIds));
     }
@@ -429,7 +448,7 @@ public class WebsocketConnectionService extends Service {
     @Deprecated
     private void fetchUsersAndProductsData(@NonNull List<String> userIds, @NonNull List<String> productIds) {
         sendDataRequested(WSSHelper.createFetchUsersAndProductsDataRequest(userIds, productIds));
-    }
+    }*/
 
     private void fetchUsersAndProductsDataREST(@Nullable List<String> userIds,
                                                @Nullable List<String> productIds) {
@@ -462,7 +481,7 @@ public class WebsocketConnectionService extends Service {
         _subsriptions.add(subscription);
     }
 
-    @Deprecated
+    /*@Deprecated
     private void onUserDataFetched(JSONObject jsonResponse) throws JSONException {
         JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
         if (users.length() == 0) {
@@ -474,9 +493,9 @@ public class WebsocketConnectionService extends Service {
         mWSSHelper.saveUsersToDB(WSSHelper.parseNewUsers(users));
         // send event to ui
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
-    }
+    }*/
 
-    @Deprecated
+    /*@Deprecated
     private void onProductsDataFetched(JSONObject jsonResponse) throws JSONException {
         JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
         if (products.length() == 0) {
@@ -513,7 +532,7 @@ public class WebsocketConnectionService extends Service {
         if (users.length() > 0 || products.length() > 0) {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
         }
-    }
+    }*/
 
     private void onUsersAndProductsDataFetched(@NonNull List<User> users, @NonNull List<Product> products) {
         if (products.size() != 0) {
@@ -571,7 +590,8 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void syncData() {
-        sendDataRequested(WSSHelper.createSyncDataRequest(mSyncTimestamp));
+        // TODO sync data request
+//        sendDataRequested(WSSHelper.createSyncDataRequest(mSyncTimestamp));
     }
 
     private void checkIncompleteRequests() {
@@ -582,7 +602,7 @@ public class WebsocketConnectionService extends Service {
 
         for (WSRequest request : mRequests) {
             Log.i(TAG, "trying to re-send request: " + request.getRequest_id());
-            sendDataRequested(request.getContent());
+            sendData(request.getContent(), request.getEvent_name(), request.getRequest_id());
         }
     }
 
@@ -604,12 +624,14 @@ public class WebsocketConnectionService extends Service {
             }
         }
 
-        try {
+        // TODO Change this to socketio based
+
+        /*try {
             JSONObject jsonRequest = WSSHelper.createUnreadMessagesRequest(unreadMessages);
             sendDataRequested(jsonRequest.toString());
         } catch (JSONException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
@@ -628,6 +650,7 @@ public class WebsocketConnectionService extends Service {
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_DISCONNECTED));
     }
 
+    @SuppressWarnings("unused")
     public void onEvent(WSRequestEvent event) {
         switch (event.getEvent()) {
             case WSRequestEvent.EVENT_CONNECT:
@@ -639,7 +662,7 @@ public class WebsocketConnectionService extends Service {
                 break;
 
             case WSRequestEvent.EVENT_SEND:
-                sendDataRequested(event.getData());
+                sendData(event.getData(), event.getWSEvent(), null);
                 break;
 
             case WSRequestEvent.EVENT_SYNC:
@@ -653,6 +676,7 @@ public class WebsocketConnectionService extends Service {
 
     }
 
+    @SuppressWarnings("unused")
     public void onEvent(NetworkConnectivityEvent event) {
         switch (event.getEvent()) {
             case NetworkConnectivityEvent.EVENT_NETWORK_CONNECTED:
@@ -671,6 +695,7 @@ public class WebsocketConnectionService extends Service {
     /////////////// NOTIFICATIONS ///////////////////
     ////////////////////////////////////////////////
 
+    @SuppressWarnings("unused")
     private void generateNotifications() {
 
     }

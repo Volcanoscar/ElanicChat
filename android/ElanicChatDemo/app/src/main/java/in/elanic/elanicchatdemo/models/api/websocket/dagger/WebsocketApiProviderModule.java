@@ -2,6 +2,7 @@ package in.elanic.elanicchatdemo.models.api.websocket.dagger;
 
 import dagger.Module;
 import dagger.Provides;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.socketio.BlockingSocketIOProvider;
 import in.elanic.elanicchatdemo.models.api.websocket.websocket.BlockingWebsocketProvider;
@@ -42,6 +43,21 @@ public class WebsocketApiProviderModule {
                 throw new RuntimeException("Invalid type: " + type);
         }
 
+    }
+
+    @Provides
+    public String provideURL() {
+        switch (type) {
+            case API_WS_NON_BLOCKONG:
+            case API_WS_BLOCKING:
+                return Constants.WS_URL;
+            case API_SOCKET_IO_BLOCKING:
+            case API_SOCKET_IO_NON_BLOCKING:
+                return Constants.SERVER_BASE_URL;
+
+            default:
+                throw new RuntimeException("Invalid type: " + type);
+        }
     }
 
 }

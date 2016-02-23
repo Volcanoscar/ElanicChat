@@ -11,6 +11,7 @@ public class Constants {
 
     public static final String BASE_URL = "http://" + BuildConfig.LOCAL_IP + ":9999/";
     public static final String WS_URL = "ws://" + BuildConfig.LOCAL_IP + ":9999/ws";
+    public static final String SERVER_BASE_URL = "http://54.169.71.129:3200/";
 
     public static final int REQUEST_INVALID_CODE = -1;
     public static final int REQUEST_SEND_MESSAGE = 1;

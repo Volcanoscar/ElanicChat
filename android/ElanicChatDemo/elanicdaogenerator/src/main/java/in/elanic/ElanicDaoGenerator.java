@@ -120,6 +120,9 @@ public class ElanicDaoGenerator {
         wsRequest.addDateProperty("updated_at");
         wsRequest.addBooleanProperty("is_deleted");
 
+        // Added in version 8
+        wsRequest.addStringProperty("event_name");
+
     }
 
 }
