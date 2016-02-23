@@ -464,14 +464,28 @@ public class WSSHelper {
         return mWSRequestProvider.getIncompleteRequests();
     }
 
+    public static Pair<String, String> createSyncRequest(long timestamp) throws JSONException {
+        JSONObject jsonRequest = new JSONObject();
+        if (timestamp != -1) {
+            jsonRequest.put(JSONUtils.KEY_SYNC_TIMESTAMP,
+                    JSONUtils.convertDateToString(new Date(timestamp)));
+        }
+
+        return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_GET_MESSAGES);
+    }
+
     public static Pair<String, String> createSendMessageRequest(@NonNull Message message) throws JSONException {
         JSONObject jsonObject = JSONUtils.toJSON(message);
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SEND_CHAT);
+        JSONObject jsonRequest = new JSONObject();
+        jsonRequest.put(JSONUtils.KEY_MESSAGE, jsonObject);
+        return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_SEND_CHAT);
     }
 
     public static Pair<String, String> createOfferMessageRequest(@NonNull Message message) throws JSONException {
         JSONObject jsonObject = JSONUtils.toJSON(message);
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_MAKE_OFFER);
+        JSONObject jsonRequest = new JSONObject();
+        jsonRequest.put(JSONUtils.KEY_MESSAGE, jsonObject);
+        return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_MAKE_OFFER);
     }
 
     public static Pair<String, String> createOfferResponse(@NonNull Message message, boolean accept) throws JSONException {
@@ -560,5 +574,9 @@ public class WSSHelper {
         }
 
         return count;
+    }
+
+    public static boolean isMyMessage(@NonNull JSONObject jsonResponse, @NonNull String userId) {
+        return jsonResponse.optString(JSONUtils.KEY_USER_ID, "").equals(userId);
     }
 }

@@ -26,9 +26,11 @@ import javax.inject.Inject;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
+import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.services.WebsocketConnectionService;
 import in.elanic.elanicchatdemo.features.chatlist.container.dagger.DaggerChatListViewComponent;
 import in.elanic.elanicchatdemo.features.chatlist.section.ChatListBuySectionFragment;
@@ -295,6 +297,8 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
 
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
+
+        EventBus.getDefault().post(new WSRequestEvent(WSRequestEvent.EVENT_QUIT));
 
         finish();
     }

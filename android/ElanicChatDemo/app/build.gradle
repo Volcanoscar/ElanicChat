@@ -31,11 +31,13 @@ android {
         ws {
             applicationId "in.elanic.elanicchatdemo"
             versionName "elanic_chat_ws"
+            buildConfigField"String", "LOCAL_PORT", "\"9999\""
         }
 
         sio {
             applicationId "in.elanic.elanicchatdemo_sio"
             versionName "elanic_chat_sio"
+            buildConfigField"String", "LOCAL_PORT", "\"9900\""
         }
 
     }

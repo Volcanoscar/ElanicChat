@@ -127,6 +127,7 @@ public class RxWebsocketProvider implements WebsocketApi {
             JSONObject request = new JSONObject(data);
             request.put(JSONUtils.KEY_REQUEST_TYPE, event);
             request.put(JSONUtils.KEY_REQUEST_ID, requestId);
+            mWebsocket.sendText(request.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -162,7 +163,14 @@ public class RxWebsocketProvider implements WebsocketApi {
         @Override
         public void onTextMessage(WebSocket websocket, String text) throws Exception {
             if (mCallback != null) {
-                mCallback.onMessageReceived(text);
+
+                JSONObject response = new JSONObject(text);
+                String event = response.optString(JSONUtils.KEY_REQUEST_TYPE, null);
+                if (event == null) {
+                    event = response.optString(JSONUtils.KEY_RESPONSE_TYPE, null);
+                }
+
+                mCallback.onMessageReceived(text, event, response.optString(JSONUtils.KEY_REQUEST_ID));
             }
         }
 

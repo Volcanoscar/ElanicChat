@@ -10,6 +10,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.Pair;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -106,7 +107,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         mWSSHelper = new WSSHelper(mDaoSession);
-//        clearPendingRequests();
+        clearPendingRequests();
 
     }
 
@@ -148,6 +149,10 @@ public class WebsocketConnectionService extends Service {
         unregisterForEvents();
         Log.i(TAG, "onDestroy");
         super.onDestroy();
+    }
+
+    private void quit() {
+        stopSelf();
     }
 
     // Restart the service
@@ -230,12 +235,12 @@ public class WebsocketConnectionService extends Service {
             }
 
             @Override
-            public void onMessageReceived(String response) {
+            public void onMessageReceived(String response, String event, String requestId) {
                 if (DEBUG) {
                     Log.i(TAG, "received message: " + response);
                 }
 
-                processServerResponse(response);
+                processServerResponse(response, event, requestId);
             }
 
             @Override
@@ -300,10 +305,16 @@ public class WebsocketConnectionService extends Service {
         createWSConnectionRequested();
     }
 
-    private void processServerResponse(String data) {
+    private void processServerResponse(String data, String event, String requestId) {
         JSONObject jsonResponse;
         try {
             jsonResponse = new JSONObject(data);
+
+            if (event == null) {
+                Log.e(TAG, "Event is null");
+                // TODO do something
+                return;
+            }
 
             if (!jsonResponse.has(JSONUtils.KEY_SUCCESS)) {
                 // TODO Handle invalid json
@@ -311,11 +322,12 @@ public class WebsocketConnectionService extends Service {
             }
 
             boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
-            int requestType = WSSHelper.getRequestType(jsonResponse);
             if (!success) {
                 // TODO handle request failure
-                if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
+                if (event.equals(SocketIOConstants.EVENT_REVOKE_DENY_OFFER) ||
+                        event.equals(SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER)) {
                     mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
+
                 }
                 return;
             }
@@ -326,27 +338,30 @@ public class WebsocketConnectionService extends Service {
                 mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
             }
 
-            String requestId = WSSHelper.getRequestId(jsonResponse);
+            // TODO check if my request
+            boolean isMyRequest = WSSHelper.isMyMessage(jsonResponse, mUserId);
+
             mWSSHelper.markRequestAsCompleted(requestId);
 
-
-            if (requestType == Constants.REQUEST_SEND_MESSAGE) {
-                onMessageSentSuccessfully(jsonResponse);
-                return;
-            } else if (requestType == Constants.REQUEST_GET_ALL_MESSAGES) {
+            if (isMyRequest) {
+                if (event.equals(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER)) {
+                    onMessageSentSuccessfully(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT)) {
+                    onMessageSentSuccessfully(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER)) {
+                    onOfferResponseSuccessful(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_DENY_OFFER)) {
+                    onOfferResponseSuccessful(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_GET_MESSAGES)) {
+                    onNewMessagesArrived(jsonResponse);
+                }
+            } else {
                 onNewMessagesArrived(jsonResponse);
-                return;
-            /*} else if (requestType == Constants.REQUEST_GET_USER) {
-                onUserDataFetched(jsonResponse);
-                return;
-            } else if (requestType == Constants.REQUEST_GET_PRODUCTS) {
-                onProductsDataFetched(jsonResponse);
-            } else if (requestType == Constants.REQUEST_GET_USERS_AND_PRODUCTS) {
-                onUsersAndPrdouctsDataFetched(jsonResponse);*/
+            }
 
-                // TODO this is going to get removed
+            /*
 
-            } else if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
+            else if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
                 onOfferResponseSuccessful(jsonResponse);
             } else if (requestType == Constants.REQUEST_MARK_AS_READ) {
                 onMarkAsReadRequestCompleted(jsonResponse);
@@ -359,7 +374,7 @@ public class WebsocketConnectionService extends Service {
             if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
                 Log.i(TAG, "response_new_message");
                 onNewMessagesArrived(jsonResponse);
-            }
+            }*/
 
 
         } catch (JSONException e) {
@@ -590,7 +605,17 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void syncData() {
-        // TODO sync data request
+
+        Log.i(TAG, "sync data");
+
+        try {
+
+            Pair<String, String> request = WSSHelper.createSyncRequest(mSyncTimestamp);
+            sendData(request.first, request.second, null);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 //        sendDataRequested(WSSHelper.createSyncDataRequest(mSyncTimestamp));
     }
 
@@ -671,6 +696,10 @@ public class WebsocketConnectionService extends Service {
 
             case WSRequestEvent.EVENT_SEND_READ_DATA:
                 markMessagesAsRead(event.getData());
+                break;
+
+            case WSRequestEvent.EVENT_QUIT:
+                quit();
                 break;
         }
 

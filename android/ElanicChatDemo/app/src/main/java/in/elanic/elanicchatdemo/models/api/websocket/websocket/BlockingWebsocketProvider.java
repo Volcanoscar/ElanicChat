@@ -9,6 +9,8 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ import java.util.Map;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
+import in.elanic.elanicchatdemo.models.db.JSONUtils;
 
 /**
  * Created by Jay Rambhia on 1/11/16.
@@ -119,7 +122,13 @@ public class BlockingWebsocketProvider implements WebsocketApi {
         @Override
         public void onTextMessage(WebSocket websocket, String text) throws Exception {
             if (mCallback != null) {
-                mCallback.onMessageReceived(text);
+                JSONObject response = new JSONObject(text);
+                String event = response.optString(JSONUtils.KEY_REQUEST_TYPE, null);
+                if (event == null) {
+                    event = response.optString(JSONUtils.KEY_RESPONSE_TYPE, null);
+                }
+
+                mCallback.onMessageReceived(text, event, response.optString(JSONUtils.KEY_REQUEST_ID));
             }
         }
 

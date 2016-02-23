@@ -5,6 +5,8 @@ package in.elanic.elanicchatdemo.controllers.events;
  */
 public class WSRequestEvent {
 
+    public static final int EVENT_QUIT = 101;
+
     public static final int EVENT_CONNECT = 1;
     public static final int EVENT_SEND = 2;
     public static final int EVENT_DISCONNECT = 3;

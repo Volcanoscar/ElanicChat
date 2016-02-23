@@ -82,7 +82,7 @@ public class BlockingSocketIOProvider implements WebsocketApi {
         socket.on(Socket.EVENT_DISCONNECT, onDisconnected);
         socket.on(Socket.EVENT_ERROR, onError);
 
-        socket.on("send_message", onSendMessage);
+//        socket.on("send_message", onSendMessage);
 
         socket.connect();
 
@@ -151,7 +151,7 @@ public class BlockingSocketIOProvider implements WebsocketApi {
         }
     };
 
-    Emitter.Listener onSendMessage = new Emitter.Listener() {
+    /*Emitter.Listener onSendMessage = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             if (mCallback != null) {
@@ -160,5 +160,5 @@ public class BlockingSocketIOProvider implements WebsocketApi {
                 mCallback.onMessageReceived(jsonObject.toString());
             }
         }
-    };
+    };*/
 }
