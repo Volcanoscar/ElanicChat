@@ -16,4 +16,9 @@ public interface WebsocketApi {
     void setCallback(@Nullable WebsocketCallback callback);
 
     void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId);
+
+    void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId,
+                  boolean isBuyer, long epocTimestamp);
+
+    void leaveChat(@NonNull String postId, @NonNull String buyerId);
 }

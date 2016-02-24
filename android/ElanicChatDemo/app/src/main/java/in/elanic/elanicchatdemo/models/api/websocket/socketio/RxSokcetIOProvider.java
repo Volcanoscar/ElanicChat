@@ -20,6 +20,7 @@ import java.util.Map;
 
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
+import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -202,7 +203,36 @@ public class RxSokcetIOProvider implements WebsocketApi {
     @Override
     public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
         if (mSocket != null && mSocket.connected()) {
-            mSocket.emit(event, data, requestId);
+
+            JSONObject jsonBundle = new JSONObject();
+            try {
+
+                jsonBundle.put(JSONUtils.KEY_REQUEST_ID, requestId);
+                jsonBundle.put(JSONUtils.KEY_USER_ID, mUserId);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return;
+            }
+
+            mSocket.emit(event, data, jsonBundle);
+        }
+    }
+
+    @Override
+    public void joinChat(@NonNull String buyerId, @NonNull String sellerId,
+                         @NonNull String postId, boolean isBuyer, long epocTimestamp) {
+
+        if (mSocket != null && !mSocket.connected()) {
+            mSocket.emit(SocketIOConstants.EVENT_ADD_USER, buyerId, sellerId, postId, isBuyer, epocTimestamp);
+        }
+
+    }
+
+    @Override
+    public void leaveChat(@NonNull String postId, @NonNull String buyerId) {
+        if (mSocket != null && !mSocket.connected()) {
+            mSocket.emit(SocketIOConstants.EVENT_LEAVE_ROOM, postId + "-" + buyerId);
         }
     }
 
