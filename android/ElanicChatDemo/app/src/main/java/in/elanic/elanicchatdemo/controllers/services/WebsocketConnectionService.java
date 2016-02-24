@@ -356,17 +356,28 @@ public class WebsocketConnectionService extends Service {
                     onNewMessagesArrived(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER)) {
                     onOfferResponseSuccessful(jsonResponse);
-                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_DELIVERED_ON)) {
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON)) {
                     onMarkAsDeliveredRequestCompleted(jsonResponse);
-                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_DELIVERED_ON)) {
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON)) {
                     onMarkAsDeliveredRequestCompleted(jsonResponse);
-                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_READ_AT)) {
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT)) {
                     onMarkAsReadRequestCompleted(jsonResponse);
-                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_READ_AT)) {
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT)) {
                     onMarkAsReadRequestCompleted(jsonResponse);
                 }
             } else {
-                onNewMessagesArrived(jsonResponse);
+
+                if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON)) {
+                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON)) {
+                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT)) {
+                    onMarkAsReadRequestCompleted(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT)) {
+                    onMarkAsReadRequestCompleted(jsonResponse);
+                } else {
+                    onNewMessagesArrived(jsonResponse);
+                }
             }
 
             /*
@@ -457,6 +468,11 @@ public class WebsocketConnectionService extends Service {
         } else {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
             // TODO send notification
+        }
+
+        if (!newMessages.isEmpty()) {
+            Pair<String, String> request = WSSHelper.createDeliveredReceiptsRequest(newMessages);
+            sendData(request.first, request.second, null);
         }
     }
 

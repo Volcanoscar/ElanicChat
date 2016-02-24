@@ -34,13 +34,13 @@ public class SocketIOConstants {
     public static final String EVENT_REVOKE_BUY_NOW = "revokeBuyNow";
     public static final String EVENT_CONFIRM_CANCEL_OFFER = "confirmCancelOffer";
     public static final String EVENT_REVOKE_CANCEL_OFFER = "denyCancelOffer";
-    public static final String EVENT_CONFIRM_SET_QUOTATION_DELIVERED_ON = "confirmSetQuotationDeliveredOn";
-    public static final String EVENT_CONFIRM_SET_MESSAGE_DELIVERED_ON = "confirmSetMessageDeliveredOn";
-    public static final String EVENT_CONFIRM_SET_QUOTATION_READ_AT = "confirmSetQuotationReadAt";
-    public static final String EVENT_CONFIRM_SET_MESSAGE_READ_AT = "confirmSetMessageReadAt";
-    public static final String EVENT_REVOKE_SET_QUOTATION_DELIVERED_ON = "revokeSetQuotationDeliveredOn";
-    public static final String EVENT_REVOKE_SET_MESSAGE_DELIVERED_ON = "revokeSetMessageDeliveredOn";
-    public static final String EVENT_REVOKE_SET_QUOTATION_READ_AT = "revokeSetQuotationReadAt";
-    public static final String EVENT_REVOKE_SET_MESSAGE_READ_AT = "revokeSetMessageReadAt";
+    public static final String EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON = "confirmSetQuotationsDeliveredOn";
+    public static final String EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON = "confirmSetMessagesDeliveredOn";
+    public static final String EVENT_CONFIRM_SET_QUOTATIONS_READ_AT = "confirmSetQuotationsReadAt";
+    public static final String EVENT_CONFIRM_SET_MESSAGES_READ_AT = "confirmSetMessagesReadAt";
+    public static final String EVENT_REVOKE_SET_QUOTATIONS_DELIVERED_ON = "revokeSetQuotationsDeliveredOn";
+    public static final String EVENT_REVOKE_SET_MESSAGES_DELIVERED_ON = "revokeSetMessagesDeliveredOn";
+    public static final String EVENT_REVOKE_SET_QUOTATIONS_READ_AT = "revokeSetQuotationsReadAt";
+    public static final String EVENT_REVOKE_SET_MESSAGES_READ_AT = "revokeSetMessagesReadAt";
 
 }

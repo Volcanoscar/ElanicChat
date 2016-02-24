@@ -58,14 +58,14 @@ public class RxSokcetIOProvider implements WebsocketApi {
             SocketIOConstants.EVENT_CONFIRM_BUY_NOW,
             SocketIOConstants.EVENT_REVOKE_BUY_NOW,
             SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
-            SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_DELIVERED_ON,
-            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_DELIVERED_ON,
-            SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_READ_AT,
-            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_READ_AT,
-            SocketIOConstants.EVENT_REVOKE_SET_QUOTATION_DELIVERED_ON,
-            SocketIOConstants.EVENT_REVOKE_SET_MESSAGE_DELIVERED_ON,
-            SocketIOConstants.EVENT_REVOKE_SET_QUOTATION_READ_AT,
-            SocketIOConstants.EVENT_REVOKE_SET_MESSAGE_READ_AT
+            SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON,
+            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON,
+            SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT,
+            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT,
+            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_DELIVERED_ON,
+            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_DELIVERED_ON,
+            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_READ_AT,
+            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_READ_AT
     };
 
     public RxSokcetIOProvider() {

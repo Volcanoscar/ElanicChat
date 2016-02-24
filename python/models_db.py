@@ -137,6 +137,8 @@ class ModelsProvider:
 
 	@staticmethod
 	def sanitizeEntity(orig_enitiy):
+		if type(orig_enitiy) == list:
+			return orig_enitiy
 
 		entity = copy.deepcopy(orig_enitiy)
 

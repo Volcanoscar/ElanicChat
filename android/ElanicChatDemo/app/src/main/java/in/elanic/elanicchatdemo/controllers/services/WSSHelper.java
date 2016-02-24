@@ -561,6 +561,19 @@ public class WSSHelper {
         return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SET_MESSAGES_READ_AT);
     }
 
+    public static Pair<String, String> createDeliveredReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+
+        List<String> messageIds = new ArrayList<>();
+        for (Message message : messages) {
+            messageIds.add(message.getMessage_id());
+        }
+
+        jsonObject.put(JSONUtils.KEY_MESSAGE_IDS, new JSONArray(messageIds));
+
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SET_MESSAGES_DELIVERD_ON);
+    }
+
     public static JSONObject createUnreadMessagesRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
         JSONObject jsonObject = createWSRequest(Constants.REQUEST_MARK_AS_READ);
 

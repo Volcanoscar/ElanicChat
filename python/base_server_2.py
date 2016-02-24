@@ -20,7 +20,7 @@ REQUEST_MAKE_OFFER = "makeOffer"
 REQUEST_ACCEPT_OFFER = "acceptOffer"
 REQUEST_DENY_OFFER = "denyOffer"
 REQUEST_CANCEL_OFFER = "cancelOffer"
-REQUEST_SET_MESSAGES_DELIVERED_ON = "setMessageDeliveredOn"
+REQUEST_SET_MESSAGES_DELIVERED_ON = "setMessagesDeliveredOn"
 REQUEST_SET_QUOTATIONS_DELIVERED_ON = "setQuotationsDeliveredOn"
 REQUEST_SET_MESSAGES_READ_AT = "setMessagesReadAt"
 REQUEST_SET_QUOTATIONS_READ_AT = "setQuotationsReadAt"
@@ -38,11 +38,11 @@ RESPONSE_CONFIRM_DENY_OFFER = "confirmDenyOffer"
 RESPONSE_REVOKE_DENY_OFFER = "revokeDenyOffer"
 RESPONSE_CONFIRM_CANCEL_OFFER = "confirmCancelOffer"
 RESPONSE_REVOKE_CANCEL_OFFER = "revokeCancelOffer"
-RESPONSE_CONFIRM_SET_MESSAGES_DELIVERED_ON = "confirmSetMessageDeliveredOn"
+RESPONSE_CONFIRM_SET_MESSAGES_DELIVERED_ON = "confirmSetMessagesDeliveredOn"
 RESPONSE_CONFIRM_QUOTATIONS_DELIVERED_ON = "confirmSetQuotationsDeliveredOn"
 RESPONSE_CONFIRM_MESSAGES_READ_AT = "confirmSetMessagesReadAt"
 RESPONSE_CONFIRM_QUOTATIONS_READ_AT = "confirmSetQuotationsReadAt"
-RESPONSE_REVOKE_SET_MESSAGES_DELIVERED_ON = "revokeSetMessageDeliveredOn"
+RESPONSE_REVOKE_SET_MESSAGES_DELIVERED_ON = "revokeSetMessagesDeliveredOn"
 RESPONSE_REVOKE_QUOTATIONS_DELIVERED_ON = "revokeSetQuotationsDeliveredOn"
 RESPONSE_REVOKE_MESSAGES_READ_AT = "revokeSetMessagesReadAt"
 RESPONSE_REVOKE_QUOTATIONS_READ_AT = "revokeSetQuotationsReadAt"
@@ -433,11 +433,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		
 		# print new_message
 		sent = self.sendMessage(sanitizedMessage, receiver_id, confirm_response)
-		if sent:
-			params = dict()
-			params['delivered_at'] = datetime.datetime.now()
-			self.db_provider.updateMessageField(new_message['_id'], params)
-			new_message['delivered_at'] = datetime.datetime.now()
+		# if sent:
+		# 	params = dict()
+		# 	params['delivered_at'] = datetime.datetime.now()
+		# 	self.db_provider.updateMessageField(new_message['_id'], params)
+		# 	new_message['delivered_at'] = datetime.datetime.now()
 
 		print new_message
 		sanitizedMessage = self.db_provider.sanitizeEntity(new_message)
@@ -786,6 +786,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		retVal = []
 		userId = self.id
+
+		senderIds = []
+
 		for message_id in message_ids:
 			message = self.db_provider.getMessage(message_id)
 			if message:
@@ -802,13 +805,17 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 						print params
 
 						retVal.append(ModelsProvider.sanitizeEntity(params))
-
-		# TODO : Send read notifications to sender?
+						senderIds.append(message['sender_id'])
 
 		self.write_message(json.dumps( {'success' : True,
 				"request_id" : request_id,
 				"user_id" : self.id,
 				"request_type" : confirm_response, "data" : retVal}))
+
+		senderIds = set(senderIds)
+		for senderId in senderIds:
+			self.sendMessage(retVal, senderId, confirm_response)
+
 		return
 
 
@@ -834,6 +841,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			return
 
 		retVal = []
+		senderIds = []
+
 		userId = self.id
 		for message_id in message_ids:
 			message = self.db_provider.getMessage(message_id)
@@ -851,20 +860,24 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 						print params
 
 						retVal.append(ModelsProvider.sanitizeEntity(params))
-
-		# TODO : Send read notifications to sender?
+						senderIds.append(message['sender_id'])
 
 		self.write_message(json.dumps( {'success' : True,
 				"request_id" : request_id,
 				"user_id" : self.id,
 				"request_type" : confirm_response, "data" : retVal}))
+
+		senderIds = set(senderIds)
+		for senderId in senderIds:
+			self.sendMessage(retVal, senderId, confirm_response)
+
 		return
 
 	def sendMessages(self, messages, receiver_id, event=""):
 		if receiver_id in clients:
 			data = []
 			for message in messages:
-				message['delivered_at'] = datetime.datetime.now()
+				# message['delivered_at'] = datetime.datetime.now()
 				message = ModelsProvider.sanitizeEntity(message)
 				data.append(message)
 
@@ -877,9 +890,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 	def sendMessage(self, data, receiver_id, event=""):
 		if receiver_id in clients:
-			data['delivered_at'] = datetime.datetime.now()
+			# data['delivered_at'] = datetime.datetime.now()
 			data = ModelsProvider.sanitizeEntity(data)
-			messages = [data]
+			if type(data) == list:
+				messages = data
+			else:	
+				messages = [data]
 			response = {"success" : True, "user_id" : self.id, "response_type" : event, "data" : messages, 
 						'sync_timestamp' : ModelsProvider.getSyncTime()}
 			clients[receiver_id]["object"].write_message(json.dumps(response))
