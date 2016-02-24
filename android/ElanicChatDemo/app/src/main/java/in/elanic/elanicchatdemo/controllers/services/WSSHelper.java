@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.websocket.socketio.SocketIOConstants;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.Constants;
@@ -586,48 +587,74 @@ public class WSSHelper {
         return jsonObject;
     }
 
-    public int updateDeliveredReceipts(JSONObject jsonResponse) throws JSONException {
+    public List<String> updateDeliveredReceipts(JSONObject jsonResponse) throws JSONException {
         JSONArray deliveredReceipts = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
 
         int count = 0;
 
         DateFormat df = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT);
 
+        List<String> messageIds = new ArrayList<>();
+        DualList<String, Date> updateVals = new DualList<>();
+
         for (int i=0; i<deliveredReceipts.length(); i++) {
             JSONObject readObject = deliveredReceipts.getJSONObject(i);
             String messageId = readObject.getString(JSONUtils.KEY_MESSAGE_ID);
+
+            if (messageId == null || messageId.isEmpty()) {
+                continue;
+            }
+
             try {
                 Date deliveredAt = df.parse(readObject.getString(JSONUtils.KEY_DELIVERED_AT));
-                count += mMessageProvider.updateDeliveredTimestamp(messageId, deliveredAt);
+                if (deliveredAt == null) {
+                    continue;
+                }
+
+                updateVals.add(messageId, deliveredAt);
+                messageIds.add(messageId);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-
         }
 
-        return count;
+        mMessageProvider.updateDeliveredTimestamps(updateVals);
+        return messageIds;
     }
 
-    public int updateReadReceipts(JSONObject jsonResponse) throws JSONException {
+    public List<String> updateReadReceipts(JSONObject jsonResponse) throws JSONException {
         JSONArray readReceipts = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
 
         int count = 0;
+        List<String> messageIds = new ArrayList<>();
+        DualList<String, Date> updateVals = new DualList<>();
 
         DateFormat df = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT);
 
         for (int i=0; i<readReceipts.length(); i++) {
             JSONObject readObject = readReceipts.getJSONObject(i);
             String messageId = readObject.getString(JSONUtils.KEY_MESSAGE_ID);
+
+            if (messageId == null || messageId.isEmpty()) {
+                continue;
+            }
+
             try {
                 Date readAt = df.parse(readObject.getString(JSONUtils.KEY_READ_AT));
-                count += mMessageProvider.updateReadTimestamp(messageId, readAt);
+
+                if (readAt == null) {
+                    continue;
+                }
+
+                updateVals.add(messageId, readAt);
+                messageIds.add(messageId);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-
         }
 
-        return count;
+        mMessageProvider.updateReadTimestamps(updateVals);
+        return messageIds;
     }
 
     public static boolean isMyMessage(@NonNull JSONObject jsonResponse, @NonNull String userId) {

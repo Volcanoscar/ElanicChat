@@ -3,16 +3,20 @@ package in.elanic.elanicchatdemo.models.providers.message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import de.greenrobot.dao.query.CountQuery;
 import de.greenrobot.dao.query.QueryBuilder;
 import de.greenrobot.dao.query.WhereCondition;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.MessageDao;
 import in.elanic.elanicchatdemo.models.db.Product;
@@ -169,17 +173,11 @@ public class MessageProviderImpl implements MessageProvider {
 
     @Override
     public int addOrUpdateMessages(@NonNull List<Message> messages) {
-        int count = 0;
-        for (Message message : messages) {
-
-            if (message.getIs_read() == null) {
-                message.setIs_read(false);
-            }
-
-            count = count + (mDao.insertOrReplace(message) != 0 ? 1: 0);
+        if (messages.isEmpty()) {
+            return 0;
         }
-
-        return count;
+        mDao.insertOrReplaceInTx(messages);
+        return messages.size();
     }
 
     @Override
@@ -223,8 +221,10 @@ public class MessageProviderImpl implements MessageProvider {
         return cq.count();
     }
 
+    @Deprecated
     @Override
     public int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt) {
+
         Message message = mDao.load(messageId);
         if (message != null) {
             message.setRead_at(readAt);
@@ -238,15 +238,74 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public int updateReadTimestamps(@NonNull DualList<String, Date> updateVals) {
+        if (updateVals.isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+        List<Message> messages = mDao.queryBuilder()
+                .where(MessageDao.Properties.Message_id.in(updateVals.getT())).list();
+
+        if (messages == null || messages.isEmpty()) {
+            return 0;
+        }
+
+        for (Message message : messages) {
+            if (message == null) {
+                continue;
+            }
+
+            Date readAt = updateVals.getItem(message.getMessage_id());
+            message.setRead_at(readAt);
+            count++;
+        }
+
+        mDao.updateInTx(messages);
+        return count;
+    }
+
+    @Override
+    @Deprecated
     public int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt) {
         Message message = mDao.load(messageId);
         if (message != null) {
             message.setDelivered_at(deliveredAt);
             mDao.update(message);
+
+
             return 1;
         }
 
         return 0;
+    }
+
+    @Override
+    public int updateDeliveredTimestamps(@NonNull DualList<String, Date> updateVals) {
+        if (updateVals.isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+        List<Message> messages = mDao.queryBuilder()
+                .where(MessageDao.Properties.Message_id.in(updateVals.getT())).list();
+
+        if (messages == null || messages.isEmpty()) {
+            return 0;
+        }
+
+        for (Message message : messages) {
+            if (message == null) {
+                continue;
+            }
+
+            Date readAt = updateVals.getItem(message.getMessage_id());
+            message.setDelivered_at(readAt);
+            count++;
+        }
+
+        mDao.updateInTx(messages);
+        return count;
     }
 
     @Override
@@ -307,5 +366,18 @@ public class MessageProviderImpl implements MessageProvider {
         }
 
         return messages.get(0);
+    }
+
+    @Override
+    public List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String receiverId,
+                                             @NonNull String productId, @NonNull List<String> messageIds) {
+
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        qb.where(MessageDao.Properties.Message_id.in(messageIds),
+                MessageDao.Properties.Receiver_id.eq(receiverId),
+                MessageDao.Properties.Sender_id.eq(senderId),
+                MessageDao.Properties.Product_id.eq(productId));
+
+        return qb.list();
     }
 }

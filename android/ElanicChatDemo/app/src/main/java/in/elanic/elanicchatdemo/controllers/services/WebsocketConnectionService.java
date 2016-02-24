@@ -691,11 +691,23 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
-        mWSSHelper.updateReadReceipts(jsonResponse);
+        List<String> updatedIds = mWSSHelper.updateReadReceipts(jsonResponse);
+        if (updatedIds.isEmpty()) {
+            Log.e(TAG, "update ids is empty");
+            return;
+        }
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
     }
 
     private void onMarkAsDeliveredRequestCompleted(JSONObject jsonResponse) throws JSONException {
-        mWSSHelper.updateDeliveredReceipts(jsonResponse);
+        List<String> updatedIds = mWSSHelper.updateDeliveredReceipts(jsonResponse);
+
+        if (updatedIds.isEmpty()) {
+            Log.e(TAG, "update ids is empty");
+            return;
+        }
+
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
     }
 
     ///////////////////////////////////////////

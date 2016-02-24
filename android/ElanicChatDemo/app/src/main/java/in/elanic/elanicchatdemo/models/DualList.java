@@ -28,4 +28,23 @@ public class DualList<T,V> {
     public List<V> getV() {
         return v;
     }
+
+    public void add(T tItem, V vItem) {
+        t.add(tItem);
+        v.add(vItem);
+    }
+
+    public boolean isEmpty() {
+        return t.isEmpty() || v.isEmpty();
+    }
+
+    public V getItem(T key) {
+        int index = t.indexOf(key);
+        if (index == -1) {
+            return null;
+        }
+
+        return v.get(index);
+    }
+
 }

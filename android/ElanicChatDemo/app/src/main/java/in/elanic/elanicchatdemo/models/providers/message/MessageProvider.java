@@ -2,12 +2,14 @@ package in.elanic.elanicchatdemo.models.providers.message;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import com.google.gson.JsonObject;
 
 import java.util.Date;
 import java.util.List;
 
+import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.db.Message;
 import in.elanic.elanicchatdemo.models.db.Product;
 import in.elanic.elanicchatdemo.models.db.User;
@@ -30,12 +32,17 @@ public interface MessageProvider {
     long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId);
     long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String productId);
 
-    int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
-    int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt);
+    @Deprecated int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
+    int updateReadTimestamps(@NonNull DualList<String, Date> updateVals);
+    @Deprecated int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt);
+    int updateDeliveredTimestamps(@NonNull DualList<String, Date> updateVals);
+
 
     Message getLatestSimpleMessage(@NonNull String productId);
     Message getLatestOffer(@NonNull String productId);
 
     Message getLatestOffer(@NonNull String productId, @NonNull String buyerId);
     Message getLatestSimpleMessage(@NonNull String productId, @NonNull String buyerId);
+
+    List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String receiverId, @NonNull String productId, @NonNull List<String> messages);
 }

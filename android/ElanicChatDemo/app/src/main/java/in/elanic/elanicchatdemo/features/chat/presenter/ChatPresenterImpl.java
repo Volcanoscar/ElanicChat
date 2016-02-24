@@ -744,6 +744,30 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.showSnackbar("Offer Response failed");
     }
 
+    private synchronized void onUpdateMessages(List<String> messageIds) {
+        if (messageIds == null || messageIds.isEmpty() || mMessages == null || mMessages.isEmpty()) {
+            return;
+        }
+
+        List<Message> messages = mMessageProvider.getRelevantMessages(mSenderId, mReceiverId, mProductId, messageIds);
+        if (messages == null) {
+            Log.e(TAG, "relevant messages is null");
+            return;
+        }
+
+        for (Message message : messages) {
+            int index = mMessages.indexOf(message);
+            if (index != -1) {
+                mMessages.set(index, message);
+                mChatView.updateMessageAtIndex(index);
+            }
+
+            if (DEBUG) {
+                Log.i(TAG, "message: " + message.getContent());
+            }
+        }
+    }
+
     @SuppressWarnings("unused")
     public void onEventMainThread(WSResponseEvent event) {
         switch (event.getEvent()) {
@@ -764,6 +788,10 @@ public class ChatPresenterImpl implements ChatPresenter {
 
             case WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED:
                 onOfferResponseFailed();
+                break;
+
+            case WSResponseEvent.EVENT_MESSAGES_UPDATED:
+                onUpdateMessages(event.getMessageIds());
                 break;
         }
     }
