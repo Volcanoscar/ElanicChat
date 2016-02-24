@@ -468,10 +468,18 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
-        try {
+        /*try {
             JSONObject jsonRequest = WSSHelper.createOfferCancellationRequest(message);
             mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
 
+            mChatView.showProgressDialog(true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }*/
+
+        try {
+            Pair<String, String> request = WSSHelper.createOfferCancelRequest(message);
+            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
             mChatView.showProgressDialog(true);
         } catch (JSONException e) {
             e.printStackTrace();

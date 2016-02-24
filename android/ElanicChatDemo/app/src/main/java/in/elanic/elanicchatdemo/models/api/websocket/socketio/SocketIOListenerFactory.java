@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.models.api.websocket.socketio;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.github.nkzawa.socketio.client.Socket;
 
@@ -46,7 +47,18 @@ public class SocketIOListenerFactory {
         }
     }
 
+    public void disconnect(@NonNull Socket socket) {
+        if (listeners == null) {
+            throw new IllegalArgumentException("listeners never generated");
+        }
+
+        for (SocketIOListener listener : listeners) {
+            listener.setCallback(null);
+            socket.off(listener.getEvent(), listener);
+        }
+    }
+
     public interface EventCallback {
-        void onEvent(@NonNull String event, Object... args);
+        void onEvent(@NonNull String event, @Nullable String requestId, Object... args);
     }
 }

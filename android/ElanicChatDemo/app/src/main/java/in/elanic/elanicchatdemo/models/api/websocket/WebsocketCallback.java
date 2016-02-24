@@ -7,7 +7,7 @@ public interface WebsocketCallback {
 
     void onConnected();
     void onDisconnected();
-    void onMessageReceived(String response, String event, String requestId);
+    void onMessageReceived(String response, String event, String requestId, Object... args);
     void onError(Throwable error);
 
 }

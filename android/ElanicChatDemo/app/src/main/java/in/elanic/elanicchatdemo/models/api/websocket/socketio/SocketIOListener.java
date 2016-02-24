@@ -19,7 +19,7 @@ public class SocketIOListener implements Emitter.Listener {
     @Override
     public void call(Object... args) {
         if (callback != null) {
-            callback.onEvent(event, args);
+            callback.onEvent(event, (String) args[1], args);
         }
     }
 

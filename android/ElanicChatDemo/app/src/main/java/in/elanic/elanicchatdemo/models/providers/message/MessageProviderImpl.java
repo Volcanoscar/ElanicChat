@@ -238,6 +238,18 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt) {
+        Message message = mDao.load(messageId);
+        if (message != null) {
+            message.setDelivered_at(deliveredAt);
+            mDao.update(message);
+            return 1;
+        }
+
+        return 0;
+    }
+
+    @Override
     public Message getLatestSimpleMessage(@NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
         qb.where(MessageDao.Properties.Product_id.eq(productId),

@@ -12,7 +12,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,7 +25,6 @@ import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
-import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
@@ -235,7 +233,7 @@ public class WebsocketConnectionService extends Service {
             }
 
             @Override
-            public void onMessageReceived(String response, String event, String requestId) {
+            public void onMessageReceived(String response, String event, String requestId, Object... args) {
                 if (DEBUG) {
                     Log.i(TAG, "received message: " + response);
                 }
@@ -343,6 +341,8 @@ public class WebsocketConnectionService extends Service {
 
             mWSSHelper.markRequestAsCompleted(requestId);
 
+            // TODO Handle messages coming from other user properly.
+
             if (isMyRequest) {
                 if (event.equals(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER)) {
                     onMessageSentSuccessfully(jsonResponse);
@@ -354,6 +354,16 @@ public class WebsocketConnectionService extends Service {
                     onOfferResponseSuccessful(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_GET_MESSAGES)) {
                     onNewMessagesArrived(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER)) {
+                    onOfferResponseSuccessful(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_DELIVERED_ON)) {
+                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_DELIVERED_ON)) {
+                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_READ_AT)) {
+                    onMarkAsReadRequestCompleted(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_READ_AT)) {
+                    onMarkAsReadRequestCompleted(jsonResponse);
                 }
             } else {
                 onNewMessagesArrived(jsonResponse);
@@ -649,7 +659,12 @@ public class WebsocketConnectionService extends Service {
             }
         }
 
-        // TODO Change this to socketio based
+        try {
+            Pair<String, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
+            sendData(request.first, request.second, null);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         /*try {
             JSONObject jsonRequest = WSSHelper.createUnreadMessagesRequest(unreadMessages);
@@ -661,6 +676,10 @@ public class WebsocketConnectionService extends Service {
 
     private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
         mWSSHelper.updateReadReceipts(jsonResponse);
+    }
+
+    private void onMarkAsDeliveredRequestCompleted(JSONObject jsonResponse) throws JSONException {
+        mWSSHelper.updateDeliveredReceipts(jsonResponse);
     }
 
     ///////////////////////////////////////////

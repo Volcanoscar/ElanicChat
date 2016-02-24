@@ -495,6 +495,12 @@ public class WSSHelper {
                 accept ? SocketIOConstants.EVENT_ACCEPT_OFFER : SocketIOConstants.EVENT_DENY_OFFER);
     }
 
+    public static Pair<String, String> createOfferCancelRequest(@NonNull Message message) throws JSONException {
+        JSONObject jsonObject = createWSRequest(Constants.REQUEST_CANCEL_OFFER);
+        jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_CANCEL_OFFER);
+    }
+
     @Deprecated
     public static JSONObject createOfferResponseRequest(Message message, boolean accept) throws JSONException {
         JSONObject jsonObject = createWSRequest(Constants.REQUEST_RESPOND_TO_OFFER);
@@ -542,6 +548,19 @@ public class WSSHelper {
         return mMessageProvider.getUnreadMessages(receiverId, senderId, productId);
     }
 
+    public static Pair<String, String> createReadReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+
+        List<String> messageIds = new ArrayList<>();
+        for (Message message : messages) {
+            messageIds.add(message.getMessage_id());
+        }
+
+        jsonObject.put(JSONUtils.KEY_MESSAGE_IDS, new JSONArray(messageIds));
+
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SET_MESSAGES_READ_AT);
+    }
+
     public static JSONObject createUnreadMessagesRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
         JSONObject jsonObject = createWSRequest(Constants.REQUEST_MARK_AS_READ);
 
@@ -552,6 +571,28 @@ public class WSSHelper {
 
         jsonObject.put(JSONUtils.KEY_MESSAGE_IDS, new JSONArray(messageIds));
         return jsonObject;
+    }
+
+    public int updateDeliveredReceipts(JSONObject jsonResponse) throws JSONException {
+        JSONArray deliveredReceipts = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
+
+        int count = 0;
+
+        DateFormat df = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT);
+
+        for (int i=0; i<deliveredReceipts.length(); i++) {
+            JSONObject readObject = deliveredReceipts.getJSONObject(i);
+            String messageId = readObject.getString(JSONUtils.KEY_MESSAGE_ID);
+            try {
+                Date deliveredAt = df.parse(readObject.getString(JSONUtils.KEY_DELIVERED_AT));
+                count += mMessageProvider.updateDeliveredTimestamp(messageId, deliveredAt);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return count;
     }
 
     public int updateReadReceipts(JSONObject jsonResponse) throws JSONException {

@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import rx.Observable;
@@ -54,9 +53,19 @@ public class RxSokcetIOProvider implements WebsocketApi {
             SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER,
             SocketIOConstants.EVENT_CONFIRM_DENY_OFFER,
             SocketIOConstants.EVENT_REVOKE_DENY_OFFER,
+            SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER,
+            SocketIOConstants.EVENT_REVOKE_CANCEL_OFFER,
             SocketIOConstants.EVENT_CONFIRM_BUY_NOW,
             SocketIOConstants.EVENT_REVOKE_BUY_NOW,
-            SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER
+            SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
+            SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_DELIVERED_ON,
+            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_DELIVERED_ON,
+            SocketIOConstants.EVENT_CONFIRM_SET_QUOTATION_READ_AT,
+            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGE_READ_AT,
+            SocketIOConstants.EVENT_REVOKE_SET_QUOTATION_DELIVERED_ON,
+            SocketIOConstants.EVENT_REVOKE_SET_MESSAGE_DELIVERED_ON,
+            SocketIOConstants.EVENT_REVOKE_SET_QUOTATION_READ_AT,
+            SocketIOConstants.EVENT_REVOKE_SET_MESSAGE_READ_AT
     };
 
     public RxSokcetIOProvider() {
@@ -164,6 +173,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
         if (mSocket != null && mSocket.connected()) {
             Log.i(TAG, "disconnect socketio");
             mSocket.disconnect();
+            listenerFactory.disconnect(mSocket);
         }
     }
 
@@ -215,8 +225,11 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
     private SocketIOListenerFactory.EventCallback eventCallback = new SocketIOListenerFactory.EventCallback() {
         @Override
-        public void onEvent(@NonNull String event, Object... args) {
+        public void onEvent(@NonNull String event, @Nullable String requestId, Object... args) {
             logResponse(event, args);
+            if (mCallback != null) {
+                mCallback.onMessageReceived((String) args[0], event, requestId, args);
+            }
         }
     };
 

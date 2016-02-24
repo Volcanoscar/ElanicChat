@@ -31,6 +31,7 @@ public interface MessageProvider {
     long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String productId);
 
     int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
+    int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt);
 
     Message getLatestSimpleMessage(@NonNull String productId);
     Message getLatestOffer(@NonNull String productId);

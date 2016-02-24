@@ -19,6 +19,11 @@ REQUEST_MAKE_OFFER = "makeOffer"
 
 REQUEST_ACCEPT_OFFER = "acceptOffer"
 REQUEST_DENY_OFFER = "denyOffer"
+REQUEST_CANCEL_OFFER = "cancelOffer"
+REQUEST_SET_MESSAGES_DELIVERED_ON = "setMessageDeliveredOn"
+REQUEST_SET_QUOTATIONS_DELIVERED_ON = "setQuotationsDeliveredOn"
+REQUEST_SET_MESSAGES_READ_AT = "setMessagesReadAt"
+REQUEST_SET_QUOTATIONS_READ_AT = "setQuotationsReadAt"
 
 RESPONSE_GET_MESSAGES = "getMessages"
 RESPONSE_GET_QUOTATIONS = "getQuotations"
@@ -31,6 +36,17 @@ RESPONSE_CONFIRM_ACCEPT_OFFER = "confirmAcceptOffer"
 RESPONSE_REVOKE_ACCEPT_OFFER = "revokeAcceptOffer"
 RESPONSE_CONFIRM_DENY_OFFER = "confirmDenyOffer"
 RESPONSE_REVOKE_DENY_OFFER = "revokeDenyOffer"
+RESPONSE_CONFIRM_CANCEL_OFFER = "confirmCancelOffer"
+RESPONSE_REVOKE_CANCEL_OFFER = "revokeCancelOffer"
+RESPONSE_CONFIRM_SET_MESSAGES_DELIVERED_ON = "confirmSetMessageDeliveredOn"
+RESPONSE_CONFIRM_QUOTATIONS_DELIVERED_ON = "confirmSetQuotationsDeliveredOn"
+RESPONSE_CONFIRM_MESSAGES_READ_AT = "confirmSetMessagesReadAt"
+RESPONSE_CONFIRM_QUOTATIONS_READ_AT = "confirmSetQuotationsReadAt"
+RESPONSE_REVOKE_SET_MESSAGES_DELIVERED_ON = "revokeSetMessageDeliveredOn"
+RESPONSE_REVOKE_QUOTATIONS_DELIVERED_ON = "revokeSetQuotationsDeliveredOn"
+RESPONSE_REVOKE_MESSAGES_READ_AT = "revokeSetMessagesReadAt"
+RESPONSE_REVOKE_QUOTATIONS_READ_AT = "revokeSetQuotationsReadAt"
+
 
 REQUEST_GET_USER = 2
 REQUEST_GET_ALL_MESSAGES = 5
@@ -38,7 +54,6 @@ REQUEST_GET_PRODUCTS = 6
 REQUEST_GET_USERS_AND_PRODUCTS = 7
 REQUEST_RESPOND_TO_OFFER = 8
 REQUEST_MARK_AS_READ = 9
-REQUEST_CANCEL_OFFER = 10
 
 RESPONSE_NEW_MESSAGE = 3
 RESPONSE_USER = 4
@@ -329,6 +344,16 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			self.onRespondToOfferRequested(data, True)
 		elif request_type == REQUEST_DENY_OFFER:
 			self.onRespondToOfferRequested(data, False)
+		elif request_type == REQUEST_CANCEL_OFFER:
+			self.onCancelOfferRequested(data)
+		elif request_type == REQUEST_SET_MESSAGES_READ_AT:
+			self.onMarkAsReadRequested(data, False)
+		elif request_type == REQUEST_SET_QUOTATIONS_READ_AT:
+			self.onMarkAsReadRequested(data, True)	
+		elif request_type == REQUEST_SET_MESSAGES_DELIVERED_ON:
+			self.onMarkAsDeliveredRequested(data, False)
+		elif request_type == REQUEST_SET_QUOTATIONS_DELIVERED_ON:
+			self.onMarkAsDeliveredRequested(data, True)			
 
 		# elif request_type == REQUEST_MARK_AS_READ:
 		# 	self.onMarkAsReadRequested(data)
@@ -649,6 +674,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		request_id = data['request_id']
 		message_id = data['message_id']
 
+		confirm_response = RESPONSE_CONFIRM_CANCEL_OFFER
+		revoke_response = RESPONSE_REVOKE_CANCEL_OFFER
+
 		if message_id.find('test') != -1:
 			# test request
 			self.testCancelOfferRequest(data)
@@ -658,7 +686,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 		if not message:
 			self.write_message(json.dumps( {'success' : False,
 				"request_id" : request_id,
-				"request_type" : REQUEST_CANCEL_OFFER, "error" : "No such offer found"}))
+				"user_id" : self.id, 
+				"request_type" : revoke_response, "error" : "No such offer found"}))
 			return
 
 		# check if the user has some relation with the offer or not
@@ -667,14 +696,16 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			# message is not related to the user
 			self.write_message(json.dumps( {'success' : False,
 				"request_id" : request_id,
-				"request_type" : REQUEST_CANCEL_OFFER, "error" : "Offer is not created by the user"}))
+				"user_id" : self.id, 
+				"request_type" : revoke_response, "error" : "Offer is not created by the user"}))
 			return
 
 		# check type of the message
 		if message['type'] != 2:
 			self.write_message(json.dumps( {'success' : False,
 				"request_id" : request_id,
-				"request_type" : REQUEST_CANCEL_OFFER, "error" : "Offer is not available"}))
+				"user_id" : self.id, 
+				"request_type" : revoke_response, "error" : "Offer is not available"}))
 			return
 
 		# TODO: check if offer is expired
@@ -686,7 +717,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 			# user has alreday responded to the offer
 			self.write_message(json.dumps( {'success' : False,
 				"request_id" : request_id,
-				"request_type" : REQUEST_CANCEL_OFFER, "error" : "User has already responded to the offer"}))
+				"user_id" : self.id, 
+				"request_type" : revoke_response, "error" : "User has already responded to the offer"}))
 			return
 
 		new_message = self.db_provider.cancelOffer(message)
@@ -698,14 +730,16 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		# Make offer event
 
-		self.sendMessage(sender_offer_event_message, new_message['sender_id'])
+		self.sendMessage(sender_offer_event_message, new_message['sender_id'], confirm_response)
 
 		self.write_message(json.dumps( {'success' : True,
 				"request_id" : request_id,
-				"request_type" : REQUEST_CANCEL_OFFER, "message" : new_message}))
+				"user_id" : self.id, 
+				"request_type" : confirm_response,
+				"message" : new_message}))
 
 		# send to the other user
-		self.sendMessages([new_message, receiver_offer_event_message], new_message['receiver_id'])
+		self.sendMessages([new_message, receiver_offer_event_message], new_message['receiver_id'], confirm_response)
 
 	def testCancelOfferRequest(self, data):
 		request_id = data['request_id']
@@ -729,14 +763,74 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 					"request_id" : request_id,
 					"request_type" : REQUEST_CANCEL_OFFER, "error" : "Offer does not belong to the user"}))
 
-
-	def onMarkAsReadRequested(self, data):
+	def onMarkAsDeliveredRequested(self, data, isOffer):
 		request_id = data['request_id']
 		message_ids = data.get('message_ids')
+
+		confirm_response = ""
+		revoke_response = ""
+
+		if isOffer:
+			confirm_response = RESPONSE_CONFIRM_QUOTATIONS_DELIVERED_ON
+			revoke_response = RESPONSE_REVOKE_QUOTATIONS_DELIVERED_ON
+		else:
+			confirm_response = RESPONSE_CONFIRM_SET_MESSAGES_DELIVERED_ON
+			revoke_response = RESPONSE_REVOKE_SET_MESSAGES_DELIVERED_ON
+
 		if not message_ids:
 			self.write_message(json.dumps( {'success' : False,
 				"request_id" : request_id,
-				"request_type" : REQUEST_GET_USERS_AND_PRODUCTS, "error" : "message_ids not found"}))
+				"user_id" : self.id,
+				"request_type" : revoke_response, "error" : "message_ids not found"}))
+			return
+
+		retVal = []
+		userId = self.id
+		for message_id in message_ids:
+			message = self.db_provider.getMessage(message_id)
+			if message:
+				# check if user is the receiver
+				if message['receiver_id'] == userId:
+					delivered_at = message.get('delivered_at')
+					if not delivered_at:
+						params = dict()
+						params['is_delivered'] = True
+						params['delivered_at'] = datetime.datetime.now()
+						self.db_provider.updateMessageField(message['_id'], params)
+						params['message_id'] = message_id
+
+						print params
+
+						retVal.append(ModelsProvider.sanitizeEntity(params))
+
+		# TODO : Send read notifications to sender?
+
+		self.write_message(json.dumps( {'success' : True,
+				"request_id" : request_id,
+				"user_id" : self.id,
+				"request_type" : confirm_response, "data" : retVal}))
+		return
+
+
+	def onMarkAsReadRequested(self, data, isOffer):
+		request_id = data['request_id']
+		message_ids = data.get('message_ids')
+
+		confirm_response = ""
+		revoke_response = ""
+
+		if isOffer:
+			confirm_response = RESPONSE_CONFIRM_QUOTATIONS_READ_AT
+			revoke_response = RESPONSE_REVOKE_QUOTATIONS_READ_AT
+		else:
+			confirm_response = RESPONSE_CONFIRM_MESSAGES_READ_AT
+			revoke_response = RESPONSE_REVOKE_MESSAGES_READ_AT	
+
+		if not message_ids:
+			self.write_message(json.dumps( {'success' : False,
+				"request_id" : request_id,
+				"user_id" : self.id,
+				"request_type" : revoke_response, "error" : "message_ids not found"}))
 			return
 
 		retVal = []
@@ -762,7 +856,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 		self.write_message(json.dumps( {'success' : True,
 				"request_id" : request_id,
-				"request_type" : REQUEST_MARK_AS_READ, "data" : retVal}))
+				"user_id" : self.id,
+				"request_type" : confirm_response, "data" : retVal}))
 		return
 
 	def sendMessages(self, messages, receiver_id, event=""):
