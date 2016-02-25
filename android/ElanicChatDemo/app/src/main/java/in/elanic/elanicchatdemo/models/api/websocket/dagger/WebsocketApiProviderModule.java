@@ -1,5 +1,7 @@
 package in.elanic.elanicchatdemo.models.api.websocket.dagger;
 
+import javax.inject.Named;
+
 import dagger.Module;
 import dagger.Provides;
 import in.elanic.elanicchatdemo.models.Constants;
@@ -45,6 +47,7 @@ public class WebsocketApiProviderModule {
 
     }
 
+    @Named("url")
     @Provides
     public String provideURL() {
         switch (type) {
@@ -58,6 +61,12 @@ public class WebsocketApiProviderModule {
             default:
                 throw new RuntimeException("Invalid type: " + type);
         }
+    }
+
+    @Named("api_key")
+    @Provides
+    public String provideApiKey() {
+        return Constants.API_KEY;
     }
 
 }

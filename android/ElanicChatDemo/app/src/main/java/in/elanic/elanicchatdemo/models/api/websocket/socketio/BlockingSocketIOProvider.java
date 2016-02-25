@@ -34,16 +34,9 @@ public class BlockingSocketIOProvider implements WebsocketApi {
     private WebsocketCallback mCallback;
 
     @Override
-    public boolean connect(@NonNull String userId, @NonNull String url) {
-
-        mUserId = userId;
-
-        if (mSocket != null && mSocket.connected()) {
-            disconnect();
-        }
-
-        mSocket = createConnection();
-        return true;
+    public boolean connect(@NonNull String userId, @NonNull String url, @NonNull String apiKey) {
+        // TODO implement this
+        return false;
     }
 
     private Socket createConnection() {
@@ -118,8 +111,24 @@ public class BlockingSocketIOProvider implements WebsocketApi {
         mCallback = callback;
     }
 
+    @Deprecated
     @Override
     public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+        // TODO add stuff here
+    }
+
+    @Override
+    public void sendData(@NonNull JSONObject data, @NonNull String event, @NonNull String requestId) {
+        // TODO add stuff here
+    }
+
+    @Override
+    public void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId, boolean isBuyer, long epocTimestamp, @NonNull String requestId) {
+        // TODO add stuff here
+    }
+
+    @Override
+    public void leaveChat(@NonNull String postId, @NonNull String buyerId) {
         // TODO add stuff here
     }
 

@@ -437,6 +437,12 @@ public class WSSHelper {
         return requestId;
     }
 
+    public String createRequest(@NonNull String userId, @NonNull String event, @NonNull JSONObject data) {
+        String requestId = String.valueOf(new Date().getTime());
+        mWSRequestProvider.createRequest(requestId, event, data.toString(), userId);
+        return requestId;
+    }
+
     @Deprecated
     public boolean createAndSaveRequest(String userId, String request) throws JSONException {
         JSONObject jsonRequest = new JSONObject(request);
@@ -492,14 +498,15 @@ public class WSSHelper {
     public static Pair<String, String> createOfferResponse(@NonNull Message message, boolean accept) throws JSONException {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
-        return new Pair<>(jsonObject.toString(),
-                accept ? SocketIOConstants.EVENT_ACCEPT_OFFER : SocketIOConstants.EVENT_DENY_OFFER);
+        jsonObject.put(JSONUtils.KEY_STATUS, accept ? "Active" : "Denied");
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_EDIT_OFFER_STATUS);
     }
 
     public static Pair<String, String> createOfferCancelRequest(@NonNull Message message) throws JSONException {
         JSONObject jsonObject = createWSRequest(Constants.REQUEST_CANCEL_OFFER);
         jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_CANCEL_OFFER);
+        jsonObject.put(JSONUtils.KEY_STATUS, "Cancelled");
+        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_EDIT_OFFER_STATUS);
     }
 
     @Deprecated
@@ -549,7 +556,7 @@ public class WSSHelper {
         return mMessageProvider.getUnreadMessages(receiverId, senderId, productId);
     }
 
-    public static Pair<String, String> createReadReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
+    public static Pair<JSONObject, String> createReadReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
         JSONObject jsonObject = new JSONObject();
 
         List<String> messageIds = new ArrayList<>();
@@ -559,10 +566,10 @@ public class WSSHelper {
 
         jsonObject.put(JSONUtils.KEY_MESSAGE_IDS, new JSONArray(messageIds));
 
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SET_MESSAGES_READ_AT);
+        return new Pair<>(jsonObject, SocketIOConstants.EVENT_SET_MESSAGES_READ_AT);
     }
 
-    public static Pair<String, String> createDeliveredReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
+    public static Pair<JSONObject, String> createDeliveredReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
         JSONObject jsonObject = new JSONObject();
 
         List<String> messageIds = new ArrayList<>();
@@ -572,7 +579,7 @@ public class WSSHelper {
 
         jsonObject.put(JSONUtils.KEY_MESSAGE_IDS, new JSONArray(messageIds));
 
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_SET_MESSAGES_DELIVERD_ON);
+        return new Pair<>(jsonObject, SocketIOConstants.EVENT_SET_MESSAGES_DELIVERD_ON);
     }
 
     public static JSONObject createUnreadMessagesRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {

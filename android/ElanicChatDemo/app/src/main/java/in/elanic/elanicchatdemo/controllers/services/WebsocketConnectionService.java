@@ -15,16 +15,20 @@ import android.util.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
+import in.elanic.elanicchatdemo.controllers.events.WSMessageEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
@@ -55,7 +59,8 @@ public class WebsocketConnectionService extends Service {
 
     @Inject DaoSession mDaoSession;
     @Inject WebsocketApi mWebSocketApi;
-    @Inject String URL;
+    @Inject @Named("url") String URL;
+    @Inject @Named("api_key") String API_KEY;
     @Inject ChatApiProvider chatApiProvider;
 
     private WSSHelper mWSSHelper;
@@ -76,6 +81,8 @@ public class WebsocketConnectionService extends Service {
     private static final int BROADCAST_CONNECTION_DELAY = 5000; // 5sec
     private static final int RETRY_CONNECTION_SHORT_DELAY = 30000; // 30 sec
     private static final int RETRY_CONNECTION_LONG_DELAY = 60 * 60 * 1000; // 1 hour
+
+    private List<String> conncetedRooms;
 
     @Nullable
     @Override
@@ -107,14 +114,18 @@ public class WebsocketConnectionService extends Service {
         mWSSHelper = new WSSHelper(mDaoSession);
         clearPendingRequests();
 
+        conncetedRooms = new ArrayList<>();
+
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
         DaggerWebsocketConnectionServiceComponent.builder()
                 .applicationComponent(applicationComponent)
                 .websocketConnectionServiceModule(new WebsocketConnectionServiceModule())
+                /*.websocketApiProviderModule(new WebsocketApiProviderModule(
+                        WebsocketApiProviderModule.API_WS_NON_BLOCKONG))*/
                 .websocketApiProviderModule(new WebsocketApiProviderModule(
-                        WebsocketApiProviderModule.API_WS_NON_BLOCKONG))
+                        WebsocketApiProviderModule.API_SOCKET_IO_NON_BLOCKING))
                 .chatApiProviderModule(new ChatApiProviderModule())
                 .build()
                 .inject(this);
@@ -209,7 +220,7 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
-        mWebSocketApi.connect(mUserId, URL);
+        mWebSocketApi.connect(mUserId, URL, API_KEY);
         mWebSocketApi.setCallback(new WebsocketCallback() {
             @Override
             public void onConnected() {
@@ -233,12 +244,13 @@ public class WebsocketConnectionService extends Service {
             }
 
             @Override
-            public void onMessageReceived(String response, String event, String requestId, Object... args) {
+            public void onMessageReceived(boolean success, JSONObject response, String event,
+                                          String requestId, String senderId, Object... args) {
                 if (DEBUG) {
                     Log.i(TAG, "received message: " + response);
                 }
 
-                processServerResponse(response, event, requestId);
+                processServerResponse(success, response, event, requestId, senderId);
             }
 
             @Override
@@ -258,25 +270,13 @@ public class WebsocketConnectionService extends Service {
         mWebSocketApi.setCallback(null);
     }
 
-    /*@Deprecated
-    private void sendDataRequested(String data) {
-
-        if (data == null || data.isEmpty()) {
-            if (DEBUG) {
-                Log.e(TAG, "request is null or empty");
-                return;
-            }
-        }
-
-        try {
-            mWSSHelper.createAndSaveRequest(mUserId, data);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            // TODO send error event
+    private void sendData(@NonNull JSONObject request, @NonNull String event, @Nullable String requestId) {
+        if (requestId == null) {
+            requestId = mWSSHelper.createRequest(mUserId, event, request);
         }
 
         if (mWebSocketApi.isConnected()) {
-            mWebSocketApi.sendData(data);
+            mWebSocketApi.sendData(request, event, requestId);
             return;
         }
 
@@ -284,8 +284,9 @@ public class WebsocketConnectionService extends Service {
             Log.i(TAG, "ws connection not available. Create new connection");
         }
         createWSConnectionRequested();
-    }*/
+    }
 
+    @Deprecated
     private void sendData(@NonNull String data, @NonNull String event, @Nullable String requestId) {
 
         if (requestId == null) {
@@ -303,10 +304,9 @@ public class WebsocketConnectionService extends Service {
         createWSConnectionRequested();
     }
 
-    private void processServerResponse(String data, String event, String requestId) {
-        JSONObject jsonResponse;
+    private void processServerResponse(boolean success, JSONObject jsonResponse, String event,
+                                       String requestId, String senderId) {
         try {
-            jsonResponse = new JSONObject(data);
 
             if (event == null) {
                 Log.e(TAG, "Event is null");
@@ -314,18 +314,10 @@ public class WebsocketConnectionService extends Service {
                 return;
             }
 
-            if (!jsonResponse.has(JSONUtils.KEY_SUCCESS)) {
-                // TODO Handle invalid json
-                return;
-            }
-
-            boolean success = jsonResponse.getBoolean(JSONUtils.KEY_SUCCESS);
             if (!success) {
                 // TODO handle request failure
-                if (event.equals(SocketIOConstants.EVENT_REVOKE_DENY_OFFER) ||
-                        event.equals(SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER)) {
+                if (event.equals(SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS)) {
                     mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
-
                 }
                 return;
             }
@@ -337,14 +329,17 @@ public class WebsocketConnectionService extends Service {
             }
 
             // TODO check if my request
-            boolean isMyRequest = WSSHelper.isMyMessage(jsonResponse, mUserId);
+            boolean isMyRequest = mUserId.equals(senderId);
 
             mWSSHelper.markRequestAsCompleted(requestId);
 
             // TODO Handle messages coming from other user properly.
 
             if (isMyRequest) {
-                if (event.equals(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER)) {
+                //noinspection IfCanBeSwitch
+                if (event.equals(SocketIOConstants.EVENT_CONFIRM_ADD_USER)) {
+                    onRoomJoined(jsonResponse);
+                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER)) {
                     onMessageSentSuccessfully(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT)) {
                     onMessageSentSuccessfully(jsonResponse);
@@ -366,7 +361,7 @@ public class WebsocketConnectionService extends Service {
                     onMarkAsReadRequestCompleted(jsonResponse);
                 }
             } else {
-
+                //noinspection IfCanBeSwitch
                 if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON)) {
                     onMarkAsDeliveredRequestCompleted(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON)) {
@@ -471,7 +466,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         if (!newMessages.isEmpty()) {
-            Pair<String, String> request = WSSHelper.createDeliveredReceiptsRequest(newMessages);
+            Pair<JSONObject, String> request = WSSHelper.createDeliveredReceiptsRequest(newMessages);
             sendData(request.first, request.second, null);
         }
     }
@@ -653,7 +648,12 @@ public class WebsocketConnectionService extends Service {
 
         for (WSRequest request : mRequests) {
             Log.i(TAG, "trying to re-send request: " + request.getRequest_id());
-            sendData(request.getContent(), request.getEvent_name(), request.getRequest_id());
+            try {
+                sendData(new JSONObject(request.getContent()), request.getEvent_name(),
+                        request.getRequest_id());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -676,7 +676,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         try {
-            Pair<String, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
+            Pair<JSONObject, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
             sendData(request.first, request.second, null);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -708,6 +708,54 @@ public class WebsocketConnectionService extends Service {
         }
 
         mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
+    }
+
+    ///////////////////////////////////////////
+    /////////////// NEW METHODS ///////////////
+    ///////////////////////////////////////////
+
+    private void sendMessage(WSMessageEvent event) {
+        String buyerId = event.getBuyerId();
+        String sellerId = event.getSellerId();
+        String postId = event.getPostId();
+        String message_text = event.getMessage();
+
+        JSONObject messageRequest = new JSONObject();
+        try {
+            messageRequest.put("buyer_profile", buyerId);
+            messageRequest.put("seller_profile", sellerId);
+            messageRequest.put("post", postId);
+
+            JSONObject message = new JSONObject();
+            message.put("User_profile", event.getUserId());
+            message.put("message_text", message_text);
+            message.put("type", Constants.TYPE_MESSAGE_TEXT);
+            messageRequest.put("message", message);
+
+            if (!conncetedRooms.contains(postId + "-" + buyerId)) {
+                Log.i(TAG, "Need to join room first");
+                joinRoom(buyerId, sellerId, postId, buyerId.equals(event.getUserId()), 0);
+            }
+
+            sendData(messageRequest, SocketIOConstants.EVENT_SEND_CHAT, "42");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void joinRoom(String buyerId, String sellerId, String postId, boolean isBuyer, long timestamp) {
+        // TODO make join room request
+        mWebSocketApi.joinChat(buyerId, sellerId, postId, isBuyer, timestamp, "join_room_request");
+    }
+
+    private void onRoomJoined(JSONObject jsonResponse) {
+        String room = jsonResponse.optString("room");
+        if (room != null && !room.isEmpty()) {
+            conncetedRooms.add(room);
+
+            // TODO check and parse other data
+        }
     }
 
     ///////////////////////////////////////////
@@ -750,6 +798,15 @@ public class WebsocketConnectionService extends Service {
                 break;
         }
 
+    }
+
+    @SuppressWarnings("unused")
+    public void onEvent(WSMessageEvent event) {
+        switch (event.getEvent()) {
+            case WSMessageEvent.EVENT_SEND_MESSAGE:
+                sendMessage(event);
+                break;
+        }
     }
 
     @SuppressWarnings("unused")

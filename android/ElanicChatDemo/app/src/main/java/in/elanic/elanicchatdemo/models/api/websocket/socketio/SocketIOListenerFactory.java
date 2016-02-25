@@ -2,8 +2,11 @@ package in.elanic.elanicchatdemo.models.api.websocket.socketio;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.github.nkzawa.socketio.client.Socket;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +16,11 @@ import java.util.List;
  */
 public class SocketIOListenerFactory {
 
+    private static final String TAG = "SIOListenerFactory";
     private final String[] events;
     private List<SocketIOListener> listeners;
+
+    private boolean DEBUG = true;
 
     public SocketIOListenerFactory(String[] events) {
         this.events = events;
@@ -43,6 +49,11 @@ public class SocketIOListenerFactory {
 
         for (SocketIOListener listener : listeners) {
             listener.setCallback(eventCallback);
+
+            if (DEBUG) {
+                Log.i(TAG, "attaching listener to event: " + listener.getEvent());
+            }
+
             socket.on(listener.getEvent(), listener);
         }
     }
@@ -59,6 +70,7 @@ public class SocketIOListenerFactory {
     }
 
     public interface EventCallback {
-        void onEvent(@NonNull String event, @Nullable String requestId, Object... args);
+        void onEvent(boolean success, @NonNull String event, @Nullable JSONObject response,
+                     @Nullable String requestId, @Nullable String userId, Object... args);
     }
 }

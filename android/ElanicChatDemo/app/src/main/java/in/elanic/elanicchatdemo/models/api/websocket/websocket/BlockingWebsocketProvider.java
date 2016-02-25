@@ -29,8 +29,19 @@ public class BlockingWebsocketProvider implements WebsocketApi {
     private WebSocket mWebsocket;
     private String mUserId;
 
+    private WebSocket createConnection(final String url) throws IOException, WebSocketException {
+
+        WebSocket webSocket = new WebSocketFactory()
+                .createSocket(url + "?Id=" + mUserId, 3000);
+        return webSocket.connect();
+    }
+
+    private void attachListeners(WebSocket websocket) {
+        websocket.addListener(new WSListener());
+    }
+
     @Override
-    public boolean connect(@NonNull String userId, @NonNull String url) {
+    public boolean connect(@NonNull String userId, @NonNull String url, @NonNull String apiKey) {
         mUserId = userId;
 
         if (mWebsocket != null && mWebsocket.isOpen()) {
@@ -48,18 +59,8 @@ public class BlockingWebsocketProvider implements WebsocketApi {
             e.printStackTrace();
         }
 
+        // TODO stuff here
         return false;
-    }
-
-    private WebSocket createConnection(final String url) throws IOException, WebSocketException {
-
-        WebSocket webSocket = new WebSocketFactory()
-                .createSocket(url + "?Id=" + mUserId, 3000);
-        return webSocket.connect();
-    }
-
-    private void attachListeners(WebSocket websocket) {
-        websocket.addListener(new WSListener());
     }
 
     @Override
@@ -90,6 +91,22 @@ public class BlockingWebsocketProvider implements WebsocketApi {
     @Override
     public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
         // TODO move things here
+    }
+
+    @Deprecated
+    @Override
+    public void sendData(@NonNull JSONObject data, @NonNull String event, @NonNull String requestId) {
+        // TODO move things here
+    }
+
+    @Override
+    public void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId, boolean isBuyer, long epocTimestamp, @NonNull String requestId) {
+        // Do nothing
+    }
+
+    @Override
+    public void leaveChat(@NonNull String postId, @NonNull String buyerId) {
+        // Do nothing
     }
 
     private class WSListener extends WebSocketAdapter {
@@ -128,7 +145,9 @@ public class BlockingWebsocketProvider implements WebsocketApi {
                     event = response.optString(JSONUtils.KEY_RESPONSE_TYPE, null);
                 }
 
-                mCallback.onMessageReceived(text, event, response.optString(JSONUtils.KEY_REQUEST_ID));
+                mCallback.onMessageReceived(response.optBoolean(JSONUtils.KEY_SUCCESS, false),
+                        response, event, response.optString(JSONUtils.KEY_REQUEST_ID, null),
+                        response.optString(JSONUtils.KEY_USER_ID, null));
             }
         }
 

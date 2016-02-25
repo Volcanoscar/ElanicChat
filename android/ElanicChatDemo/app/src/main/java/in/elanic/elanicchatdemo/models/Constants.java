@@ -13,6 +13,8 @@ public class Constants {
     public static final String WS_URL = "ws://" + BuildConfig.LOCAL_IP + ":" + BuildConfig.LOCAL_PORT + "/ws";
     public static final String SERVER_BASE_URL = "http://54.169.71.129:3200/";
 
+    public static final String API_KEY = "ELANIC-CLIENT-SENDS-THIS";
+
     public static final int REQUEST_INVALID_CODE = -1;
     public static final int REQUEST_SEND_MESSAGE = 1;
     public static final int REQUEST_GET_USER = 2;
@@ -57,5 +59,8 @@ public class Constants {
     public static final String EXTRA_PRODUCT_ID = "product_id";
     public static final String EXTRA_CHAT_ITEM_ID = "chat_item_id";
 
+    public static final String TYPE_MESSAGE_TEXT = "Text";
+    public static final String TYPE_MESSAGE_OFFER = "Offer";
+    public static final String TYPE_MESSAGE_SYSTEM = "System";
 
 }

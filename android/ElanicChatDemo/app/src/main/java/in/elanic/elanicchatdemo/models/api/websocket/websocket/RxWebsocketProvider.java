@@ -41,8 +41,29 @@ public class RxWebsocketProvider implements WebsocketApi {
     public RxWebsocketProvider() {
     }
 
+    private Observable<WebSocket> createConnection(final String url) {
+        return Observable.defer(new Func0<Observable<WebSocket>>() {
+            @Override
+            public Observable<WebSocket> call() {
+                try {
+                    WebSocket webSocket = new WebSocketFactory()
+                            .createSocket(url + "?Id=" + mUserId, 3000);
+                    return Observable.just(webSocket.connect());
+                } catch (IOException e) {
+                    return Observable.error(e);
+                } catch (WebSocketException e1) {
+                    return Observable.error(e1);
+                }
+            }
+        });
+    }
+
+    private void attachListeners(WebSocket websocket) {
+        websocket.addListener(new WSListener());
+    }
+
     @Override
-    public boolean connect(@NonNull String userId, @NonNull String url) {
+    public boolean connect(@NonNull String userId, @NonNull String url, @NonNull String apiKey) {
         mUserId = userId;
 
         if (mWebsocket != null && mWebsocket.isOpen()) {
@@ -70,27 +91,6 @@ public class RxWebsocketProvider implements WebsocketApi {
                 });
 
         return true;
-    }
-
-    private Observable<WebSocket> createConnection(final String url) {
-        return Observable.defer(new Func0<Observable<WebSocket>>() {
-            @Override
-            public Observable<WebSocket> call() {
-                try {
-                    WebSocket webSocket = new WebSocketFactory()
-                            .createSocket(url + "?Id=" + mUserId, 3000);
-                    return Observable.just(webSocket.connect());
-                } catch (IOException e) {
-                    return Observable.error(e);
-                } catch (WebSocketException e1) {
-                    return Observable.error(e1);
-                }
-            }
-        });
-    }
-
-    private void attachListeners(WebSocket websocket) {
-        websocket.addListener(new WSListener());
     }
 
     @Override
@@ -121,8 +121,12 @@ public class RxWebsocketProvider implements WebsocketApi {
         mCallback = callback;
     }
 
+    @Deprecated
     @Override
     public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+
+        Log.e(TAG, "sendData is deprecated");
+
         try {
             JSONObject request = new JSONObject(data);
             request.put(JSONUtils.KEY_REQUEST_TYPE, event);
@@ -131,6 +135,27 @@ public class RxWebsocketProvider implements WebsocketApi {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void sendData(@NonNull JSONObject request, @NonNull String event, @NonNull String requestId) {
+        try {
+            request.put(JSONUtils.KEY_REQUEST_TYPE, event);
+            request.put(JSONUtils.KEY_REQUEST_ID, requestId);
+            mWebsocket.sendText(request.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId, boolean isBuyer, long epocTimestamp, @NonNull String requestId) {
+        // Do nothing
+    }
+
+    @Override
+    public void leaveChat(@NonNull String postId, @NonNull String buyerId) {
+        // Do nothing
     }
 
     private class WSListener extends WebSocketAdapter {
@@ -170,7 +195,9 @@ public class RxWebsocketProvider implements WebsocketApi {
                     event = response.optString(JSONUtils.KEY_RESPONSE_TYPE, null);
                 }
 
-                mCallback.onMessageReceived(text, event, response.optString(JSONUtils.KEY_REQUEST_ID));
+                mCallback.onMessageReceived(response.optBoolean(JSONUtils.KEY_SUCCESS, false),
+                        response, event, response.optString(JSONUtils.KEY_REQUEST_ID, null),
+                        response.optString(JSONUtils.KEY_USER_ID, null));
             }
         }
 

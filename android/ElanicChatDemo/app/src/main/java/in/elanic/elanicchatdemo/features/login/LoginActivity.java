@@ -18,6 +18,7 @@ import butterknife.OnClick;
 import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
+import in.elanic.elanicchatdemo.features.demo.DemoActivity;
 import in.elanic.elanicchatdemo.features.login.dagger.DaggerLoginViewComponent;
 import in.elanic.elanicchatdemo.features.login.dagger.LoginViewModule;
 import in.elanic.elanicchatdemo.features.login.presenter.LoginPresenter;
@@ -92,7 +93,9 @@ public class LoginActivity extends AppCompatActivity implements LoginView {
             return;
         }
 
-        mPresenter.login(userId);
+        saveLoginId(userId);
+        navigateOnLogin(userId, false);
+//        mPresenter.login(userId);
     }
 
     @Override
@@ -123,9 +126,18 @@ public class LoginActivity extends AppCompatActivity implements LoginView {
         provider.setLoginUserId(user.getUser_id());
     }
 
+    private void saveLoginId(String id) {
+        PreferenceProvider provider = new PreferenceProvider(this);
+        provider.setLoginUserId(id);
+    }
+
     @Override
     public void navigateOnLogin(String userId, boolean newLogin) {
-        Intent intent = ChatListActivity.getActivityIntent(this, userId, newLogin);
+        /*Intent intent = ChatListActivity.getActivityIntent(this, userId, newLogin);
+        startActivity(intent);
+        finish();*/
+
+        Intent intent = DemoActivity.getActivityIntent(this, userId);
         startActivity(intent);
         finish();
     }

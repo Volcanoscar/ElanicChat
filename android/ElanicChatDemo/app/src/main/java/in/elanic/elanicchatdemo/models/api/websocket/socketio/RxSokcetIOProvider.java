@@ -36,6 +36,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
     private Socket mSocket;
     private String mUserId;
     private String mUrl;
+    private String mApiKey;
 
     private SocketIOListenerFactory listenerFactory;
 
@@ -44,29 +45,31 @@ public class RxSokcetIOProvider implements WebsocketApi {
     private boolean DEBUG = true;
 
     private static final String[] socketIOEvents = {
+            SocketIOConstants.EVENT_CONFIRM_ADD_USER,
             SocketIOConstants.EVENT_GET_MESSAGES,
             SocketIOConstants.EVENT_GET_QUOTATIONS,
             SocketIOConstants.EVENT_CONFIRM_SEND_CHAT,
-            SocketIOConstants.EVENT_REVOKE_SEND_CHAT,
+//            SocketIOConstants.EVENT_REVOKE_SEND_CHAT,
             SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER,
-            SocketIOConstants.EVENT_REVOKE_MAKE_OFFER,
+            SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS,
+//            SocketIOConstants.EVENT_REVOKE_MAKE_OFFER,
             SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
-            SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER,
+//            SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER,
             SocketIOConstants.EVENT_CONFIRM_DENY_OFFER,
-            SocketIOConstants.EVENT_REVOKE_DENY_OFFER,
+//            SocketIOConstants.EVENT_REVOKE_DENY_OFFER,
             SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER,
-            SocketIOConstants.EVENT_REVOKE_CANCEL_OFFER,
+//            SocketIOConstants.EVENT_REVOKE_CANCEL_OFFER,
             SocketIOConstants.EVENT_CONFIRM_BUY_NOW,
-            SocketIOConstants.EVENT_REVOKE_BUY_NOW,
+//            SocketIOConstants.EVENT_REVOKE_BUY_NOW,
             SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
             SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON,
             SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON,
             SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT,
-            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT,
-            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_DELIVERED_ON,
-            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_DELIVERED_ON,
-            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_READ_AT,
-            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_READ_AT
+            SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT
+//            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_DELIVERED_ON,
+//            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_DELIVERED_ON,
+//            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_READ_AT,
+//            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_READ_AT
     };
 
     public RxSokcetIOProvider() {
@@ -75,11 +78,16 @@ public class RxSokcetIOProvider implements WebsocketApi {
     }
 
     @Override
-    public boolean connect(@NonNull String userId, @NonNull String url) {
+    public boolean connect(@NonNull String userId, @NonNull String url, @NonNull String apiKey) {
         mUserId = userId;
+        mApiKey = apiKey;
 
         if (mSocket != null && mSocket.connected()) {
             disconnect();
+        }
+
+        if (DEBUG) {
+            Log.i(TAG, "connect socketio: " + url);
         }
 
         Observable<Socket> observable = createConnection(url);
@@ -97,6 +105,9 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
                     @Override
                     public void onNext(Socket socket) {
+                        if(DEBUG) {
+                            Log.i(TAG, "connection created");
+                        }
                         mSocket = socket;
 //                        attachListeners(mWebsocket);
                     }
@@ -109,6 +120,10 @@ public class RxSokcetIOProvider implements WebsocketApi {
         return Observable.defer(new Func0<Observable<Socket>>() {
             @Override
             public Observable<Socket> call() {
+
+                if (DEBUG) {
+                    Log.i(TAG, "initiate connection");
+                }
 
                 Socket socket = null;
 
@@ -140,6 +155,10 @@ public class RxSokcetIOProvider implements WebsocketApi {
                     return Observable.error(e);
                 }
 
+                if (DEBUG) {
+                    Log.i(TAG, "socketio connection initiated. Attaching events");
+                }
+
                 socket.on(Socket.EVENT_CONNECT, onConnected);
                 socket.on(Socket.EVENT_DISCONNECT, onDisconnected);
                 socket.on(Socket.EVENT_ERROR, onError);
@@ -162,7 +181,14 @@ public class RxSokcetIOProvider implements WebsocketApi {
                 socket.on(SocketIOConstants.EVENT_CONFIRM_BUY_NOW, onConfirmBuyNow);
                 socket.on(SocketIOConstants.EVENT_REVOKE_BUY_NOW, onRevokeBuyNow);*/
 
+                if (DEBUG) {
+                    Log.i(TAG, "Calling connect");
+                }
                 socket.connect();
+
+                if (DEBUG) {
+                    Log.i(TAG, "connect returned");
+                }
 
                 return Observable.just(socket);
             }
@@ -180,6 +206,14 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
     @Override
     public boolean isConnected() {
+        if (DEBUG) {
+            Log.i(TAG, "check if socketio is connected");
+            if (mSocket == null) {
+                Log.e(TAG, "socket object is null");
+            } else {
+                Log.i(TAG, "socket connected: " + mSocket.connected());
+            }
+        }
         return mSocket != null && mSocket.connected();
     }
 
@@ -188,7 +222,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
     public void sendData(@NonNull String data) {
         if (mSocket != null) {
             try {
-                mSocket.emit("send_message", new JSONObject(data));
+                Emitter emitter = mSocket.emit("send_message", new JSONObject(data));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -200,8 +234,19 @@ public class RxSokcetIOProvider implements WebsocketApi {
         mCallback = callback;
     }
 
+    @Deprecated
     @Override
     public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
+        Log.e(TAG, "deprecated API. Forwarding data to different API");
+        try {
+            sendData(new JSONObject(data), event, requestId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void sendData(@NonNull JSONObject data, @NonNull String event, @NonNull String requestId) {
         if (mSocket != null && mSocket.connected()) {
 
             JSONObject jsonBundle = new JSONObject();
@@ -215,16 +260,34 @@ public class RxSokcetIOProvider implements WebsocketApi {
                 return;
             }
 
-            mSocket.emit(event, data, jsonBundle);
+            if (DEBUG) {
+                Log.i(TAG, "send data: " + event + ", data: " + data);
+            }
+            mSocket.emit(event, data, jsonBundle, mApiKey);
         }
     }
 
     @Override
     public void joinChat(@NonNull String buyerId, @NonNull String sellerId,
-                         @NonNull String postId, boolean isBuyer, long epocTimestamp) {
+                         @NonNull String postId, boolean isBuyer, long epocTimestamp,
+                         @NonNull String requestId) {
 
-        if (mSocket != null && !mSocket.connected()) {
-            mSocket.emit(SocketIOConstants.EVENT_ADD_USER, buyerId, sellerId, postId, isBuyer, epocTimestamp);
+        if (mSocket != null && mSocket.connected()) {
+
+            JSONObject jsonBundle = new JSONObject();
+            try {
+
+                jsonBundle.put(JSONUtils.KEY_REQUEST_ID, requestId);
+                jsonBundle.put(JSONUtils.KEY_USER_ID, mUserId);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return;
+            }
+
+            Log.i(TAG, "join room event: " + buyerId + " " + sellerId + " " + postId + " " + isBuyer + " " + epocTimestamp);
+            mSocket.emit(SocketIOConstants.EVENT_ADD_USER, buyerId, sellerId, postId, isBuyer,
+                    epocTimestamp, jsonBundle, mApiKey);
         }
 
     }
@@ -236,10 +299,10 @@ public class RxSokcetIOProvider implements WebsocketApi {
         }
     }
 
-    private void logResponse(@NonNull String event, Object... args) {
+    private void logResponse(boolean success, @NonNull String event, @Nullable JSONObject response, Object... args) {
         if (DEBUG) {
 
-            Log.d(TAG, "event: " + event);
+            Log.d(TAG, "event: " + event + ", success: " + success);
 
             if (args == null) {
                 Log.e(TAG, "null args");
@@ -247,6 +310,12 @@ public class RxSokcetIOProvider implements WebsocketApi {
             }
 
             for(Object arg : args) {
+
+                if (arg == null) {
+                    Log.e(TAG, "null arg received");
+                    continue;
+                }
+
                 Log.i(TAG, "type: " + arg.getClass().getSimpleName() + ", value: " + arg);
             }
 
@@ -255,10 +324,12 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
     private SocketIOListenerFactory.EventCallback eventCallback = new SocketIOListenerFactory.EventCallback() {
         @Override
-        public void onEvent(@NonNull String event, @Nullable String requestId, Object... args) {
-            logResponse(event, args);
+        public void onEvent(boolean success, @NonNull String event, @Nullable JSONObject response,
+                            @Nullable String requestId, @Nullable String senderId,
+                            Object... args) {
+            logResponse(success, event, response, args);
             if (mCallback != null) {
-                mCallback.onMessageReceived((String) args[0], event, requestId, args);
+                mCallback.onMessageReceived(success, response, event, requestId, senderId, args);
             }
         }
     };
