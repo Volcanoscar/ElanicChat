@@ -473,7 +473,7 @@ public class WebsocketTests {
             jsonObject.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             jsonObject.put(JSONUtils.KEY_REQUEST_ID, requestId);
 
-            jsonObject.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
+            jsonObject.put(JSONUtils.KEY_MESSAGE, JSONUtils.textMessageToJSON(message));
 
         } catch (JSONException e) {
             throw new RuntimeException(e);
@@ -575,7 +575,7 @@ public class WebsocketTests {
             jsonObject.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             jsonObject.put(JSONUtils.KEY_REQUEST_ID, requestId);
 
-            jsonObject.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
+            jsonObject.put(JSONUtils.KEY_MESSAGE, JSONUtils.textMessageToJSON(message));
 
         } catch (JSONException e) {
             throw new RuntimeException(e);

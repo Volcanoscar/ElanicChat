@@ -14,12 +14,12 @@ import rx.Observable;
 public interface UIChatItemProvider {
 
     Observable<List<UIChatItem>> getUIBuyChats(@NonNull List<ChatItem> chats,
-                                                  @NonNull String userId);
+                                                  @NonNull String buyerId);
 
     Observable<List<UIChatItem>> getUISellChats(@NonNull List<ChatItem> chats,
-                                                   @NonNull String userId);
+                                                   @NonNull String sellerId);
 
     Observable<List<UIChatItem>> getUISellChatsForProduct(@NonNull String productId,
                                                               @NonNull List<ChatItem> chats,
-                                                              @NonNull String userId);
+                                                              @NonNull String sellerId);
 }

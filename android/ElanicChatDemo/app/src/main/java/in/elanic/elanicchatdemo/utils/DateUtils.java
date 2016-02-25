@@ -44,6 +44,21 @@ public class DateUtils {
     }
 
     public static boolean isOfferExpired(@NonNull Message message) {
-        return !(message.getOffer_expiry() != null && new Date().compareTo(message.getOffer_expiry()) < 0);
+        Date expiryDate = getExpiryDate(message);
+        return (expiryDate == null || new Date().compareTo(expiryDate) > 0);
+    }
+
+    public static Date getExpiryDate(@NonNull Message message) {
+        Date createdAt = message.getCreated_at();
+        if (createdAt == null) {
+            return null;
+        }
+
+        Integer validity = message.getValidity();
+        if (validity == null) {
+            return null;
+        }
+
+        return new Date(createdAt.getTime() + validity * 1000);
     }
 }

@@ -7,6 +7,8 @@ import android.util.Log;
 /**
  * Created by Jay Rambhia on 05/01/16.
  */
+
+@Deprecated
 public class ProdOpenHelper extends DaoMaster.OpenHelper {
     private static final String TAG = "ProdOpenHelper";
 
@@ -16,7 +18,7 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.i(TAG, "onUpgrade: Upgrading schema version from " + oldVersion + " to " + newVersion);
+        /*Log.i(TAG, "onUpgrade: Upgrading schema version from " + oldVersion + " to " + newVersion);
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_price.columnName + " INTEGER;");
             Log.i(TAG, "added offer_price to Message Table");
@@ -60,6 +62,6 @@ public class ProdOpenHelper extends DaoMaster.OpenHelper {
             Log.i(TAG, "upgrading from version 6 to 7");
             db.execSQL("ALTER TABLE " + MessageDao.TABLENAME + " ADD COLUMN " + MessageDao.Properties.Offer_earning_data.columnName + " TEXT;");
             Log.i(TAG, "added offer_earning_data in message table");
-        }
+        }*/
     }
 }

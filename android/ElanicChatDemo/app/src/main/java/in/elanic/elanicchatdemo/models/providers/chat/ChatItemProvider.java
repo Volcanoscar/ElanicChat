@@ -17,9 +17,10 @@ public interface ChatItemProvider {
     boolean addOrUpdateChatItem(ChatItem chatItem);
     int addOrUpdateChatItems(List<ChatItem> items);
 
-    List<ChatItem> getActiveSellChats(String userId);
-    List<ChatItem> getActiveBuyChats(String userId);
-    List<ChatItem> getActiveSellChatsForProduct(String userId, String productId);
+    List<ChatItem> getActiveSellChats(String sellerId);
+    List<ChatItem> getActiveBuyChats(String buyerId);
+    List<ChatItem> getActiveSellChatsForProduct(String sellerId, String productId);
 
+    @Deprecated
     String getReceiverId(@NonNull ChatItem item, @NonNull String senderId);
 }

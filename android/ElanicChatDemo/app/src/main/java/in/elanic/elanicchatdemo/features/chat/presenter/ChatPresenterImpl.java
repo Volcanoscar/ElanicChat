@@ -59,14 +59,15 @@ public class ChatPresenterImpl implements ChatPresenter {
     private ChatItemProvider chatItemProvider;
 
     private String mSenderId;
-    private String mReceiverId;
+    private String sellerId;
+    private String buyerId;
     private String mProductId;
     private String chatId;
 
     private boolean initialized = false;
 
     private User mSender;
-    private User mReceiver;
+    private User seller;
     private User buyer;
     private Product mProduct;
     private ChatItem chatItem;
@@ -112,13 +113,20 @@ public class ChatPresenterImpl implements ChatPresenter {
         mSenderId = extras.getString(Constants.EXTRA_SENDER_ID);
         mSender = mUserProvider.getUser(mSenderId);
 
-        mReceiverId = chatItemProvider.getReceiverId(chatItem, mSenderId);
-        mReceiver = mUserProvider.getUser(mReceiverId);
+        sellerId = chatItem.getSeller_id();
+        buyerId = chatItem.getBuyer_id();
+
+        seller = mUserProvider.getUser(sellerId);
+        buyer = mUserProvider.getUser(buyerId);
         mProduct = mProductProvider.getProduct(mProductId);
 
-        if (mReceiver == null) {
-            Log.e(TAG, "receiver is not available: " + mReceiverId);
+        if (seller == null) {
+            Log.e(TAG, "seller is not available: " + sellerId);
             return;
+        }
+
+        if (buyer == null) {
+            Log.e(TAG, "buyer is not available: " + buyerId);
         }
 
         if (mProduct == null) {
@@ -131,9 +139,8 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
-        setReceiver(mReceiver);
+        setReceiver(seller.getUser_id().equals(mSender.getUser_id()) ? buyer : seller);
         setProduct(mProduct);
-        buyer = mProduct.getUser_id().equals(mSenderId) ? mReceiver : mSender;
         getLatestOffer(mProduct, buyer);
 
         isSeller = !(mSender.getUser_id().equals(buyer.getUser_id()));
@@ -180,7 +187,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         if (!initialized) {
             return;
         }
-        mMessages = mMessageProvider.getAllMessages(mSenderId, mReceiverId, mProductId);
+        mMessages = mMessageProvider.getAllMessages(buyerId, sellerId, mProductId);
         mChatView.setData(mMessages);
     }
 
@@ -193,11 +200,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
 
-        Message message = mMessageProvider.createNewMessage(content, mSender, mReceiver, mProduct);
-
-        if (DEBUG) {
-            Log.i(TAG, "receiver_id: " + message.getReceiver_id());
-        }
+        Message message = mMessageProvider.createNewMessage(content, mSender, buyer, seller, mProduct);
 
         addMessageToChat(0, message);
 
@@ -205,7 +208,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
             // TODO move this to WSService
             JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
+            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.textMessageToJSON(message));
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
             sendMessageToWSService(jsonRequest.toString());
@@ -258,11 +261,8 @@ public class ChatPresenterImpl implements ChatPresenter {
             }
         }
 
-        Message message = mMessageProvider.createNewOffer(mPrice, mSender, mReceiver, mProduct, commission);
-
-        if (DEBUG) {
-            Log.i(TAG, "receiver_id: " + message.getReceiver_id());
-        }
+        Message message = mMessageProvider.createNewOffer(mPrice, mSender, buyer, seller, mProduct,
+                commission);
 
         addMessageToChat(0, message);
 
@@ -270,7 +270,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
             // TODO move this to WSService
             JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.toJSON(message));
+            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.textMessageToJSON(message));
             jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
             jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
             sendMessageToWSService(jsonRequest.toString());
@@ -448,8 +448,9 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         Message message = mMessages.get(position);
-        if (message == null || message.getType() != Constants.TYPE_OFFER_MESSAGE ||
-                message.getOffer_response() == null || message.getOffer_response() != Constants.OFFER_ACTIVE) {
+        // TODO check these conditions
+        if (message == null || message.getType().equals(Constants.TYPE_MESSAGE_OFFER) ||
+                message.getOffer_status() == null) {
             return;
         }
 
@@ -463,8 +464,9 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         Message message = mMessages.get(position);
-        if (message == null || message.getType() != Constants.TYPE_OFFER_MESSAGE ||
-                message.getOffer_response() == null || message.getOffer_response() != Constants.OFFER_ACTIVE) {
+        // TODO check these conditions
+        if (message == null || message.getType().equals(Constants.TYPE_MESSAGE_OFFER) ||
+                message.getOffer_status() == null) {
             return;
         }
 
@@ -515,7 +517,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         final Message offer = mMessages.get(position);
-        if (offer.getType() != Constants.TYPE_OFFER_MESSAGE) {
+        if (!offer.getType().equals(Constants.TYPE_MESSAGE_OFFER)) {
             return;
         }
 
@@ -573,9 +575,9 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     private void getLatestOffer(@NonNull Product product, @NonNull User buyer) {
         Message offer = mMessageProvider.getLatestOffer(product.getProduct_id(), buyer.getUser_id());
-        if (offer != null && offer.getOffer_response() != null &&
-                (offer.getOffer_response() == Constants.OFFER_ACTIVE
-                        || offer.getOffer_price() == Constants.OFFER_ACCEPTED)
+
+        // TODO check these conditions
+        if (offer != null && offer.getOffer_status() != null
                 && offer.getOffer_price() != null) {
             mChatView.setOfferPrice("ACTIVE OFFER", "Rs. " + offer.getOffer_price());
 
@@ -589,8 +591,18 @@ public class ChatPresenterImpl implements ChatPresenter {
     }
     
     private boolean areDetailsAvailable() {
-        if (mReceiver == null) {
-            Log.e(TAG, "receiver data is not present");
+        if (buyer == null) {
+            Log.e(TAG, "buyer data is not present");
+            return false;
+        }
+
+        if (seller == null) {
+            Log.e(TAG, "seller data is not present");
+            return false;
+        }
+
+        if (mSender == null) {
+            Log.e(TAG, "sender data is not present");
             return false;
         }
 
@@ -621,12 +633,12 @@ public class ChatPresenterImpl implements ChatPresenter {
         List<Message> data;
         if (mMessages != null && !mMessages.isEmpty()) {
             Log.i(TAG, "timestamp: " + mMessages.get(0).getCreated_at());
-             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), mSenderId, mReceiverId, mProductId);
+             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), buyerId, sellerId, mProductId);
         } else {
             if (DEBUG) {
                 Log.e(TAG, "messages is null. fetch all");
             }
-            data = mMessageProvider.getAllMessages(mSenderId, mReceiverId, mProductId);
+            data = mMessageProvider.getAllMessages(buyerId, sellerId, mProductId);
         }
 
         if (data != null && !data.isEmpty()) {
@@ -732,7 +744,8 @@ public class ChatPresenterImpl implements ChatPresenter {
             addMessageToChat(matchIndex, message);
         }
 
-        if (message.getOffer_response() != null && message.getOffer_response() == Constants.OFFER_CANCELED) {
+        if (message.getOffer_status() != null &&
+                message.getOffer_status().equals(Constants.STATUS_OFFER_CANCELLED)) {
             mChatView.showSnackbar("Offer canceled successfully");
         } else {
             mChatView.showSnackbar("Offer Response successful");
@@ -749,7 +762,8 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
-        List<Message> messages = mMessageProvider.getRelevantMessages(mSenderId, mReceiverId, mProductId, messageIds);
+        List<Message> messages = mMessageProvider.getRelevantMessages(mSenderId, buyerId, sellerId,
+                mProductId, messageIds);
         if (messages == null) {
             Log.e(TAG, "relevant messages is null");
             return;

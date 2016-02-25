@@ -33,16 +33,19 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
 
     @Override
     public Observable<List<UIChatItem>> getUIBuyChats(@NonNull final List<ChatItem> chats,
-                                                         @NonNull final String userId) {
+                                                         @NonNull final String buyerId) {
         return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
             public Observable<List<UIChatItem>> call() {
                 List<UIChatItem> uiChats = new ArrayList<>();
                 for (ChatItem chat : chats) {
                     UIChatItem uiChat = new UIChatItem(chat);
-                    uiChat.setUnreadMessages((int)getUnreadMessages(chat, userId));
-                    uiChat.setLatestMessage(getLatestSimpleMessage(chat));
-                    uiChat.setDisplayOffer(getLatestOffer(chat));
+
+                    uiChat.setUnreadMessages((int) messageProvider.getUnreadMessagesCount(
+                            chat.getSeller_id(), chat.getProduct_id()));
+
+                    uiChat.setLatestMessage(messageProvider.getLatestSimpleMessage(chat.getProduct_id()));
+                    uiChat.setDisplayOffer(messageProvider.getLatestOffer(chat.getProduct_id()));
                     uiChats.add(uiChat);
                 }
 
@@ -55,7 +58,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
 
     @Override
     public Observable<List<UIChatItem>> getUISellChats(@NonNull final List<ChatItem> chats,
-                                                          @NonNull final String userId) {
+                                                          @NonNull final String sellerId) {
         return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
             public Observable<List<UIChatItem>> call() {
@@ -79,6 +82,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
                 List<UIChatItem> uiChats = new ArrayList<>();
 
                 Iterator<Map.Entry<String, List<ChatItem>>> it = productMap.entrySet().iterator();
+                //noinspection WhileLoopReplaceableByForEach
                 while (it.hasNext()) {
                     Map.Entry<String, List<ChatItem>> pair = it.next();
                     String productId = pair.getKey();
@@ -91,12 +95,12 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
 //                    List<Message> unreadMessages = new ArrayList<Message>();
 
                     for (ChatItem item : items) {
-                        Message offer = getLatestOffer(productId, item.getBuyer_id());
+                        Message offer = messageProvider.getLatestOffer(productId, item.getBuyer_id());
                         if (offer != null) {
                             offers.add(offer);
                         }
 
-                        Message message = getLatestSimpleMessage(productId, item.getBuyer_id());
+                        Message message = messageProvider.getLatestSimpleMessage(productId, item.getBuyer_id());
                         if (message != null) {
                             messages.add(message);
                             /*Boolean isRead = message.getIs_read();
@@ -131,8 +135,8 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
                     }
 
                     // Get display message
-                    long unreadMessageCount = getUnreadMessages(items.get(0), userId);
-                    uiChat.setUnreadMessages((int)unreadMessageCount);
+                    long unreadMessageCount = messageProvider.getUnreadMessagesCount(sellerId, productId);
+                    uiChat.setUnreadMessages((int) unreadMessageCount);
 
                     uiChats.add(uiChat);
                 }
@@ -146,16 +150,17 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
     @Override
     public Observable<List<UIChatItem>> getUISellChatsForProduct(@NonNull final String productId,
                                                                     @NonNull final List<ChatItem> chats,
-                                                                    @NonNull final String userId) {
+                                                                    @NonNull final String sellerId) {
         return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
             public Observable<List<UIChatItem>> call() {
                 List<UIChatItem> uiChats = new ArrayList<>();
                 for (ChatItem chat : chats) {
                     UIChatItem uiChat = new UIChatItem(chat);
-                    uiChat.setUnreadMessages((int)getUnreadMessages(productId, chat.getBuyer_id(), chat.getSeller_id()));
-                    uiChat.setLatestMessage(getLatestSimpleMessage(productId, chat.getBuyer_id()));
-                    uiChat.setDisplayOffer(getLatestOffer(productId, chat.getBuyer_id()));
+
+                    uiChat.setUnreadMessages((int) messageProvider.getUnreadMessagesCount(sellerId, chat.getBuyer_id(), productId));
+                    uiChat.setLatestMessage(messageProvider.getLatestSimpleMessage(productId, chat.getBuyer_id()));
+                    uiChat.setDisplayOffer(messageProvider.getLatestOffer(productId, chat.getBuyer_id()));
                     uiChats.add(uiChat);
                 }
 
@@ -166,7 +171,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
         });
     }
 
-    private long getUnreadMessages(ChatItem item, String receiverId) {
+    /*private long getUnreadMessages(ChatItem item, String receiverId) {
         String productId = item.getProduct_id();
         return messageProvider.getUnreadMessagesCount(receiverId, productId);
     }
@@ -189,7 +194,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
 
     private Message getLatestSimpleMessage(String productId, String buyerId) {
         return messageProvider.getLatestSimpleMessage(productId, buyerId);
-    }
+    }*/
 
     private Comparator<UIChatItem> comparator = new Comparator<UIChatItem>() {
         @Override

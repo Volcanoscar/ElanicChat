@@ -103,22 +103,22 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             boolean isBuyer = !latestOffer.getSeller_id().equals(userId);
             boolean isMyOffer = latestOffer.getSender_id().equals(userId);
-            Integer response = latestOffer.getOffer_response();
 
-            if (response == null) {
-                response = Constants.OFFER_INVALID;
+            String offerStatus = latestOffer.getOffer_status();
+
+            if (offerStatus == null) {
+                offerStatus = Constants.STATUS_OFFER_INVALID;
             }
 
             viewHolder.offerValidityView.setVisibility(View.VISIBLE);
-
-            Date expiryDate = latestOffer.getOffer_expiry();
             boolean isExpired = DateUtils.isOfferExpired(latestOffer);
+            Date expiryDate = DateUtils.getExpiryDate(latestOffer);
 
-            if (response == Constants.OFFER_DECLINED) {
+            if (offerStatus.equals(Constants.STATUS_OFFER_DENIED)) {
 
                 viewHolder.showOfferIsDeclined();
 
-            } else if (response == Constants.OFFER_ACTIVE) {
+            } else if (offerStatus.equals(Constants.STATUS_OFFER_INACTIVE)) {
 
                 if (isExpired) {
                     viewHolder.showOfferIsExpired();
@@ -156,7 +156,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     viewHolder.offerValidityView.setVisibility(View.VISIBLE);
                 }
 
-            } else if (response == Constants.OFFER_ACCEPTED) {
+            } else if (offerStatus.equals(Constants.STATUS_OFFER_ACTIVE)) {
                 if (isExpired) {
                     viewHolder.showOfferIsExpired();
                 } else {
@@ -174,9 +174,9 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     viewHolder.offerValidityView.setText(DateUtils.getRemainingTime(expiryDate));
                     viewHolder.offerValidityView.setVisibility(View.VISIBLE);
                 }
-            } else if (response == Constants.OFFER_EXPIRED) {
+            } else if (offerStatus.equals(Constants.STATUS_OFFER_EXPIRED)) {
                 viewHolder.showOfferIsExpired();
-            } else if (response == Constants.OFFER_CANCELED) {
+            } else if (offerStatus.equals(Constants.STATUS_OFFER_CANCELLED)) {
                 viewHolder.showOfferIsCanceled();
             }
 

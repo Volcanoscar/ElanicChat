@@ -47,7 +47,7 @@ var chatData = {
   message: {
     message_text: 'Hello World11',
     User_profile: 270,
-    // type: 'text'
+    type: 'Text'
   }
 };
 
@@ -77,26 +77,23 @@ socket.on('revokeSendChat', function(record,event_header) {
 
 var date=new Date();
 
-//var quotationData = {
-//  buyer_profile: 250,
-//  seller_profile: 270,
-//  post: 100,
-//  quotation: {
-//    "quoted_price": 350,
-//    "is_seller_offer": true,
-//    "status": 'Active',
-//    "seconds_validity": 86400,
-//    "quoted_on": date
-//  }
-//};
-//socket.emit('makeOffer', quotationData);
-//socket.on('confirmMakeOffer', function(offerRecord) {
-//  console.log('got updated Offer');
-//  console.log('=======================');
-//  console.log('record:');
-//  console.log(offerRecord);
-//  console.log('=======================');
-//});
+var quotationData = {
+ buyer_profile: 250,
+ seller_profile: 270,
+ post: 100,
+ quotation: {
+   "quoted_price": 350,
+   "User_profile": 250
+ }
+};
+socket.emit('makeOffer', quotationData, extraBundle, apiKey);
+socket.on('confirmMakeOffer', function(success, offerRecord, user_data) {
+ console.log('got updated Offer');
+ console.log('=======================');
+ console.log('record:');
+ console.log(offerRecord);
+ console.log('=======================');
+});
 //socket.on('revokeMakeOffer', function(offerError) {
 //  console.log('revoke update Offer');
 //  console.log('=======================');

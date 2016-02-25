@@ -99,10 +99,13 @@ public class WSSHelper {
     public List<String> getUnknownUserIds(String myUserId, @NonNull List<Message> messages) {
         Set<String> userIds = new HashSet<>();
         Iterator<Message> iterator = messages.iterator();
+
+        //noinspection WhileLoopReplaceableByForEach
         while (iterator.hasNext()) {
             Message message = iterator.next();
             userIds.add(message.getSender_id());
-            userIds.add(message.getReceiver_id());
+            userIds.add(message.getBuyer_id());
+            userIds.add(message.getSeller_id());
         }
 
         List<String> unknownIds = new ArrayList<>();
@@ -120,10 +123,9 @@ public class WSSHelper {
     }
 
     public Message saveMyMessageToDB(JSONObject jsonResponse) throws JSONException {
-        JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
         Message message;
         try {
-            message = JSONUtils.getMessageFromJSON(message_json);
+            message = JSONUtils.getMessageFromJSON(jsonResponse);
         } catch (ParseException e) {
             e.printStackTrace();
             return null;
@@ -393,11 +395,9 @@ public class WSSHelper {
         Map<String, ChatItem> mMap = new HashMap<>();
         for (Message message : messages) {
             String productId = message.getProduct_id();
-            String receiver_id = message.getReceiver_id();
-            String sender_id = message.getSender_id();
             String sellerId = message.getSeller_id();
-            String buyerId = sender_id.equals(sellerId) ? receiver_id : sender_id;
-            String id = productId + "_" + buyerId;
+            String buyerId = message.getBuyer_id();
+            String id = productId + "-" + buyerId; // To match server room names
 
             if (mMap.containsKey(id)) {
                 continue;
@@ -482,14 +482,14 @@ public class WSSHelper {
     }
 
     public static Pair<String, String> createSendMessageRequest(@NonNull Message message) throws JSONException {
-        JSONObject jsonObject = JSONUtils.toJSON(message);
+        JSONObject jsonObject = JSONUtils.textMessageToJSON(message);
         JSONObject jsonRequest = new JSONObject();
         jsonRequest.put(JSONUtils.KEY_MESSAGE, jsonObject);
         return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_SEND_CHAT);
     }
 
     public static Pair<String, String> createOfferMessageRequest(@NonNull Message message) throws JSONException {
-        JSONObject jsonObject = JSONUtils.toJSON(message);
+        JSONObject jsonObject = JSONUtils.textMessageToJSON(message);
         JSONObject jsonRequest = new JSONObject();
         jsonRequest.put(JSONUtils.KEY_MESSAGE, jsonObject);
         return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_MAKE_OFFER);
@@ -527,7 +527,7 @@ public class WSSHelper {
         mWSRequestProvider.clearPendingRequests();
     }
 
-    public List<Message> getUnreadMessages(@NonNull String chatItemId, @NonNull String receiverId) {
+    public List<Message> getUnreadMessages(@NonNull String chatItemId, @NonNull String myUserId) {
         ChatItem chatItem = mChatItemProvider.getChatItem(chatItemId);
         if (chatItem == null) {
             return null;
@@ -537,15 +537,15 @@ public class WSSHelper {
         String buyerId = chatItem.getBuyer_id();
         String sellerId = chatItem.getSeller_id();
 
-        if (!buyerId.equals(receiverId) && !sellerId.equals(receiverId)) {
+        if (!buyerId.equals(myUserId) && !sellerId.equals(myUserId)) {
             // No relation. wow.
             return null;
         }
 
         String senderId = null;
-        if (buyerId.equals(receiverId)) {
+        if (buyerId.equals(myUserId)) {
             senderId = sellerId;
-        } else if (sellerId.equals(receiverId)) {
+        } else if (sellerId.equals(myUserId)) {
             senderId = buyerId;
         }
 
@@ -553,7 +553,7 @@ public class WSSHelper {
             return null;
         }
 
-        return mMessageProvider.getUnreadMessages(receiverId, senderId, productId);
+        return mMessageProvider.getUnreadMessages(buyerId, sellerId, senderId, productId);
     }
 
     public static Pair<JSONObject, String> createReadReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
@@ -664,7 +664,4 @@ public class WSSHelper {
         return messageIds;
     }
 
-    public static boolean isMyMessage(@NonNull JSONObject jsonResponse, @NonNull String userId) {
-        return jsonResponse.optString(JSONUtils.KEY_USER_ID, "").equals(userId);
-    }
 }

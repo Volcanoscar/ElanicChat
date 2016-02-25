@@ -19,18 +19,22 @@ import in.elanic.elanicchatdemo.models.db.User;
  */
 public interface MessageProvider {
 
-    List<Message> getAllMessages(@NonNull String user1, @NonNull String user2, @NonNull String productId);
-    List<Message> getMessages(@Nullable Date timestamp, String user1, String user2, String productId);
-    Message createNewMessage(@NonNull String content, @NonNull User sender, @NonNull User receiver, @NonNull Product product);
-    Message createNewOffer(int price, @NonNull User sender,@NonNull User receiver, @NonNull Product product, @Nullable JsonObject commission);
+    List<Message> getAllMessages(@NonNull String buyer, @NonNull String seller, @NonNull String productId);
+    List<Message> getMessages(@Nullable Date timestamp, String buyer, String seller, String productId);
+
+    Message createNewMessage(@NonNull String content, @NonNull User sender, @NonNull User buyer,
+                             @NonNull User seller, @NonNull Product product);
+    Message createNewOffer(int price, @NonNull User sender, @NonNull User buyer,
+                           @NonNull User seller, @NonNull Product product, @Nullable JsonObject commission);
     boolean updateMessage(@NonNull Message message);
     boolean updateLocalMessage(@NonNull Message message);
     boolean addNewMessage(@NonNull Message message);
     int addOrUpdateMessages(@NonNull List<Message> messages);
 
-    List<Message> getUnreadMessages(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId);
-    long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId);
-    long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String productId);
+    List<Message> getUnreadMessages(@NonNull String buyerId, @NonNull String sellerId,
+                                    @NonNull String senderId, @NonNull String productId);
+    long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId, @NonNull String productId);
+    long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId);
 
     @Deprecated int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
     int updateReadTimestamps(@NonNull DualList<String, Date> updateVals);
@@ -44,5 +48,7 @@ public interface MessageProvider {
     Message getLatestOffer(@NonNull String productId, @NonNull String buyerId);
     Message getLatestSimpleMessage(@NonNull String productId, @NonNull String buyerId);
 
-    List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String receiverId, @NonNull String productId, @NonNull List<String> messages);
+    List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String buyerId,
+                                      @NonNull String sellerId, @NonNull String productId,
+                                      @NonNull List<String> messages);
 }

@@ -10,23 +10,23 @@ import de.greenrobot.dao.DaoException;
 public class Message {
 
     private String message_id;
-    private Integer type;
+    private String local_id;
+    private String type;
     private String content;
-    private String receiver_id;
+    private String product_id;
+    private String buyer_id;
+    private String seller_id;
     private String sender_id;
+    private Integer offer_price;
+    private String offer_status;
+    private Integer validity;
+    private String offer_earning_data;
     private java.util.Date created_at;
     private java.util.Date updated_at;
-    private Boolean is_deleted;
-    private Integer offer_price;
-    private String product_id;
-    private Integer offer_response;
     private java.util.Date delivered_at;
     private java.util.Date read_at;
-    private java.util.Date offer_expiry;
     private Boolean is_read;
-    private String seller_id;
-    private String local_id;
-    private String offer_earning_data;
+    private Boolean is_deleted;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -34,17 +34,17 @@ public class Message {
     /** Used for active entity operations. */
     private transient MessageDao myDao;
 
-    private User receiver;
-    private String receiver__resolvedKey;
-
-    private User sender;
-    private String sender__resolvedKey;
-
     private Product product;
     private String product__resolvedKey;
 
+    private User buyer;
+    private String buyer__resolvedKey;
+
     private User seller;
     private String seller__resolvedKey;
+
+    private User sender;
+    private String sender__resolvedKey;
 
 
     public Message() {
@@ -54,25 +54,25 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, Integer type, String content, String receiver_id, String sender_id, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, Integer offer_price, String product_id, Integer offer_response, java.util.Date delivered_at, java.util.Date read_at, java.util.Date offer_expiry, Boolean is_read, String seller_id, String local_id, String offer_earning_data) {
+    public Message(String message_id, String local_id, String type, String content, String product_id, String buyer_id, String seller_id, String sender_id, Integer offer_price, String offer_status, Integer validity, String offer_earning_data, java.util.Date created_at, java.util.Date updated_at, java.util.Date delivered_at, java.util.Date read_at, Boolean is_read, Boolean is_deleted) {
         this.message_id = message_id;
+        this.local_id = local_id;
         this.type = type;
         this.content = content;
-        this.receiver_id = receiver_id;
+        this.product_id = product_id;
+        this.buyer_id = buyer_id;
+        this.seller_id = seller_id;
         this.sender_id = sender_id;
+        this.offer_price = offer_price;
+        this.offer_status = offer_status;
+        this.validity = validity;
+        this.offer_earning_data = offer_earning_data;
         this.created_at = created_at;
         this.updated_at = updated_at;
-        this.is_deleted = is_deleted;
-        this.offer_price = offer_price;
-        this.product_id = product_id;
-        this.offer_response = offer_response;
         this.delivered_at = delivered_at;
         this.read_at = read_at;
-        this.offer_expiry = offer_expiry;
         this.is_read = is_read;
-        this.seller_id = seller_id;
-        this.local_id = local_id;
-        this.offer_earning_data = offer_earning_data;
+        this.is_deleted = is_deleted;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -89,11 +89,19 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Integer getType() {
+    public String getLocal_id() {
+        return local_id;
+    }
+
+    public void setLocal_id(String local_id) {
+        this.local_id = local_id;
+    }
+
+    public String getType() {
         return type;
     }
 
-    public void setType(Integer type) {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -105,12 +113,28 @@ public class Message {
         this.content = content;
     }
 
-    public String getReceiver_id() {
-        return receiver_id;
+    public String getProduct_id() {
+        return product_id;
     }
 
-    public void setReceiver_id(String receiver_id) {
-        this.receiver_id = receiver_id;
+    public void setProduct_id(String product_id) {
+        this.product_id = product_id;
+    }
+
+    public String getBuyer_id() {
+        return buyer_id;
+    }
+
+    public void setBuyer_id(String buyer_id) {
+        this.buyer_id = buyer_id;
+    }
+
+    public String getSeller_id() {
+        return seller_id;
+    }
+
+    public void setSeller_id(String seller_id) {
+        this.seller_id = seller_id;
     }
 
     public String getSender_id() {
@@ -119,6 +143,38 @@ public class Message {
 
     public void setSender_id(String sender_id) {
         this.sender_id = sender_id;
+    }
+
+    public Integer getOffer_price() {
+        return offer_price;
+    }
+
+    public void setOffer_price(Integer offer_price) {
+        this.offer_price = offer_price;
+    }
+
+    public String getOffer_status() {
+        return offer_status;
+    }
+
+    public void setOffer_status(String offer_status) {
+        this.offer_status = offer_status;
+    }
+
+    public Integer getValidity() {
+        return validity;
+    }
+
+    public void setValidity(Integer validity) {
+        this.validity = validity;
+    }
+
+    public String getOffer_earning_data() {
+        return offer_earning_data;
+    }
+
+    public void setOffer_earning_data(String offer_earning_data) {
+        this.offer_earning_data = offer_earning_data;
     }
 
     public java.util.Date getCreated_at() {
@@ -137,38 +193,6 @@ public class Message {
         this.updated_at = updated_at;
     }
 
-    public Boolean getIs_deleted() {
-        return is_deleted;
-    }
-
-    public void setIs_deleted(Boolean is_deleted) {
-        this.is_deleted = is_deleted;
-    }
-
-    public Integer getOffer_price() {
-        return offer_price;
-    }
-
-    public void setOffer_price(Integer offer_price) {
-        this.offer_price = offer_price;
-    }
-
-    public String getProduct_id() {
-        return product_id;
-    }
-
-    public void setProduct_id(String product_id) {
-        this.product_id = product_id;
-    }
-
-    public Integer getOffer_response() {
-        return offer_response;
-    }
-
-    public void setOffer_response(Integer offer_response) {
-        this.offer_response = offer_response;
-    }
-
     public java.util.Date getDelivered_at() {
         return delivered_at;
     }
@@ -185,14 +209,6 @@ public class Message {
         this.read_at = read_at;
     }
 
-    public java.util.Date getOffer_expiry() {
-        return offer_expiry;
-    }
-
-    public void setOffer_expiry(java.util.Date offer_expiry) {
-        this.offer_expiry = offer_expiry;
-    }
-
     public Boolean getIs_read() {
         return is_read;
     }
@@ -201,78 +217,12 @@ public class Message {
         this.is_read = is_read;
     }
 
-    public String getSeller_id() {
-        return seller_id;
+    public Boolean getIs_deleted() {
+        return is_deleted;
     }
 
-    public void setSeller_id(String seller_id) {
-        this.seller_id = seller_id;
-    }
-
-    public String getLocal_id() {
-        return local_id;
-    }
-
-    public void setLocal_id(String local_id) {
-        this.local_id = local_id;
-    }
-
-    public String getOffer_earning_data() {
-        return offer_earning_data;
-    }
-
-    public void setOffer_earning_data(String offer_earning_data) {
-        this.offer_earning_data = offer_earning_data;
-    }
-
-    /** To-one relationship, resolved on first access. */
-    public User getReceiver() {
-        String __key = this.receiver_id;
-        if (receiver__resolvedKey == null || receiver__resolvedKey != __key) {
-            if (daoSession == null) {
-                throw new DaoException("Entity is detached from DAO context");
-            }
-            UserDao targetDao = daoSession.getUserDao();
-            User receiverNew = targetDao.load(__key);
-            synchronized (this) {
-                receiver = receiverNew;
-            	receiver__resolvedKey = __key;
-            }
-        }
-        return receiver;
-    }
-
-    public void setReceiver(User receiver) {
-        synchronized (this) {
-            this.receiver = receiver;
-            receiver_id = receiver == null ? null : receiver.getUser_id();
-            receiver__resolvedKey = receiver_id;
-        }
-    }
-
-    /** To-one relationship, resolved on first access. */
-    public User getSender() {
-        String __key = this.sender_id;
-        if (sender__resolvedKey == null || sender__resolvedKey != __key) {
-            if (daoSession == null) {
-                throw new DaoException("Entity is detached from DAO context");
-            }
-            UserDao targetDao = daoSession.getUserDao();
-            User senderNew = targetDao.load(__key);
-            synchronized (this) {
-                sender = senderNew;
-            	sender__resolvedKey = __key;
-            }
-        }
-        return sender;
-    }
-
-    public void setSender(User sender) {
-        synchronized (this) {
-            this.sender = sender;
-            sender_id = sender == null ? null : sender.getUser_id();
-            sender__resolvedKey = sender_id;
-        }
+    public void setIs_deleted(Boolean is_deleted) {
+        this.is_deleted = is_deleted;
     }
 
     /** To-one relationship, resolved on first access. */
@@ -301,6 +251,31 @@ public class Message {
     }
 
     /** To-one relationship, resolved on first access. */
+    public User getBuyer() {
+        String __key = this.buyer_id;
+        if (buyer__resolvedKey == null || buyer__resolvedKey != __key) {
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            UserDao targetDao = daoSession.getUserDao();
+            User buyerNew = targetDao.load(__key);
+            synchronized (this) {
+                buyer = buyerNew;
+            	buyer__resolvedKey = __key;
+            }
+        }
+        return buyer;
+    }
+
+    public void setBuyer(User buyer) {
+        synchronized (this) {
+            this.buyer = buyer;
+            buyer_id = buyer == null ? null : buyer.getUser_id();
+            buyer__resolvedKey = buyer_id;
+        }
+    }
+
+    /** To-one relationship, resolved on first access. */
     public User getSeller() {
         String __key = this.seller_id;
         if (seller__resolvedKey == null || seller__resolvedKey != __key) {
@@ -322,6 +297,31 @@ public class Message {
             this.seller = seller;
             seller_id = seller == null ? null : seller.getUser_id();
             seller__resolvedKey = seller_id;
+        }
+    }
+
+    /** To-one relationship, resolved on first access. */
+    public User getSender() {
+        String __key = this.sender_id;
+        if (sender__resolvedKey == null || sender__resolvedKey != __key) {
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            UserDao targetDao = daoSession.getUserDao();
+            User senderNew = targetDao.load(__key);
+            synchronized (this) {
+                sender = senderNew;
+            	sender__resolvedKey = __key;
+            }
+        }
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        synchronized (this) {
+            this.sender = sender;
+            sender_id = sender == null ? null : sender.getUser_id();
+            sender__resolvedKey = sender_id;
         }
     }
 

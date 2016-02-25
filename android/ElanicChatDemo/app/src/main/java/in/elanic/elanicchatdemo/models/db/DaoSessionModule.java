@@ -34,10 +34,10 @@ public class DaoSessionModule {
 
         if (isDev) {
             helper = new DaoMaster.DevOpenHelper(app.getApplicationContext(),
-                    "elchat-db", null);
+                    "elchat-db-v2", null);
         } else {
-            helper = new ProdOpenHelper(app.getApplicationContext(),
-                    "elchat-db", null);
+            helper = new ProdOpenHelper2(app.getApplicationContext(),
+                    "elchat-db-v2", null);
         }
 
         SQLiteDatabase db = helper.getWritableDatabase();

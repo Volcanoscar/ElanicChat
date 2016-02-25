@@ -92,8 +92,9 @@ public class ChatListSellProductSectionPresenterImpl extends ChatListSectionPres
         for (int i=0; i<uiChats.size(); i++) {
             UIChatItem chatItem = uiChats.get(i);
             Message offer = chatItem.getDisplayOffer();
-            if (offer != null && offer.getOffer_response() != null
-                    && offer.getOffer_response() == Constants.OFFER_ACTIVE
+            if (offer != null && offer.getOffer_status() != null
+                    && (offer.getOffer_status().equals(Constants.STATUS_OFFER_INACTIVE)
+                            || offer.getOffer_status().equals(Constants.STATUS_OFFER_ACTIVE))
                     && offer.getOffer_price() != null
                     && offer.getOffer_price() > bestOfferPrice) {
 

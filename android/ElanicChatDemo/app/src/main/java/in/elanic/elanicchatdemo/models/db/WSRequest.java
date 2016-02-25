@@ -7,7 +7,6 @@ package in.elanic.elanicchatdemo.models.db;
 public class WSRequest {
 
     private String request_id;
-    private Integer request_type;
     private String user_id;
     private String content;
     private Boolean is_completed;
@@ -23,9 +22,8 @@ public class WSRequest {
         this.request_id = request_id;
     }
 
-    public WSRequest(String request_id, Integer request_type, String user_id, String content, Boolean is_completed, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, String event_name) {
+    public WSRequest(String request_id, String user_id, String content, Boolean is_completed, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted, String event_name) {
         this.request_id = request_id;
-        this.request_type = request_type;
         this.user_id = user_id;
         this.content = content;
         this.is_completed = is_completed;
@@ -41,14 +39,6 @@ public class WSRequest {
 
     public void setRequest_id(String request_id) {
         this.request_id = request_id;
-    }
-
-    public Integer getRequest_type() {
-        return request_type;
-    }
-
-    public void setRequest_type(Integer request_type) {
-        this.request_type = request_type;
     }
 
     public String getUser_id() {

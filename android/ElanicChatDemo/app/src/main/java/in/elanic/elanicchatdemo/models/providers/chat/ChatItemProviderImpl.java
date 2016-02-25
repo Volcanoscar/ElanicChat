@@ -45,21 +45,21 @@ public class ChatItemProviderImpl implements ChatItemProvider {
     }
 
     @Override
-    public List<ChatItem> getActiveSellChats(String userId) {
-        Query<ChatItem> query = mDao.queryBuilder().where(ChatItemDao.Properties.Seller_id.eq(userId)).build();
+    public List<ChatItem> getActiveSellChats(String sellerId) {
+        Query<ChatItem> query = mDao.queryBuilder().where(ChatItemDao.Properties.Seller_id.eq(sellerId)).build();
         return query.list();
     }
 
     @Override
-    public List<ChatItem> getActiveBuyChats(String userId) {
-        Query<ChatItem> query = mDao.queryBuilder().where(ChatItemDao.Properties.Buyer_id.eq(userId)).build();
+    public List<ChatItem> getActiveBuyChats(String buyerId) {
+        Query<ChatItem> query = mDao.queryBuilder().where(ChatItemDao.Properties.Buyer_id.eq(buyerId)).build();
         return query.list();
     }
 
     @Override
-    public List<ChatItem> getActiveSellChatsForProduct(String userId, String productId) {
+    public List<ChatItem> getActiveSellChatsForProduct(String sellerId, String productId) {
         Query<ChatItem> query = mDao.queryBuilder().where(ChatItemDao.Properties.Product_id.eq(productId),
-                ChatItemDao.Properties.Seller_id.eq(userId)).build();
+                ChatItemDao.Properties.Seller_id.eq(sellerId)).build();
         return query.list();
     }
 

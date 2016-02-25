@@ -37,13 +37,13 @@ public class WSRequestProviderImpl implements WSRequestProvider {
         return (mDao.insert(request) != 0);
     }
 
+    @Deprecated
     @Override
     public WSRequest createRequest(String requestId, int requestType, String content, String userId) {
         Date timestamp = new Date();
 
         WSRequest wsRequest = new WSRequest();
         wsRequest.setRequest_id(requestId);
-        wsRequest.setRequest_type(requestType);
         wsRequest.setContent(content);
         wsRequest.setCreated_at(timestamp);
         wsRequest.setUpdated_at(timestamp);

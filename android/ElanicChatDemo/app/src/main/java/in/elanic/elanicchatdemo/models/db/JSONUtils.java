@@ -70,14 +70,45 @@ public class JSONUtils {
     public static final String KEY_POSTS = "posts";
     public static final String KEY_EARN = "earn";
     public static final String KEY_OFFER_EARNING_DATA = "offer_earning_data";
+    public static final String KEY_MESSAGE_TEXT = "message_text";
+    public static final String KEY_USER_PROFILE = "User_profile";
+    public static final String KEY_BUYER_PROFILE = "buyer_profile";
+    public static final String KEY_SELLER_PROFILE = "seller_profile";
+    public static final String KEY_POST = "post";
 
-    public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String KEY_QUOTATION = "quotation";
+    public static final String KEY_QUOTED_PRICE = "quoted_price";
+    public static final String KEY_IS_SELLER_OFFER = "is_seller_offer";
+    public static final String KEY_ID = "id";
+    public static final String KEY__ID = "_id";
+    public static final String KEY_SECONDS_VALIDITY = "seconds_validity";
+
+    public static final String KEY_CREATION_DATE = "creation_date";
+    public static final String KEY_MODIFIED_DATE = "modified_date";
+    public static final String KEY_DELIVERED_DATE = "delivered_date";
+
+//    public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String JSON_DATE_FORMAT = "yyyy-MM-dd'T'kk:mm:ss.SSS'Z'";
     private static final String TAG = "JSONUtils";
 
-    public static JSONObject toJSON(Message message) throws JSONException {
+    public static JSONObject textMessageToJSON(Message message) throws JSONException {
         JSONObject json = new JSONObject();
+        JSONObject messageJson = new JSONObject();
 
-        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        messageJson.put(KEY_MESSAGE_TEXT, message.getContent());
+        messageJson.put(KEY_USER_PROFILE, message.getSender_id());
+        messageJson.put(KEY_TYPE, Constants.TYPE_MESSAGE_TEXT);
+        if (message.getLocal_id() != null && !message.getLocal_id().isEmpty()) {
+            messageJson.put(KEY_LOCAL_ID, message.getLocal_id());
+        }
+
+        json.put(KEY_MESSAGE, messageJson);
+
+        json.put(KEY_BUYER_PROFILE, message.getBuyer_id());
+        json.put(KEY_SELLER_PROFILE, message.getSeller_id());
+        json.put(KEY_POST, message.getProduct_id());
+
+        /*DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
 
         json.put(KEY_MESSAGE_ID, message.getMessage_id());
 
@@ -99,55 +130,81 @@ public class JSONUtils {
 
         if (message.getOffer_earning_data() != null) {
             json.put(KEY_OFFER_EARNING_DATA, message.getOffer_earning_data());
+        }*/
+
+        return json;
+    }
+
+    public static JSONObject offerMessageToJSON(Message message) throws JSONException {
+        JSONObject json = new JSONObject();
+        JSONObject messageJson = new JSONObject();
+
+        messageJson.put(KEY_USER_PROFILE, message.getSender_id());
+        messageJson.put(KEY_QUOTED_PRICE, message.getOffer_price());
+
+        if (message.getOffer_earning_data() != null) {
+            messageJson.put(KEY_OFFER_EARNING_DATA, message.getOffer_earning_data());
         }
+
+        if (message.getLocal_id() != null && !message.getLocal_id().isEmpty()) {
+            messageJson.put(KEY_LOCAL_ID, message.getLocal_id());
+        }
+
+        json.put(KEY_QUOTATION, messageJson);
+
+        json.put(KEY_BUYER_PROFILE, message.getBuyer_id());
+        json.put(KEY_SELLER_PROFILE, message.getSeller_id());
+        json.put(KEY_POST, message.getProduct_id());
 
         return json;
     }
 
     public static Message getMessageFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
         Message message = new Message();
-        message.setMessage_id(jsonObject.getString(KEY_MESSAGE_ID));
+        message.setBuyer_id(jsonObject.getString(KEY_BUYER_PROFILE));
+        message.setSeller_id(jsonObject.getString(KEY_SELLER_PROFILE));
+        message.setProduct_id(jsonObject.getString(KEY_POST));
 
-        if (jsonObject.has(KEY_LOCAL_ID)) {
+        // text message
+        JSONObject jsonMessage = null;
+        if (jsonObject.has(KEY_MESSAGE)) {
+            jsonMessage = jsonObject.getJSONObject(KEY_MESSAGE);
+            message.setContent(jsonMessage.getString(KEY_MESSAGE_TEXT));
+            message.setType(jsonMessage.getString(KEY_TYPE));
+        } else if (jsonObject.has(KEY_QUOTATION)) {
+            jsonMessage = jsonObject.getJSONObject(KEY_QUOTATION);
+            message.setOffer_price(jsonMessage.getInt(KEY_QUOTED_PRICE));
+            message.setOffer_status(jsonMessage.getString(KEY_STATUS));
+            message.setValidity(jsonMessage.getInt(KEY_SECONDS_VALIDITY));
+            if (jsonMessage.has(KEY_OFFER_EARNING_DATA)) {
+                message.setOffer_earning_data(jsonMessage.getString(KEY_OFFER_EARNING_DATA));
+            }
+            message.setType(Constants.TYPE_MESSAGE_OFFER);
+        } else {
+            throw new JSONException("message or quotation object not found");
+        }
+
+        message.setMessage_id(jsonMessage.getString(KEY__ID));
+
+        if (jsonMessage.has(KEY_LOCAL_ID)) {
             message.setLocal_id(jsonObject.getString(KEY_LOCAL_ID));
         }
 
-        message.setType(jsonObject.getInt(KEY_TYPE));
-        message.setContent(jsonObject.getString(KEY_CONTENT));
-        message.setReceiver_id(jsonObject.getString(KEY_RECEIVER_ID));
-        message.setSender_id(jsonObject.getString(KEY_SENDER_ID));
-        message.setOffer_price(jsonObject.getInt(KEY_OFFER_PRICE));
-        message.setProduct_id(jsonObject.getString(KEY_PRODUCT_ID));
-
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
-        message.setCreated_at(df.parse(jsonObject.getString(KEY_CREATED_AT)));
-        message.setUpdated_at(df.parse(jsonObject.getString(KEY_UPDATED_AT)));
-        message.setIs_deleted(jsonObject.getBoolean(KEY_IS_DELETED));
-
-        message.setSeller_id(jsonObject.getString(KEY_SELLER_ID));
-
-
-        if (jsonObject.has(KEY_DELIVERED_AT)) {
-            message.setDelivered_at(df.parse(jsonObject.getString(KEY_DELIVERED_AT)));
+        message.setCreated_at(df.parse(jsonMessage.getString(KEY_CREATION_DATE)));
+        if (jsonMessage.has(KEY_MODIFIED_DATE)) {
+            message.setUpdated_at(df.parse(jsonMessage.getString(KEY_MODIFIED_DATE)));
         }
 
-        if (jsonObject.has(KEY_READ_AT)) {
-            message.setRead_at(df.parse(jsonObject.getString(KEY_READ_AT)));
+        message.setIs_deleted(jsonMessage.optBoolean(KEY_IS_DELETED, false));
+
+        if (jsonMessage.has(KEY_DELIVERED_DATE)) {
+            message.setDelivered_at(df.parse(jsonMessage.getString(KEY_DELIVERED_DATE)));
         }
 
-        if (jsonObject.has(KEY_OFFER_EXPIRY)) {
-            message.setOffer_expiry(df.parse(jsonObject.getString(KEY_OFFER_EXPIRY)));
+        if (jsonMessage.has(KEY_READ_AT)) {
+            message.setRead_at(df.parse(jsonMessage.getString(KEY_READ_AT)));
         }
-
-        if (jsonObject.has(KEY_IS_READ)) {
-            message.setIs_read(jsonObject.getBoolean(KEY_IS_READ));
-        }
-
-        if (jsonObject.has(KEY_OFFER_EARNING_DATA)) {
-            message.setOffer_earning_data(jsonObject.getString(KEY_OFFER_EARNING_DATA));
-        }
-
-        message.setOffer_response(jsonObject.optInt(KEY_OFFER_RESPONSE, -1));
 
         return message;
     }

@@ -142,16 +142,16 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
 
         UIChatItem uiChatItem = uiItems.get(position);
         Message offer = uiChatItem.getDisplayOffer();
-        if (offer == null || offer.getOffer_response() == null) {
+        if (offer == null || offer.getOffer_status() == null) {
             return;
         }
 
         // Check if expired
-        if (offer.getOffer_response() == Constants.OFFER_EXPIRED || DateUtils.isOfferExpired(offer)) {
+        if (offer.getOffer_status().equals(Constants.STATUS_OFFER_EXPIRED) || DateUtils.isOfferExpired(offer)) {
             return;
         }
 
-        if (offer.getOffer_response() == Constants.OFFER_ACTIVE) {
+        if (offer.getOffer_status().equals(Constants.STATUS_OFFER_ACTIVE)) {
             // do something
         }
     }

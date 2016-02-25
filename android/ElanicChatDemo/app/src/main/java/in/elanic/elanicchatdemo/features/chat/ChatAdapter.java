@@ -46,12 +46,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static final int MY_MESSAGE = 3;
     public static final int OTHER_MESSAGE = 4;
-    public static final int VIEW_MY_MESSAGE = MY_MESSAGE << Constants.TYPE_SIMPLE_MESSAGE;
-    public static final int VIEW_OTHERS_MESSAGE = OTHER_MESSAGE << Constants.TYPE_SIMPLE_MESSAGE;
-    public static final int VIEW_MY_OFFER = MY_MESSAGE << Constants.TYPE_OFFER_MESSAGE;
-    public static final int VIEW_OTHER_OFFER = OTHER_MESSAGE << Constants.TYPE_OFFER_MESSAGE;
-    public static final int VIEW_MY_EVENT = MY_MESSAGE << Constants.TYPE_EVENT_MESSAGE;
-    public static final int VIEW_OTHER_EVENT = OTHER_MESSAGE << Constants.TYPE_EVENT_MESSAGE;
+    public static final int VIEW_MY_MESSAGE = MY_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_TEXT;
+    public static final int VIEW_OTHERS_MESSAGE = OTHER_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_TEXT;
+    public static final int VIEW_MY_OFFER = MY_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_OFFER;
+    public static final int VIEW_OTHER_OFFER = OTHER_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_OFFER;
+    public static final int VIEW_MY_EVENT = MY_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_SYSTEM;
+    public static final int VIEW_OTHER_EVENT = OTHER_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_SYSTEM;
 
     private int myChatColor;
     private int otherChatColor;
@@ -163,9 +163,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             viewHolder.mOfferView.setText(sb.toString());
 
-            Integer response = message.getOffer_response();
-            Date expiryDate = message.getOffer_expiry();
+            String offerStatus = message.getOffer_status();
+            Date createdAt = message.getCreated_at();
+            // TODO check for createdAt null
+
             boolean isExpired;
+            Integer validity = message.getValidity();
+            Date expiryDate = null;
+            if (validity != null) {
+                expiryDate = new Date(createdAt.getTime() + validity * 1000);
+            }
+
 //            boolean hasResponded = false;
             boolean isSent = true;
             viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
@@ -188,7 +196,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             isExpired = !(expiryDate != null && new Date().compareTo(expiryDate) < 0);
 
             if (isMyMessage && expiryDate == null && !isSent) {
-                response = Constants.OFFER_NOT_SENT;
+                offerStatus = Constants.STATUS_OFFER_NOT_SENT;
             }
 
             viewHolder.showBuyNowOption(false);
@@ -200,9 +208,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // hide offer earn view
             viewHolder.mOfferEarnView.setVisibility(View.GONE);
 
-            if (response != null) {
-                switch (response) {
-                    case Constants.OFFER_ACTIVE:
+            if (offerStatus != null) {
+                switch (offerStatus) {
+                    case Constants.STATUS_OFFER_ACTIVE:
+                    case Constants.STATUS_OFFER_INACTIVE:
                         if (!isExpired) {
                             viewHolder.mOfferStatusView.setText(R.string.offer_waiting_response);
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
@@ -231,13 +240,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 //                        hasResponded = false;
                         break;
-                    case Constants.OFFER_DECLINED:
+                    case Constants.STATUS_OFFER_DENIED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_declined);
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_block_grey_400_24dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
 //                        hasResponded = true;
                         break;
-                    case Constants.OFFER_ACCEPTED:
+                    /*case Constants.OFFER_ACCEPTED:
 
                         if (!isExpired) {
 
@@ -263,21 +272,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
 
 //                        hasResponded = true;
-                        break;
-                    case Constants.OFFER_EXPIRED:
+                        break;*/
+                    case Constants.STATUS_OFFER_EXPIRED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_expired);
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_off_grey_400_24dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
 //                        hasResponded = false;
                         break;
 
-                    case Constants.OFFER_CANCELED:
+                    case Constants.STATUS_OFFER_CANCELLED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_canceled);
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_block_grey_400_24dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
                         break;
 
-                    case Constants.OFFER_NOT_SENT:
+                    case Constants.STATUS_OFFER_NOT_SENT:
                         viewHolder.mOfferStatusView.setText(R.string.offer_sending);
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_grey_400_18dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
@@ -305,16 +314,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             viewHolder.mOfferView.setText(sb.toString());
             viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
 
-            Integer response = message.getOffer_response();
-            Date expiryDate = message.getOffer_expiry();
+            String offerStatus = message.getOffer_status();
+            Date createdAt = message.getCreated_at();
+            // TODO check for createdAt null
+
             boolean isExpired;
+            Integer validity = message.getValidity();
+            Date expiryDate = null;
+            if (validity != null) {
+                expiryDate = new Date(createdAt.getTime() + validity * 1000);
+            }
 //            boolean hasResponded = false;
 
             isExpired = DateUtils.isOfferExpired(message);
 
-            if (response != null) {
-                switch (response) {
-                    case Constants.OFFER_ACTIVE:
+            if (offerStatus != null) {
+                switch (offerStatus) {
+                    case Constants.STATUS_OFFER_ACTIVE:
+                    case Constants.STATUS_OFFER_INACTIVE:
                         if (!isExpired) {
 
                             if (isBuyer) {
@@ -339,7 +356,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 //                        hasResponded = false;
                         break;
-                    case Constants.OFFER_DECLINED:
+                    case Constants.STATUS_OFFER_DENIED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_declined);
                         viewHolder.setRightDrawable(R.drawable.ic_block_grey_600_18dp,
                                 viewHolder.mOfferStatusView);
@@ -347,7 +364,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         viewHolder.showStatus(true);
 //                        hasResponded = true;
                         break;
-                    case Constants.OFFER_ACCEPTED:
+                    /*case Constants.OFFER_ACCEPTED:
 
                         if (!isExpired) {
 
@@ -372,8 +389,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
 
 //                        hasResponded = true;
-                        break;
-                    case Constants.OFFER_EXPIRED:
+                        break;*/
+                    case Constants.STATUS_OFFER_EXPIRED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_expired);
                         viewHolder.setRightDrawable(R.drawable.ic_alarm_off_grey_600_18dp,
                                 viewHolder.mOfferStatusView);
@@ -382,7 +399,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 //                        hasResponded = false;
                         break;
 
-                    case Constants.OFFER_CANCELED:
+                    case Constants.STATUS_OFFER_CANCELLED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_canceled);
                         viewHolder.setRightDrawable(R.drawable.ic_block_grey_600_18dp,
                                 viewHolder.mOfferStatusView);
@@ -408,7 +425,20 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public int getItemViewType(int position) {
         int whoseMessage = mItems.get(position).getSender_id().equals(myUserId) ? MY_MESSAGE : OTHER_MESSAGE;
-        return whoseMessage << mItems.get(position).getType();
+        String type = mItems.get(position).getType();
+        if (type == null) {
+            return -1;
+        }
+        switch (type) {
+            case Constants.TYPE_MESSAGE_TEXT:
+                return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_OFFER;
+            case Constants.TYPE_MESSAGE_OFFER:
+                return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_OFFER;
+            case Constants.TYPE_MESSAGE_SYSTEM:
+                return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_SYSTEM;
+            default:
+                return -1;
+        }
     }
 
     @Override

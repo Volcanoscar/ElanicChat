@@ -48,9 +48,9 @@ public class Constants {
     public static final int OFFER_CANCELED = 5;
     public static final String OFFER_CANCELED_STRING = "Offer is canceled";
 
-    public static final int TYPE_SIMPLE_MESSAGE = 1;
-    public static final int TYPE_OFFER_MESSAGE = 2;
-    public static final int TYPE_EVENT_MESSAGE = 3;
+//    public static final int TYPE_SIMPLE_MESSAGE = 1;
+//    public static final int TYPE_OFFER_MESSAGE = 2;
+//    public static final int TYPE_EVENT_MESSAGE = 3;
 
     public static final String EXTRA_USER_ID = "user_id";
     public static final String EXTRA_JUST_LOGGED_IN = "just_logged_in";
@@ -60,7 +60,18 @@ public class Constants {
     public static final String EXTRA_CHAT_ITEM_ID = "chat_item_id";
 
     public static final String TYPE_MESSAGE_TEXT = "Text";
+    public static final int DUMMY_TYPE_MESSAGE_TEXT = 1;
     public static final String TYPE_MESSAGE_OFFER = "Offer";
+    public static final int DUMMY_TYPE_MESSAGE_OFFER = 2;
     public static final String TYPE_MESSAGE_SYSTEM = "System";
+    public static final int DUMMY_TYPE_MESSAGE_SYSTEM = 3;
+
+    public static final String STATUS_OFFER_NOT_SENT = "Offer_Not_Sent";
+    public static final String STATUS_OFFER_INACTIVE = "Inactive";
+    public static final String STATUS_OFFER_ACTIVE = "Active";
+    public static final String STATUS_OFFER_DENIED = "Denied";
+    public static final String STATUS_OFFER_CANCELLED = "Cancelled";
+    public static final String STATUS_OFFER_EXPIRED = "Expired";
+    public static final String STATUS_OFFER_INVALID = "Invalid";
 
 }

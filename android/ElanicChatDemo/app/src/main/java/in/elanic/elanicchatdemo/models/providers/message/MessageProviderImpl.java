@@ -37,38 +37,24 @@ public class MessageProviderImpl implements MessageProvider {
     private static final boolean DEBUG = true;
 
     @Override
-    public List<Message> getAllMessages(@NonNull String user1, @NonNull String user2, @NonNull String productId) {
-        return getMessages(null, user1, user2, productId);
-
-        /*WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
-        WhereCondition c2 = MessageDao.Properties.Sender_id.eq(user2);
-        WhereCondition c3 = MessageDao.Properties.Sender_id.eq(user1);
-        WhereCondition c4 = MessageDao.Properties.Receiver_id.eq(user2);
-
-        QueryBuilder<Message> qb = mDao.queryBuilder();
-        qb.whereOr(qb.and(c1, c2), qb.and(c3, c4));
-
-        return qb.orderDesc(MessageDao.Properties.Created_at).list();*/
+    public List<Message> getAllMessages(@NonNull String buyer, @NonNull String seller, @NonNull String productId) {
+        return getMessages(null, buyer, seller, productId);
     }
 
     @Override
-    public List<Message> getMessages(@Nullable Date timestamp, @NonNull String user1,
-                                     @NonNull String user2, @NonNull String productId) {
+    public List<Message> getMessages(@Nullable Date timestamp, @NonNull String buyer,
+                                     @NonNull String seller, @NonNull String productId) {
 
-        WhereCondition c1 = MessageDao.Properties.Receiver_id.eq(user1);
-        WhereCondition c2 = MessageDao.Properties.Sender_id.eq(user2);
-        WhereCondition c3 = MessageDao.Properties.Sender_id.eq(user1);
-        WhereCondition c4 = MessageDao.Properties.Receiver_id.eq(user2);
+        WhereCondition c1 = MessageDao.Properties.Buyer_id.eq(buyer);
+        WhereCondition c2 = MessageDao.Properties.Seller_id.eq(seller);
         WhereCondition c5 = MessageDao.Properties.Product_id.eq(productId);
 
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-        WhereCondition c6 = qb.or(qb.and(c1, c2), qb.and(c3, c4));
-
         if (timestamp != null) {
-            qb.where(MessageDao.Properties.Updated_at.gt(timestamp), c5, c6);
+            qb.where(MessageDao.Properties.Updated_at.gt(timestamp), c5, c1, c2);
         } else {
-            qb.where(c5, c6);
+            qb.where(c5, c1, c2);
         }
 
         return qb.orderDesc(MessageDao.Properties.Created_at).list();
@@ -76,7 +62,8 @@ public class MessageProviderImpl implements MessageProvider {
 
     @Override
     public Message createNewMessage(@NonNull String content, @NonNull User sender,
-                                    @NonNull User receiver, @NonNull Product product) {
+                                    @NonNull User buyer, @NonNull User seller,
+                                    @NonNull Product product) {
         Message message = new Message();
 
         Date date = new Date();
@@ -85,12 +72,11 @@ public class MessageProviderImpl implements MessageProvider {
         message.setLocal_id(String.valueOf(date.getTime()));
         message.setContent(content);
         message.setSender(sender);
-        message.setSeller(product.getUser_id().equals(sender.getUser_id()) ? receiver : sender);
-        message.setReceiver(receiver);
+        message.setSeller(seller);
+        message.setBuyer(buyer);
         message.setIs_deleted(false);
         message.setCreated_at(date);
-//        message.setUpdated_at(date);
-        message.setType(Constants.TYPE_SIMPLE_MESSAGE);
+        message.setType(Constants.TYPE_MESSAGE_TEXT);
         message.setProduct(product);
         message.setOffer_price(0);
 
@@ -100,7 +86,8 @@ public class MessageProviderImpl implements MessageProvider {
 
     @Override
     public Message createNewOffer(int price, @NonNull User sender,
-                                  @NonNull User receiver, @NonNull Product product,
+                                  @NonNull User buyer, @NonNull User seller,
+                                  @NonNull Product product,
                                   @Nullable JsonObject commission) {
         Message message = new Message();
 
@@ -112,12 +99,11 @@ public class MessageProviderImpl implements MessageProvider {
         message.setLocal_id(String.valueOf(date.getTime()));
         message.setContent(content);
         message.setSender(sender);
-        message.setSeller(product.getUser_id().equals(sender.getUser_id()) ? receiver : sender);
-        message.setReceiver(receiver);
+        message.setBuyer(buyer);
+        message.setSeller(seller);
         message.setIs_deleted(false);
         message.setCreated_at(date);
-//        message.setUpdated_at(date);
-        message.setType(Constants.TYPE_OFFER_MESSAGE);
+        message.setType(Constants.TYPE_MESSAGE_OFFER);
         message.setProduct(product);
         message.setOffer_price(price);
         if (commission != null) {
@@ -181,25 +167,28 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public List<Message> getUnreadMessages(@NonNull String receiverId,
+    public List<Message> getUnreadMessages(@NonNull String buyerId, @NonNull String sellerId,
                                            @NonNull String senderId,@NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
         WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
-        qb.where(MessageDao.Properties.Sender_id.eq(senderId), MessageDao.Properties.Receiver_id.eq(receiverId),
+        qb.where(MessageDao.Properties.Sender_id.eq(senderId),
+                MessageDao.Properties.Buyer_id.eq(buyerId),
+                MessageDao.Properties.Seller_id.eq(sellerId),
                 MessageDao.Properties.Product_id.eq(productId), boolCondition);
 
         return qb.build().list();
     }
 
     @Override
-    public long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String senderId, @NonNull String productId) {
+    public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId, @NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
         WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
-        qb.where(MessageDao.Properties.Sender_id.eq(senderId), MessageDao.Properties.Receiver_id.eq(receiverId),
+        qb.where(MessageDao.Properties.Seller_id.eq(sellerId),
+                MessageDao.Properties.Buyer_id.eq(buyerId),
                 MessageDao.Properties.Product_id.eq(productId), boolCondition);
 
         // TODO CountQuery for efficiency
@@ -207,15 +196,16 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public long getUnreadMessagesCount(@NonNull String receiverId, @NonNull String productId) {
+    public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
         WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
-        qb.where(MessageDao.Properties.Product_id.eq(productId), MessageDao.Properties.Receiver_id.eq(receiverId), boolCondition);
+        qb.where(MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Seller_id.eq(sellerId), boolCondition);
         CountQuery<Message> cq = qb.buildCount();
         if (DEBUG) {
-            Log.i(TAG, "productId: " + productId + ", receiverId: " + receiverId + ", cq unread count: " + cq.count());
-            Log.i(TAG, "productId: " + productId + ", receiverId: " + receiverId + ", qb unread count: " + qb.count());
+            Log.i(TAG, "productId: " + productId + ", sellerId: " + sellerId + ", cq unread count: " + cq.count());
+            Log.i(TAG, "productId: " + productId + ", sellerId: " + sellerId + ", qb unread count: " + qb.count());
         }
 
         return cq.count();
@@ -312,7 +302,7 @@ public class MessageProviderImpl implements MessageProvider {
     public Message getLatestSimpleMessage(@NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
         qb.where(MessageDao.Properties.Product_id.eq(productId),
-                MessageDao.Properties.Type.eq(Constants.TYPE_SIMPLE_MESSAGE));
+                MessageDao.Properties.Type.eq(Constants.TYPE_MESSAGE_TEXT));
         List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
         if (messages == null || messages.isEmpty()) {
             return null;
@@ -325,7 +315,7 @@ public class MessageProviderImpl implements MessageProvider {
     public Message getLatestOffer(@NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
         qb.where(MessageDao.Properties.Product_id.eq(productId),
-                MessageDao.Properties.Type.eq(Constants.TYPE_OFFER_MESSAGE));
+                MessageDao.Properties.Type.eq(Constants.TYPE_MESSAGE_OFFER));
         List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
         if (messages == null || messages.isEmpty()) {
             return null;
@@ -338,11 +328,9 @@ public class MessageProviderImpl implements MessageProvider {
     public Message getLatestOffer(@NonNull String productId, @NonNull String buyerId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-        WhereCondition c1 = qb.or(MessageDao.Properties.Sender_id.eq(buyerId),
-                MessageDao.Properties.Receiver_id.eq(buyerId));
-
-        qb.where(c1, MessageDao.Properties.Product_id.eq(productId),
-                MessageDao.Properties.Type.eq(Constants.TYPE_OFFER_MESSAGE));
+        qb.where(MessageDao.Properties.Buyer_id.eq(buyerId),
+                MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Type.eq(Constants.TYPE_MESSAGE_OFFER));
         List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
         if (messages == null || messages.isEmpty()) {
             return null;
@@ -355,11 +343,9 @@ public class MessageProviderImpl implements MessageProvider {
     public Message getLatestSimpleMessage(@NonNull String productId, @NonNull String buyerId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-        WhereCondition c1 = qb.or(MessageDao.Properties.Sender_id.eq(buyerId),
-                MessageDao.Properties.Receiver_id.eq(buyerId));
-
-        qb.where(c1, MessageDao.Properties.Product_id.eq(productId),
-                MessageDao.Properties.Type.eq(Constants.TYPE_SIMPLE_MESSAGE));
+        qb.where(MessageDao.Properties.Buyer_id.eq(buyerId),
+                MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Type.eq(Constants.TYPE_MESSAGE_TEXT));
         List<Message> messages = qb.orderDesc(MessageDao.Properties.Created_at).limit(1).list();
         if (messages == null || messages.isEmpty()) {
             return null;
@@ -369,12 +355,14 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
-    public List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String receiverId,
+    public List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String buyerId,
+                                             @NonNull String sellerId,
                                              @NonNull String productId, @NonNull List<String> messageIds) {
 
         QueryBuilder<Message> qb = mDao.queryBuilder();
         qb.where(MessageDao.Properties.Message_id.in(messageIds),
-                MessageDao.Properties.Receiver_id.eq(receiverId),
+                MessageDao.Properties.Seller_id.eq(sellerId),
+                MessageDao.Properties.Buyer_id.eq(buyerId),
                 MessageDao.Properties.Sender_id.eq(senderId),
                 MessageDao.Properties.Product_id.eq(productId));
 
