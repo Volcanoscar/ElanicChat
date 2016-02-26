@@ -41,6 +41,7 @@ import in.elanic.elanicchatdemo.features.chatlist.container.presenter.ChatListPr
 import in.elanic.elanicchatdemo.features.chatlist.container.view.ChatListView;
 import in.elanic.elanicchatdemo.features.login.LoginActivity;
 import in.elanic.elanicchatdemo.models.Constants;
+import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.features.chat.ChatActivity;
 import in.elanic.elanicchatdemo.features.shared.adapters.BasicFragmentStatePagerAdapter;
@@ -95,6 +96,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListView 
         DaggerChatListViewComponent.builder()
                 .applicationComponent(applicationComponent)
                 .chatListViewModule(new ChatListViewModule(this))
+                .chatApiProviderModule(new ChatApiProviderModule(false))
                 .build()
                 .inject(this);
     }

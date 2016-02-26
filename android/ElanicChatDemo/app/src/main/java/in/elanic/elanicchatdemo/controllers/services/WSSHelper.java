@@ -126,6 +126,13 @@ public class WSSHelper {
         Message message;
         try {
             message = JSONUtils.getMessageFromJSON(jsonResponse);
+            if (DEBUG) {
+                Log.d(TAG, "sender Id: " + message.getSender_id());
+                Log.d(TAG, "buyer Id: " + message.getBuyer_id());
+                Log.d(TAG, "seller Id: " + message.getSeller_id());
+                Log.d(TAG, "id: " + message.getMessage_id());
+                Log.d(TAG, "local_id: " + message.getLocal_id());
+            }
         } catch (ParseException e) {
             e.printStackTrace();
             return null;
@@ -481,18 +488,14 @@ public class WSSHelper {
         return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_GET_MESSAGES);
     }
 
-    public static Pair<String, String> createSendMessageRequest(@NonNull Message message) throws JSONException {
+    public static Pair<JSONObject, String> createSendMessageRequest(@NonNull Message message) throws JSONException {
         JSONObject jsonObject = JSONUtils.textMessageToJSON(message);
-        JSONObject jsonRequest = new JSONObject();
-        jsonRequest.put(JSONUtils.KEY_MESSAGE, jsonObject);
-        return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_SEND_CHAT);
+        return new Pair<>(jsonObject, SocketIOConstants.EVENT_SEND_CHAT);
     }
 
-    public static Pair<String, String> createOfferMessageRequest(@NonNull Message message) throws JSONException {
-        JSONObject jsonObject = JSONUtils.textMessageToJSON(message);
-        JSONObject jsonRequest = new JSONObject();
-        jsonRequest.put(JSONUtils.KEY_MESSAGE, jsonObject);
-        return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_MAKE_OFFER);
+    public static Pair<JSONObject, String> createOfferMessageRequest(@NonNull Message message) throws JSONException {
+        JSONObject jsonObject = JSONUtils.offerMessageToJSON(message);
+        return new Pair<>(jsonObject, SocketIOConstants.EVENT_MAKE_OFFER);
     }
 
     public static Pair<String, String> createOfferResponse(@NonNull Message message, boolean accept) throws JSONException {
@@ -664,4 +667,7 @@ public class WSSHelper {
         return messageIds;
     }
 
+    public ChatItem getChatItem(@NonNull String id) {
+        return mChatItemProvider.getChatItem(id);
+    }
 }

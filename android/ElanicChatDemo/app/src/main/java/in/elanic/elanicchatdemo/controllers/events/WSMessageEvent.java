@@ -3,6 +3,8 @@ package in.elanic.elanicchatdemo.controllers.events;
 /**
  * Created by Jay Rambhia on 2/24/16.
  */
+
+@Deprecated
 public class WSMessageEvent {
 
     private int event;

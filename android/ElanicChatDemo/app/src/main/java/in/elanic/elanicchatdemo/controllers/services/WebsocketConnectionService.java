@@ -25,6 +25,7 @@ import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
+import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSMessageEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
@@ -34,6 +35,7 @@ import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.socketio.SocketIOConstants;
+import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -126,7 +128,7 @@ public class WebsocketConnectionService extends Service {
                         WebsocketApiProviderModule.API_WS_NON_BLOCKONG))*/
                 .websocketApiProviderModule(new WebsocketApiProviderModule(
                         WebsocketApiProviderModule.API_SOCKET_IO_NON_BLOCKING))
-                .chatApiProviderModule(new ChatApiProviderModule())
+                .chatApiProviderModule(new ChatApiProviderModule(false))
                 .build()
                 .inject(this);
     }
@@ -270,7 +272,16 @@ public class WebsocketConnectionService extends Service {
         mWebSocketApi.setCallback(null);
     }
 
-    private void sendData(@NonNull JSONObject request, @NonNull String event, @Nullable String requestId) {
+    private void sendData(@NonNull JSONObject request, @NonNull String event,
+                          @Nullable String requestId, @Nullable String roomId) {
+        if (roomId != null) {
+            // check if connected to the room
+            if (!conncetedRooms.contains(roomId)) {
+                // connect to the room
+                joinRoom(roomId);
+            }
+        }
+
         if (requestId == null) {
             requestId = mWSSHelper.createRequest(mUserId, event, request);
         }
@@ -283,6 +294,7 @@ public class WebsocketConnectionService extends Service {
         if (DEBUG) {
             Log.i(TAG, "ws connection not available. Create new connection");
         }
+
         createWSConnectionRequested();
     }
 
@@ -314,6 +326,12 @@ public class WebsocketConnectionService extends Service {
                 return;
             }
 
+            // TODO check if my request
+            boolean isMyRequest = mUserId.equals(senderId);
+            if (isMyRequest) {
+                mWSSHelper.markRequestAsCompleted(requestId);
+            }
+
             if (!success) {
                 // TODO handle request failure
                 if (event.equals(SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS)) {
@@ -327,11 +345,6 @@ public class WebsocketConnectionService extends Service {
                 mSyncTimestamp = syncTimestmap;
                 mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
             }
-
-            // TODO check if my request
-            boolean isMyRequest = mUserId.equals(senderId);
-
-            mWSSHelper.markRequestAsCompleted(requestId);
 
             // TODO Handle messages coming from other user properly.
 
@@ -465,10 +478,11 @@ public class WebsocketConnectionService extends Service {
             // TODO send notification
         }
 
-        if (!newMessages.isEmpty()) {
+        // TODO get and add chatRoom ID
+        /*if (!newMessages.isEmpty()) {
             Pair<JSONObject, String> request = WSSHelper.createDeliveredReceiptsRequest(newMessages);
             sendData(request.first, request.second, null);
-        }
+        }*/
     }
 
     /*@Deprecated
@@ -646,7 +660,9 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
-        for (WSRequest request : mRequests) {
+        // TODO add chatRoomId to WSRequest
+
+        /*for (WSRequest request : mRequests) {
             Log.i(TAG, "trying to re-send request: " + request.getRequest_id());
             try {
                 sendData(new JSONObject(request.getContent()), request.getEvent_name(),
@@ -654,7 +670,7 @@ public class WebsocketConnectionService extends Service {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
     private void markMessagesAsRead(String chatItemId) {
@@ -677,7 +693,7 @@ public class WebsocketConnectionService extends Service {
 
         try {
             Pair<JSONObject, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
-            sendData(request.first, request.second, null);
+            sendData(request.first, request.second, null, chatItemId);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -714,8 +730,9 @@ public class WebsocketConnectionService extends Service {
     /////////////// NEW METHODS ///////////////
     ///////////////////////////////////////////
 
+    @Deprecated
     private void sendMessage(WSMessageEvent event) {
-        String buyerId = event.getBuyerId();
+        /*String buyerId = event.getBuyerId();
         String sellerId = event.getSellerId();
         String postId = event.getPostId();
         String message_text = event.getMessage();
@@ -730,6 +747,7 @@ public class WebsocketConnectionService extends Service {
             message.put("User_profile", event.getUserId());
             message.put("message_text", message_text);
             message.put("type", Constants.TYPE_MESSAGE_TEXT);
+            message.put("local_id", "yolo-42");
             messageRequest.put("message", message);
 
             if (!conncetedRooms.contains(postId + "-" + buyerId)) {
@@ -741,6 +759,16 @@ public class WebsocketConnectionService extends Service {
 
         } catch (JSONException e) {
             e.printStackTrace();
+        }*/
+    }
+
+    private void joinRoom(String chatId) {
+        ChatItem chatItem = mWSSHelper.getChatItem(chatId);
+        if (chatItem != null) {
+
+            // TODO change timestamp settings here
+            joinRoom(chatItem.getBuyer_id(), chatItem.getSeller_id(), chatItem.getProduct_id(),
+                    mUserId.equals(chatItem.getBuyer_id()), 0);
         }
     }
 
@@ -781,8 +809,8 @@ public class WebsocketConnectionService extends Service {
                 disconnectWSConnectionRequested();
                 break;
 
-            case WSRequestEvent.EVENT_SEND:
-                sendData(event.getData(), event.getWSEvent(), null);
+            /*case WSRequestEvent.EVENT_SEND:
+                sendData(event.getJsonData(), event.getWSEvent(), null);
                 break;
 
             case WSRequestEvent.EVENT_SYNC:
@@ -791,7 +819,7 @@ public class WebsocketConnectionService extends Service {
 
             case WSRequestEvent.EVENT_SEND_READ_DATA:
                 markMessagesAsRead(event.getData());
-                break;
+                break;*/
 
             case WSRequestEvent.EVENT_QUIT:
                 quit();
@@ -800,13 +828,17 @@ public class WebsocketConnectionService extends Service {
 
     }
 
-    @SuppressWarnings("unused")
+    /*@SuppressWarnings("unused")
     public void onEvent(WSMessageEvent event) {
         switch (event.getEvent()) {
             case WSMessageEvent.EVENT_SEND_MESSAGE:
                 sendMessage(event);
                 break;
         }
+    }*/
+
+    public void onEvent(WSDataRequestEvent event) {
+        sendData(event.getRequestData(), event.getEvent(), null, event.getRoomId());
     }
 
     @SuppressWarnings("unused")

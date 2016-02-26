@@ -29,6 +29,11 @@ public interface RetrofitApi {
     Observable<JsonObject> getDetails(@NonNull @Field("user_ids") String userIds,
                                       @NonNull @Field("post_ids") String postIds);
 
+    @FormUrlEncoded
+    @POST("users_posts")
+    Observable<JsonObject> getDetails2(@NonNull @Field("user_id") String userIds,
+                                      @NonNull @Field("post_id") String postIds);
+
     @GET("api/get_earning")
     Observable<JsonObject> getEarning(@NonNull @Query("offer_id") String offerId);
 

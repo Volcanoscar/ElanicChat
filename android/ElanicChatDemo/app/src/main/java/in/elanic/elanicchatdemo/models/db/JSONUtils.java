@@ -1,6 +1,9 @@
 package in.elanic.elanicchatdemo.models.db;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
+
+import com.google.gson.JsonObject;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -184,10 +187,11 @@ public class JSONUtils {
             throw new JSONException("message or quotation object not found");
         }
 
+        message.setSender_id(jsonMessage.getString(KEY_USER_PROFILE));
         message.setMessage_id(jsonMessage.getString(KEY__ID));
 
         if (jsonMessage.has(KEY_LOCAL_ID)) {
-            message.setLocal_id(jsonObject.getString(KEY_LOCAL_ID));
+            message.setLocal_id(jsonMessage.getString(KEY_LOCAL_ID));
         }
 
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
@@ -283,5 +287,103 @@ public class JSONUtils {
         }
 
         return "";
+    }
+
+    public static boolean injectLocalIdToMessage(@NonNull JSONObject response, @NonNull JSONObject extra) {
+        String localId = extra.optString(JSONUtils.KEY_LOCAL_ID);
+        if (response.has(JSONUtils.KEY_MESSAGE)) {
+            try {
+                response.getJSONObject(JSONUtils.KEY_MESSAGE).put(JSONUtils.KEY_LOCAL_ID, localId);
+                return true;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean injectLocalIdToOffer(@NonNull JSONObject response, @NonNull JSONObject extra) {
+        String localId = extra.optString(JSONUtils.KEY_LOCAL_ID);
+        if (response.has(JSONUtils.KEY_QUOTATION)) {
+            try {
+                response.getJSONObject(JSONUtils.KEY_QUOTATION).put(JSONUtils.KEY_LOCAL_ID, localId);
+                return true;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean injectLolcaIdFromMessageToExtras(@NonNull JSONObject request, @NonNull JSONObject extra) {
+        if (request.has(JSONUtils.KEY_MESSAGE)) {
+            try {
+                String localId = request.getJSONObject(JSONUtils.KEY_MESSAGE).optString(JSONUtils.KEY_LOCAL_ID, null);
+                if (localId != null) {
+                    extra.put(JSONUtils.KEY_LOCAL_ID, localId);
+                    return true;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean injectLolcaIdFromOfferToExtras(@NonNull JSONObject request, @NonNull JSONObject extra) {
+        if (request.has(JSONUtils.KEY_QUOTATION)) {
+            try {
+                String localId = request.getJSONObject(JSONUtils.KEY_QUOTATION).optString(JSONUtils.KEY_LOCAL_ID, null);
+                if (localId != null) {
+                    extra.put(JSONUtils.KEY_LOCAL_ID, localId);
+                    return true;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public static User userFromJson(@NonNull JsonObject userJson) {
+        User user = new User();
+        user.setUser_id(userJson.get("id").getAsString());
+        user.setUsername(userJson.get("username").getAsString());
+        user.setGraphic(userJson.get("picture").getAsString());
+        return user;
+    }
+
+    public static Product productFromJson(@NonNull JsonObject productJson) {
+        Product product = new Product();
+        product.setProduct_id(productJson.get(JSONUtils.KEY_ID).getAsString());
+        product.setTitle(productJson.get(JSONUtils.KEY_TITLE).getAsString());
+        product.setSelling_price(productJson.get("price").getAsInt());
+        product.setPurchase_price(productJson.get("mrp").getAsInt());
+        if (productJson.has(JSONUtils.KEY_BRAND)) {
+            product.setBrand(productJson.get(JSONUtils.KEY_BRAND).getAsJsonObject().get("name").getAsString());
+        }
+        if (productJson.has(JSONUtils.KEY_COLOR)) {
+            product.setColor(productJson.get(JSONUtils.KEY_COLOR).getAsJsonObject().get("name").getAsString());
+        }
+        if (productJson.has(JSONUtils.KEY_CATEGORY)) {
+            product.setCategory(productJson.get(JSONUtils.KEY_CATEGORY).getAsJsonObject().get("name").getAsString());
+        }
+        if (productJson.has(JSONUtils.KEY_SIZE)) {
+            product.setSize(productJson.get(JSONUtils.KEY_SIZE).getAsJsonObject().get("name").getAsString());
+        }
+
+        // TODO add image here and in db
+
+        product.setAuthor(getUserFromProductJson(productJson));
+        return product;
+    }
+
+    public static User getUserFromProductJson(JsonObject productJson) {
+        JsonObject author = productJson.getAsJsonObject("author");
+        return userFromJson(author);
     }
 }

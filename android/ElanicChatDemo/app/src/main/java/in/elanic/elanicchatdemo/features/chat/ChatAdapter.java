@@ -424,6 +424,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemViewType(int position) {
+        // TODO check if sender_id is not null, it crashes here
+
         int whoseMessage = mItems.get(position).getSender_id().equals(myUserId) ? MY_MESSAGE : OTHER_MESSAGE;
         String type = mItems.get(position).getType();
         if (type == null) {
@@ -431,7 +433,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         switch (type) {
             case Constants.TYPE_MESSAGE_TEXT:
-                return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_OFFER;
+                return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_TEXT;
             case Constants.TYPE_MESSAGE_OFFER:
                 return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_OFFER;
             case Constants.TYPE_MESSAGE_SYSTEM:

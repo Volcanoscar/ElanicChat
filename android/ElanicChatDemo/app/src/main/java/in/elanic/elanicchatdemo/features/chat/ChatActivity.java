@@ -246,7 +246,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
         DaggerChatViewComponent.builder()
                 .applicationComponent(applicationComponent)
                 .chatViewModule(new ChatViewModule(this))
-                .chatApiProviderModule(new ChatApiProviderModule())
+                .chatApiProviderModule(new ChatApiProviderModule(false))
                 .build()
                 .inject(this);
     }

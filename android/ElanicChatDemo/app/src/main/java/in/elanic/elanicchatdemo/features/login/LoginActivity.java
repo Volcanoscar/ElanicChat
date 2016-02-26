@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements LoginView {
 
         DaggerLoginViewComponent.builder()
                 .applicationComponent(applicationComponent)
-                .loginProviderModule(new LoginProviderModule())
+                .loginProviderModule(new LoginProviderModule(false))
                 .loginViewModule(new LoginViewModule(this))
                 .build()
                 .inject(this);
@@ -93,9 +93,9 @@ public class LoginActivity extends AppCompatActivity implements LoginView {
             return;
         }
 
-        saveLoginId(userId);
-        navigateOnLogin(userId, false);
-//        mPresenter.login(userId);
+//        saveLoginId(userId);
+//        navigateOnLogin(userId, false);
+        mPresenter.login(userId);
     }
 
     @Override
@@ -133,12 +133,12 @@ public class LoginActivity extends AppCompatActivity implements LoginView {
 
     @Override
     public void navigateOnLogin(String userId, boolean newLogin) {
-        /*Intent intent = ChatListActivity.getActivityIntent(this, userId, newLogin);
-        startActivity(intent);
-        finish();*/
-
-        Intent intent = DemoActivity.getActivityIntent(this, userId);
+        Intent intent = ChatListActivity.getActivityIntent(this, userId, newLogin);
         startActivity(intent);
         finish();
+
+        /*Intent intent = DemoActivity.getActivityIntent(this, userId);
+        startActivity(intent);
+        finish();*/
     }
 }

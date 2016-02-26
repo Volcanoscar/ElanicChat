@@ -12,6 +12,7 @@ public class Constants {
     public static final String BASE_URL = "http://" + BuildConfig.LOCAL_IP + ":" + BuildConfig.LOCAL_PORT + "/";
     public static final String WS_URL = "ws://" + BuildConfig.LOCAL_IP + ":" + BuildConfig.LOCAL_PORT + "/ws";
     public static final String SERVER_BASE_URL = "http://54.169.71.129:3200/";
+    public static final String PHP_SERVER_BASE_URL = "http://54.169.71.129/api/dev/android/";
 
     public static final String API_KEY = "ELANIC-CLIENT-SENDS-THIS";
 

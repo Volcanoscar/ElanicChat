@@ -15,6 +15,7 @@ import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.providers.chat.ChatItemProvider;
 import in.elanic.elanicchatdemo.models.providers.product.ProductProvider;
 import in.elanic.elanicchatdemo.models.providers.user.UserProvider;
@@ -41,6 +42,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
     private EventBus mEventBus;
     private String mUserId;
+    private User mUser;
 
     private Handler mHandler;
 
@@ -71,6 +73,10 @@ public class ChatListPresenterImpl implements ChatListPresenter {
         }
 
         mUserId = extras.getString(Constants.EXTRA_USER_ID);
+        mUser = mUserProvider.getUser(mUserId);
+
+        // TODO do something if user is null
+
         boolean newLogin = extras.getBoolean(Constants.EXTRA_JUST_LOGGED_IN, true);
         mEventBus = EventBus.getDefault();
 
@@ -172,6 +178,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
                     @Override
                     public void onError(Throwable e) {
+                        e.printStackTrace();
                         mChatListView.showProgressDialog(false);
                         mChatListView.showSnackbar("Unable to start chat");
                     }
@@ -179,12 +186,14 @@ public class ChatListPresenterImpl implements ChatListPresenter {
                     @Override
                     public void onNext(ChatItem chatItem) {
                         mChatListView.showProgressDialog(false);
+//                        chatItem.setBuyer_id(mUserId);
+//                        chatItem.setBuyer();
 
                         // add chat item to db
                         mChatItemProvider.addOrUpdateChatItem(chatItem);
 
                         // add sender to db
-                        mUserProvider.addOrUpdateUser(chatItem.getBuyer());
+//                        mUserProvider.addOrUpdateUser(chatItem.getBuyer());
                         mUserProvider.addOrUpdateUser(chatItem.getSeller());
                         // add product to db
                         mProductProvider.addOrUpdateProduct(chatItem.getProduct());

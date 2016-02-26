@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import de.greenrobot.event.EventBus;
+import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
@@ -217,8 +218,9 @@ public class ChatPresenterImpl implements ChatPresenter {
         }*/
 
         try {
-            Pair<String, String> request = WSSHelper.createSendMessageRequest(message);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
+            Pair<JSONObject, String> request = WSSHelper.createSendMessageRequest(message);
+            mEventBus.post(new WSDataRequestEvent(request.first, request.second, chatId));
+//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -283,8 +285,9 @@ public class ChatPresenterImpl implements ChatPresenter {
         }*/
 
         try {
-            Pair<String, String> request = WSSHelper.createOfferMessageRequest(message);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
+            Pair<JSONObject, String> request = WSSHelper.createOfferMessageRequest(message);
+            mEventBus.post(new WSDataRequestEvent(request.first, request.second, chatId));
+//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
             return true;
         } catch (JSONException e) {
             e.printStackTrace();
@@ -360,6 +363,11 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.showOfferEarningProgressbar(true);
 
         Observable<JsonObject> observable = chatApiProvider.getEarning(mProductId, price);
+        if (observable == null) {
+            mChatView.showSnackbar("commission api is not available");
+            return;
+        }
+
         offerEarnSubscription = observable.subscribeOn(Schedulers.io())
                 .delaySubscription(500, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -522,6 +530,11 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         Observable<JsonObject> observable = chatApiProvider.getEarning(offer.getMessage_id());
+        if (observable == null) {
+            mChatView.showSnackbar("Commission API is not configured");
+            return;
+        }
+
         Subscription subscription = observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<JsonObject>() {
