@@ -46,6 +46,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
     private boolean DEBUG = true;
 
     private static final String[] socketIOEvents = {
+            SocketIOConstants.EVENT_CONFIRM_JOIN_CHAT,
             SocketIOConstants.EVENT_CONFIRM_ADD_USER,
             SocketIOConstants.EVENT_GET_MESSAGES,
             SocketIOConstants.EVENT_GET_QUOTATIONS,
@@ -54,15 +55,12 @@ public class RxSokcetIOProvider implements WebsocketApi {
             SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER,
             SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS,
 //            SocketIOConstants.EVENT_REVOKE_MAKE_OFFER,
-            SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
 //            SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER,
-            SocketIOConstants.EVENT_CONFIRM_DENY_OFFER,
 //            SocketIOConstants.EVENT_REVOKE_DENY_OFFER,
             SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER,
 //            SocketIOConstants.EVENT_REVOKE_CANCEL_OFFER,
             SocketIOConstants.EVENT_CONFIRM_BUY_NOW,
 //            SocketIOConstants.EVENT_REVOKE_BUY_NOW,
-            SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER,
             SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON,
             SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON,
             SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT,
@@ -272,6 +270,29 @@ public class RxSokcetIOProvider implements WebsocketApi {
                 Log.i(TAG, "send data: " + event + ", data: " + data);
             }
             mSocket.emit(event, data, jsonBundle, mApiKey);
+        }
+    }
+
+    @Override
+    public void joinGlobalChat(@NonNull String userId, long since) {
+
+        Log.i(TAG, "join global chat room");
+
+        if (mSocket != null && mSocket.connected()) {
+
+            JSONObject jsonBundle = new JSONObject();
+            try {
+
+//                jsonBundle.put(JSONUtils.KEY_REQUEST_ID, requestId);
+                jsonBundle.put(JSONUtils.KEY_USER_ID, mUserId);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return;
+            }
+
+            Log.d(TAG, "join global chat: " + SocketIOConstants.EVENT_JOIN_CHAT + " userId " + userId);
+            mSocket.emit(SocketIOConstants.EVENT_JOIN_CHAT, userId, since, jsonBundle, mApiKey);
         }
     }
 

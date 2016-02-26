@@ -24,6 +24,7 @@ import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
 import in.elanic.elanicchatdemo.features.chat.view.ChatView;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
+import in.elanic.elanicchatdemo.models.api.websocket.socketio.SocketIOConstants;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
 import in.elanic.elanicchatdemo.models.db.DaoSession;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
@@ -147,6 +148,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         isSeller = !(mSender.getUser_id().equals(buyer.getUser_id()));
 
         initialized = true;
+
+        joinRoom(chatId);
     }
 
     @Override
@@ -205,21 +208,10 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         addMessageToChat(0, message);
 
-        /*try {
-
-            // TODO move this to WSService
-            JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.textMessageToJSON(message));
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
-            jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
-            sendMessageToWSService(jsonRequest.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
-
         try {
             Pair<JSONObject, String> request = WSSHelper.createSendMessageRequest(message);
-            mEventBus.post(new WSDataRequestEvent(request.first, request.second, chatId));
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_SEND_DATA,
+                    request.first, request.second, chatId));
 //            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
         } catch (JSONException e) {
             e.printStackTrace();
@@ -268,25 +260,10 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         addMessageToChat(0, message);
 
-        /*try {
-
-            // TODO move this to WSService
-            JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put(JSONUtils.KEY_MESSAGE, JSONUtils.textMessageToJSON(message));
-            jsonRequest.put(JSONUtils.KEY_REQUEST_TYPE, Constants.REQUEST_SEND_MESSAGE);
-            jsonRequest.put(JSONUtils.KEY_REQUEST_ID, String.valueOf(new Date().getTime()));
-            sendMessageToWSService(jsonRequest.toString());
-            return true;
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-            mChatView.showSnackbar("Unable to create offer. Please try again");
-            return false;
-        }*/
-
         try {
             Pair<JSONObject, String> request = WSSHelper.createOfferMessageRequest(message);
-            mEventBus.post(new WSDataRequestEvent(request.first, request.second, chatId));
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_SEND_DATA,
+                    request.first, request.second, chatId));
 //            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
             return true;
         } catch (JSONException e) {
@@ -441,9 +418,11 @@ public class ChatPresenterImpl implements ChatPresenter {
         }*/
 
         try {
-            Pair<String, String> pair = WSSHelper.createOfferResponse(message, accept);
+            Pair<JSONObject, String> pair = WSSHelper.createOfferResponse(message, accept, mSenderId);
             mChatView.showProgressDialog(true);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, pair.first, pair.second));
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_SEND_DATA,
+                    pair.first, pair.second, chatId));
+//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, pair.first, pair.second));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -457,7 +436,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         Message message = mMessages.get(position);
         // TODO check these conditions
-        if (message == null || message.getType().equals(Constants.TYPE_MESSAGE_OFFER) ||
+        if (message == null || !message.getType().equals(Constants.TYPE_MESSAGE_OFFER) ||
                 message.getOffer_status() == null) {
             return;
         }
@@ -473,7 +452,7 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         Message message = mMessages.get(position);
         // TODO check these conditions
-        if (message == null || message.getType().equals(Constants.TYPE_MESSAGE_OFFER) ||
+        if (message == null || !message.getType().equals(Constants.TYPE_MESSAGE_OFFER) ||
                 message.getOffer_status() == null) {
             return;
         }
@@ -488,8 +467,10 @@ public class ChatPresenterImpl implements ChatPresenter {
         }*/
 
         try {
-            Pair<String, String> request = WSSHelper.createOfferCancelRequest(message);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
+            Pair<JSONObject, String> request = WSSHelper.createOfferCancelRequest(message, mSenderId);
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_SEND_DATA,
+                    request.first, request.second, chatId));
+//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
             mChatView.showProgressDialog(true);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -561,6 +542,12 @@ public class ChatPresenterImpl implements ChatPresenter {
                 });
 
         // TODO Add this to subcriptions
+    }
+
+    private void joinRoom(String chatId) {
+        EventBus.getDefault().post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_JOIN_ROOM, null,
+                SocketIOConstants.EVENT_ADD_USER,
+                chatId));
     }
 
     private void onOfferCommissionDetailsReceived(Message offer, JsonObject commission) {
@@ -645,13 +632,22 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         List<Message> data;
         if (mMessages != null && !mMessages.isEmpty()) {
+
             Log.i(TAG, "timestamp: " + mMessages.get(0).getCreated_at());
-             data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), buyerId, sellerId, mProductId);
+            data = mMessageProvider.getMessages(mMessages.get(0).getCreated_at(), buyerId, sellerId, mProductId);
+
         } else {
+
             if (DEBUG) {
                 Log.e(TAG, "messages is null. fetch all");
             }
+
             data = mMessageProvider.getAllMessages(buyerId, sellerId, mProductId);
+            if (data != null) {
+                mMessages = data;
+                mChatView.setData(mMessages);
+                return;
+            }
         }
 
         if (data != null && !data.isEmpty()) {

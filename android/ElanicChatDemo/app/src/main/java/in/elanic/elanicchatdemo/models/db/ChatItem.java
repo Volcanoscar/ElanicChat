@@ -13,6 +13,7 @@ public class ChatItem {
     private String buyer_id;
     private String seller_id;
     private String product_id;
+    private java.util.Date last_opened;
     private Integer status;
     private java.util.Date created_at;
     private java.util.Date updated_at;
@@ -41,11 +42,12 @@ public class ChatItem {
         this.chat_id = chat_id;
     }
 
-    public ChatItem(String chat_id, String buyer_id, String seller_id, String product_id, Integer status, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted) {
+    public ChatItem(String chat_id, String buyer_id, String seller_id, String product_id, java.util.Date last_opened, Integer status, java.util.Date created_at, java.util.Date updated_at, Boolean is_deleted) {
         this.chat_id = chat_id;
         this.buyer_id = buyer_id;
         this.seller_id = seller_id;
         this.product_id = product_id;
+        this.last_opened = last_opened;
         this.status = status;
         this.created_at = created_at;
         this.updated_at = updated_at;
@@ -88,6 +90,14 @@ public class ChatItem {
 
     public void setProduct_id(String product_id) {
         this.product_id = product_id;
+    }
+
+    public java.util.Date getLast_opened() {
+        return last_opened;
+    }
+
+    public void setLast_opened(java.util.Date last_opened) {
+        this.last_opened = last_opened;
     }
 
     public Integer getStatus() {

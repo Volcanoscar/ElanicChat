@@ -110,6 +110,10 @@ public class RetrofitServerChatApiProvider implements ChatApiProvider {
             for (String userId : userIds) {
                 users.append(userId);
                 users.append(",");
+
+            }
+            if (users.length() > 0) {
+                users.deleteCharAt(users.length() - 1);
             }
         }
 
@@ -118,9 +122,17 @@ public class RetrofitServerChatApiProvider implements ChatApiProvider {
                 posts.append(productId);
                 posts.append(",");
             }
+
+            if (posts.length() > 0) {
+                posts.deleteCharAt(posts.length() - 1);
+            }
+
         }
 
-        Observable<JsonObject> observable = mService.getDetails(users.toString(), posts.toString());
+        Log.i(TAG, "fetch users: " + users.toString());
+        Log.i(TAG, "fetch posts: " + posts.toString());
+
+        Observable<JsonObject> observable = mService.getDetails2(users.toString(), posts.toString());
         return  observable.flatMap(new Func1<JsonObject, Observable<DualList<User, Product>>>() {
             @Override
             public Observable<DualList<User, Product>> call(JsonObject jsonObject) {
@@ -133,20 +145,28 @@ public class RetrofitServerChatApiProvider implements ChatApiProvider {
                     return Observable.error(new Exception("success is false"));
                 }
 
-                JsonArray jsonUsers = jsonObject.getAsJsonArray(JSONUtils.KEY_USER);
+                JsonArray jsonUsers = jsonObject.get(JSONUtils.KEY_CONTENT)
+                        .getAsJsonObject().getAsJsonArray(JSONUtils.KEY_USER);
                 List<User> users = new ArrayList<User>();
                 for (int i=0; i<jsonUsers.size(); i++) {
                     JsonObject userJson = jsonUsers.get(i).getAsJsonObject();
+                    if (DEBUG) {
+                        Log.i(TAG, "user json: " + userJson.toString());
+                    }
                     User user = JSONUtils.userFromJson(userJson);
                     if (user != null) {
                         users.add(user);
                     }
                 }
 
-                JsonArray jsonPosts = jsonObject.getAsJsonArray(JSONUtils.KEY_POST);
+                JsonArray jsonPosts = jsonObject.get(JSONUtils.KEY_CONTENT)
+                        .getAsJsonObject().getAsJsonArray(JSONUtils.KEY_POST);
                 List<Product> posts = new ArrayList<Product>();
                 for (int i=0; i<jsonPosts.size(); i++) {
                     JsonObject postJson = jsonPosts.get(i).getAsJsonObject();
+                    if (DEBUG) {
+                        Log.i(TAG, "post json: " + postJson.toString());
+                    }
                     Product post = JSONUtils.productFromJson(postJson);
                     if (post != null) {
                         posts.add(post);

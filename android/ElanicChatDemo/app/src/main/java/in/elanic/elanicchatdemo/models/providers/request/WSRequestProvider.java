@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.request;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.List;
 
@@ -16,7 +17,8 @@ public interface WSRequestProvider {
     boolean saveRequest(WSRequest request);
     @Deprecated WSRequest createRequest(String requestId, int requestType, String content, String userId);
     WSRequest createRequest(@NonNull String requestId, @NonNull String event,
-                            @NonNull String content, @NonNull String userId);
+                            @NonNull String content, @NonNull String userId,
+                            @Nullable String roomId);
     boolean markRequestAsCompleted(String requestId);
     List<WSRequest> getIncompleteRequests();
     void clearPendingRequests();

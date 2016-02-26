@@ -16,10 +16,10 @@ import android.widget.TextView;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -27,7 +27,6 @@ import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
-import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.utils.DateUtils;
 
 /**
@@ -57,6 +56,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int otherChatColor;
 
     private JsonParser parser;
+    private TimeZone timeZone;
 
     public ChatAdapter(Context context, String userId) {
         mContext = context;
@@ -67,6 +67,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         otherChatColor = ContextCompat.getColor(context, R.color.grey_800);
 
         parser = new JsonParser();
+        timeZone = TimeZone.getDefault();
     }
 
     @Override
@@ -133,7 +134,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mHolder.mTextView.setText(sb.toString());*/
 
             mHolder.mTextView.setText(message.getContent());
-            mHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
+            mHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
 
             Log.i(TAG, "delivered at: " + message.getDelivered_at());
 
@@ -176,7 +177,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 //            boolean hasResponded = false;
             boolean isSent = true;
-            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
 
             if (isMyMessage) {
                 if (message.getRead_at() != null) {
@@ -215,7 +216,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         if (!isExpired) {
                             viewHolder.mOfferStatusView.setText(R.string.offer_waiting_response);
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
-                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
+                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate, timeZone));
                             viewHolder.mOfferTimeView.setVisibility(View.VISIBLE);
 
                             viewHolder.mOfferStatusImageView.setEnabled(true);
@@ -223,6 +224,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 @Override
                                 public void onClick(View v) {
                                     if (mCallback != null) {
+                                        Log.i(TAG, "cancel offer: " + position);
                                         mCallback.cancelOffer(position);
                                     }
                                 }
@@ -312,7 +314,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             viewHolder.mOfferEarnView.setVisibility(View.GONE);
 
             viewHolder.mOfferView.setText(sb.toString());
-            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
 
             String offerStatus = message.getOffer_status();
             Date createdAt = message.getCreated_at();
@@ -322,11 +324,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Integer validity = message.getValidity();
             Date expiryDate = null;
             if (validity != null) {
-                expiryDate = new Date(createdAt.getTime() + validity * 1000);
+                expiryDate = DateUtils.getExpiryDate(message, timeZone);
             }
 //            boolean hasResponded = false;
 
-            isExpired = DateUtils.isOfferExpired(message);
+            isExpired = DateUtils.isOfferExpired(message, timeZone);
 
             if (offerStatus != null) {
                 switch (offerStatus) {
@@ -344,7 +346,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                             viewHolder.setLeftDrawable(R.drawable.ic_timer_grey_400_18dp,
                                     viewHolder.mOfferTimeView);
-                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
+                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate, timeZone));
 
                         } else {
                             viewHolder.mOfferStatusView.setText(R.string.offer_expired);
@@ -413,7 +415,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else if (holder instanceof EventViewHolder) {
             EventViewHolder viewHolder = (EventViewHolder)holder;
             viewHolder.mContentView.setText(message.getContent());
-            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at()));
+            viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
         }
     }
 

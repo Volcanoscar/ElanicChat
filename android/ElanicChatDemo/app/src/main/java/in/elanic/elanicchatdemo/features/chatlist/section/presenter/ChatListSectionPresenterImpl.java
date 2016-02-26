@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.List;
+import java.util.TimeZone;
 
 import in.elanic.elanicchatdemo.features.chatlist.section.view.ChatListSectionView;
 import in.elanic.elanicchatdemo.models.UIChatItem;
@@ -36,11 +37,14 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     private List<ChatItem> mItems;
     protected List<UIChatItem> uiItems;
 
+    protected TimeZone timeZone;
+
     public ChatListSectionPresenterImpl(ChatListSectionView mChatListSectionView,
                                         ChatItemProvider mChatItemProvider, UIChatItemProvider chatItemProvider) {
         this.mChatListSectionView = mChatListSectionView;
         this.mChatItemProvider = mChatItemProvider;
         this.uiChatItemProvider = chatItemProvider;
+        timeZone = TimeZone.getDefault();
     }
 
     @Override
@@ -147,7 +151,8 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
         }
 
         // Check if expired
-        if (offer.getOffer_status().equals(Constants.STATUS_OFFER_EXPIRED) || DateUtils.isOfferExpired(offer)) {
+        if (offer.getOffer_status().equals(Constants.STATUS_OFFER_EXPIRED) ||
+                DateUtils.isOfferExpired(offer, timeZone)) {
             return;
         }
 

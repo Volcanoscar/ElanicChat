@@ -1,17 +1,21 @@
 package in.elanic.elanicchatdemo.models.db;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.util.Log;
 
 import com.google.gson.JsonObject;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import in.elanic.elanicchatdemo.models.Constants;
 
@@ -89,6 +93,9 @@ public class JSONUtils {
     public static final String KEY_CREATION_DATE = "creation_date";
     public static final String KEY_MODIFIED_DATE = "modified_date";
     public static final String KEY_DELIVERED_DATE = "delivered_date";
+
+    public static final String KEY_MESSAGES = "messages";
+    public static final String KEY_QUOTATIONS = "quotations";
 
 //    public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd'T'kk:mm:ss.SSS'Z'";
@@ -172,35 +179,50 @@ public class JSONUtils {
         JSONObject jsonMessage = null;
         if (jsonObject.has(KEY_MESSAGE)) {
             jsonMessage = jsonObject.getJSONObject(KEY_MESSAGE);
-            message.setContent(jsonMessage.getString(KEY_MESSAGE_TEXT));
-            message.setType(jsonMessage.getString(KEY_TYPE));
+            setTextMessageFields(message, jsonMessage);
+
         } else if (jsonObject.has(KEY_QUOTATION)) {
             jsonMessage = jsonObject.getJSONObject(KEY_QUOTATION);
-            message.setOffer_price(jsonMessage.getInt(KEY_QUOTED_PRICE));
-            message.setOffer_status(jsonMessage.getString(KEY_STATUS));
-            message.setValidity(jsonMessage.getInt(KEY_SECONDS_VALIDITY));
-            if (jsonMessage.has(KEY_OFFER_EARNING_DATA)) {
-                message.setOffer_earning_data(jsonMessage.getString(KEY_OFFER_EARNING_DATA));
-            }
-            message.setType(Constants.TYPE_MESSAGE_OFFER);
+            setOfferMessageFields(message, jsonMessage);
         } else {
             throw new JSONException("message or quotation object not found");
         }
 
-        message.setSender_id(jsonMessage.getString(KEY_USER_PROFILE));
-        message.setMessage_id(jsonMessage.getString(KEY__ID));
+        setMessageFields(message, jsonMessage);
 
         if (jsonMessage.has(KEY_LOCAL_ID)) {
             message.setLocal_id(jsonMessage.getString(KEY_LOCAL_ID));
         }
+
+        message.setIs_deleted(jsonMessage.optBoolean(KEY_IS_DELETED, false));
+
+        return message;
+    }
+
+    public static void setTextMessageFields(@NonNull Message message, @NonNull JSONObject jsonMessage) throws JSONException {
+        message.setContent(jsonMessage.getString(KEY_MESSAGE_TEXT));
+        message.setType(jsonMessage.getString(KEY_TYPE));
+    }
+
+    public static void setOfferMessageFields(@NonNull Message message, @NonNull JSONObject jsonMessage) throws JSONException {
+        message.setOffer_price(jsonMessage.getInt(KEY_QUOTED_PRICE));
+        message.setOffer_status(jsonMessage.getString(KEY_STATUS));
+        message.setValidity(jsonMessage.getInt(KEY_SECONDS_VALIDITY));
+        if (jsonMessage.has(KEY_OFFER_EARNING_DATA)) {
+            message.setOffer_earning_data(jsonMessage.getString(KEY_OFFER_EARNING_DATA));
+        }
+        message.setType(Constants.TYPE_MESSAGE_OFFER);
+    }
+
+    public static void setMessageFields(@NonNull Message message, @NonNull JSONObject jsonMessage) throws JSONException, ParseException {
+        message.setSender_id(jsonMessage.getString(KEY_USER_PROFILE));
+        message.setMessage_id(jsonMessage.getString(KEY__ID));
 
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
         message.setCreated_at(df.parse(jsonMessage.getString(KEY_CREATION_DATE)));
         if (jsonMessage.has(KEY_MODIFIED_DATE)) {
             message.setUpdated_at(df.parse(jsonMessage.getString(KEY_MODIFIED_DATE)));
         }
-
-        message.setIs_deleted(jsonMessage.optBoolean(KEY_IS_DELETED, false));
 
         if (jsonMessage.has(KEY_DELIVERED_DATE)) {
             message.setDelivered_at(df.parse(jsonMessage.getString(KEY_DELIVERED_DATE)));
@@ -209,8 +231,6 @@ public class JSONUtils {
         if (jsonMessage.has(KEY_READ_AT)) {
             message.setRead_at(df.parse(jsonMessage.getString(KEY_READ_AT)));
         }
-
-        return message;
     }
 
     public static User getUserFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
@@ -385,5 +405,78 @@ public class JSONUtils {
     public static User getUserFromProductJson(JsonObject productJson) {
         JsonObject author = productJson.getAsJsonObject("author");
         return userFromJson(author);
+    }
+
+    public static List<Message> getMessagesFromJSON(@NonNull String sellerId, @NonNull String buyerId,
+                                                    @NonNull String postId,
+                                                    @NonNull JSONArray jsonMessages) {
+
+        if (jsonMessages.length() == 0) {
+            return new ArrayList<>();
+        }
+
+        List<Message> messages = new ArrayList<>();
+        for(int i=0; i<jsonMessages.length(); i++) {
+            Message message = new Message();
+            message.setBuyer_id(buyerId);
+            message.setSeller_id(sellerId);
+            message.setProduct_id(postId);
+
+            try {
+                JSONObject jsonMessage = jsonMessages.getJSONObject(i);
+                setMessageFields(message, jsonMessage);
+                setTextMessageFields(message, jsonMessage);
+            } catch (JSONException | ParseException e) {
+                e.printStackTrace();
+                continue;
+            }
+
+            messages.add(message);
+        }
+
+        return messages;
+    }
+
+    public static List<Message> getOffersFromJSON(@NonNull String sellerId, @NonNull String buyerId,
+                                                    @NonNull String postId,
+                                                    @NonNull JSONArray jsonMessages) {
+
+        if (jsonMessages.length() == 0) {
+            return new ArrayList<>();
+        }
+
+        List<Message> messages = new ArrayList<>();
+        for(int i=0; i<jsonMessages.length(); i++) {
+            Message message = new Message();
+            message.setBuyer_id(buyerId);
+            message.setSeller_id(sellerId);
+            message.setProduct_id(postId);
+
+            try {
+                JSONObject jsonMessage = jsonMessages.getJSONObject(i);
+                setMessageFields(message, jsonMessage);
+                setOfferMessageFields(message, jsonMessage);
+            } catch (JSONException | ParseException e) {
+                e.printStackTrace();
+                continue;
+            }
+
+            messages.add(message);
+        }
+
+        return messages;
+    }
+
+    public static List<Message> getMessages(@NonNull @Size(min=1) JSONArray jsonArray) {
+        List<Message> messages = new ArrayList<>();
+        for(int i=0; i<jsonArray.length(); i++) {
+            try {
+                messages.add(getMessageFromJSON(jsonArray.getJSONObject(i)));
+            } catch (JSONException | ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return messages;
     }
 }

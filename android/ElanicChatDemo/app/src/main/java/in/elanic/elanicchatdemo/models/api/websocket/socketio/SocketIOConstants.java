@@ -5,6 +5,7 @@ package in.elanic.elanicchatdemo.models.api.websocket.socketio;
  */
 public class SocketIOConstants {
 
+    public static final String EVENT_JOIN_CHAT = "joinChat";
     public static final String EVENT_ADD_USER = "addUser";
     public static final String EVENT_SEND_CHAT = "sendChat";
     public static final String EVENT_MAKE_OFFER = "makeOffer";
@@ -20,18 +21,20 @@ public class SocketIOConstants {
     public static final String EVENT_LEAVE_ROOM = "leave_room";
     public static final String EVENT_DISCONNECT = "disconnect";
 
-    public static final String EVENT_GET_MESSAGES = "getMessages";
-    public static final String EVENT_GET_QUOTATIONS = "getQuotations";
+    @Deprecated public static final String EVENT_GET_MESSAGES = "getMessages";
+    @Deprecated public static final String EVENT_GET_QUOTATIONS = "getQuotations";
 
+    public static final String EVENT_CONFIRM_JOIN_CHAT = "confirmJoinChat";
     public static final String EVENT_CONFIRM_ADD_USER = "confirmAddUser";
     public static final String EVENT_CONFIRM_SEND_CHAT = "confirmSendChat";
 //    public static final String EVENT_REVOKE_SEND_CHAT = "revokeSendChat";
     public static final String EVENT_CONFIRM_MAKE_OFFER = "confirmMakeOffer";
     public static final String EVENT_CONFIRM_EDIT_OFFER_STATUS = "confirmEditOfferStatus";
 //    public static final String EVENT_REVOKE_MAKE_OFFER = "revokeMakeOffer";
-    public static final String EVENT_CONFIRM_ACCEPT_OFFER = "confirmAcceptOffer";
+
+    @Deprecated public static final String EVENT_CONFIRM_ACCEPT_OFFER = "confirmAcceptOffer";
 //    public static final String EVENT_REVOKE_ACCEPT_OFFER = "revokeAcceptOffer";
-    public static final String EVENT_CONFIRM_DENY_OFFER = "confirmDenyOffer";
+    @Deprecated public static final String EVENT_CONFIRM_DENY_OFFER = "confirmDenyOffer";
 //    public static final String EVENT_REVOKE_DENY_OFFER = "revokeDenyOffer";
     public static final String EVENT_CONFIRM_BUY_NOW = "confirmBuyNow";
 //    public static final String EVENT_REVOKE_BUY_NOW = "revokeBuyNow";

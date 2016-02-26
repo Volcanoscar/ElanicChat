@@ -149,6 +149,11 @@ public class RxWebsocketProvider implements WebsocketApi {
     }
 
     @Override
+    public void joinGlobalChat(@NonNull String userId, long since) {
+        // Do nothing
+    }
+
+    @Override
     public void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId, boolean isBuyer, long epocTimestamp, @NonNull String requestId) {
         // Do nothing
     }

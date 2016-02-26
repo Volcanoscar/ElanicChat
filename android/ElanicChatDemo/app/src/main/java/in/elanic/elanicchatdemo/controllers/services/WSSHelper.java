@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.controllers.services;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.util.Log;
 import android.util.Pair;
@@ -143,10 +144,9 @@ public class WSSHelper {
     }
 
     public Message updateMessageInDB(JSONObject jsonResponse) throws JSONException {
-        JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
         Message message;
         try {
-            message = JSONUtils.getMessageFromJSON(message_json);
+            message = JSONUtils.getMessageFromJSON(jsonResponse);
         } catch (ParseException e) {
             e.printStackTrace();
             return null;
@@ -178,6 +178,7 @@ public class WSSHelper {
         return mMessageProvider.addOrUpdateMessages(messages);
     }
 
+    @Deprecated
     public static List<Message> parseMessagesFromResponse(JSONObject jsonResponse) throws JSONException {
         JSONArray messages = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
         if (messages.length() == 0) {
@@ -414,7 +415,7 @@ public class WSSHelper {
                 Log.i(TAG, "buyer id: " + buyerId + " seller id: " + sellerId);
             }
 
-            ChatItem item = new ChatItem(id, buyerId, sellerId, productId,
+            ChatItem item = new ChatItem(id, buyerId, sellerId, productId, null,
                     Constants.CHAT_ITEM_STATUS_ACTIVE, new Date(), new Date(), false);
             mMap.put(id, item);
         }
@@ -438,15 +439,17 @@ public class WSSHelper {
         return createChatItems(items);
     }
 
+    /*@Deprecated
     public String createRequest(@NonNull String userId, @NonNull String event, @NonNull String data) {
         String requestId = String.valueOf(new Date().getTime());
         mWSRequestProvider.createRequest(requestId, event, data, userId);
         return requestId;
-    }
+    }*/
 
-    public String createRequest(@NonNull String userId, @NonNull String event, @NonNull JSONObject data) {
+    public String createRequest(@NonNull String userId, @NonNull String event, @NonNull JSONObject data,
+                                @Nullable String roomId) {
         String requestId = String.valueOf(new Date().getTime());
-        mWSRequestProvider.createRequest(requestId, event, data.toString(), userId);
+        mWSRequestProvider.createRequest(requestId, event, data.toString(), userId, roomId);
         return requestId;
     }
 
@@ -498,18 +501,28 @@ public class WSSHelper {
         return new Pair<>(jsonObject, SocketIOConstants.EVENT_MAKE_OFFER);
     }
 
-    public static Pair<String, String> createOfferResponse(@NonNull Message message, boolean accept) throws JSONException {
+    public static Pair<JSONObject, String> createOfferResponse(@NonNull Message message,
+                                                               boolean accept, @NonNull String userId) throws JSONException {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
-        jsonObject.put(JSONUtils.KEY_STATUS, accept ? "Active" : "Denied");
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_EDIT_OFFER_STATUS);
+        jsonObject.put(JSONUtils.KEY_POST, message.getProduct_id());
+        jsonObject.put(JSONUtils.KEY_BUYER_PROFILE, message.getBuyer_id());
+        jsonObject.put(JSONUtils.KEY_SELLER_PROFILE, message.getSeller_id());
+        jsonObject.put(JSONUtils.KEY_USER_PROFILE, userId);
+        jsonObject.put(JSONUtils.KEY_STATUS, accept ? Constants.STATUS_OFFER_ACTIVE : Constants.STATUS_OFFER_DENIED);
+        return new Pair<>(jsonObject, SocketIOConstants.EVENT_EDIT_OFFER_STATUS);
     }
 
-    public static Pair<String, String> createOfferCancelRequest(@NonNull Message message) throws JSONException {
+    public static Pair<JSONObject, String> createOfferCancelRequest(@NonNull Message message,
+                                                                    @NonNull String userId) throws JSONException {
         JSONObject jsonObject = createWSRequest(Constants.REQUEST_CANCEL_OFFER);
         jsonObject.put(JSONUtils.KEY_MESSAGE_ID, message.getMessage_id());
-        jsonObject.put(JSONUtils.KEY_STATUS, "Cancelled");
-        return new Pair<>(jsonObject.toString(), SocketIOConstants.EVENT_EDIT_OFFER_STATUS);
+        jsonObject.put(JSONUtils.KEY_POST, message.getProduct_id());
+        jsonObject.put(JSONUtils.KEY_BUYER_PROFILE, message.getBuyer_id());
+        jsonObject.put(JSONUtils.KEY_SELLER_PROFILE, message.getSeller_id());
+        jsonObject.put(JSONUtils.KEY_USER_PROFILE, userId);
+        jsonObject.put(JSONUtils.KEY_STATUS, Constants.STATUS_OFFER_CANCELLED);
+        return new Pair<>(jsonObject, SocketIOConstants.EVENT_EDIT_OFFER_STATUS);
     }
 
     @Deprecated
@@ -669,5 +682,12 @@ public class WSSHelper {
 
     public ChatItem getChatItem(@NonNull String id) {
         return mChatItemProvider.getChatItem(id);
+    }
+
+    public void updateSyncTimeForChat(@NonNull String roomId, @NonNull Date date) {
+        ChatItem item = mChatItemProvider.getChatItem(roomId);
+        if (item != null) {
+            item.setLast_opened(date);
+        }
     }
 }

@@ -14,6 +14,9 @@ public class ProdOpenHelper2 extends DaoMaster.OpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        if (oldVersion < 2) {
+            DaoMaster.dropAllTables(db, true);
+            onCreate(db);
+        }
     }
 }

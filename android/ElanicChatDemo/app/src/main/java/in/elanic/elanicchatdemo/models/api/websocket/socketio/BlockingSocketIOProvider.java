@@ -123,6 +123,11 @@ public class BlockingSocketIOProvider implements WebsocketApi {
     }
 
     @Override
+    public void joinGlobalChat(@NonNull String userId, long since) {
+        // Todo add stuff here
+    }
+
+    @Override
     public void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId, boolean isBuyer, long epocTimestamp, @NonNull String requestId) {
         // TODO add stuff here
     }

@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
@@ -197,6 +197,8 @@ public class ElanicDaoGenerator {
         chatItem.addToOne(user, sellerId, "seller");
         chatItem.addToOne(product, chatItem.addStringProperty("product_id").getProperty(), "product");
 
+        chatItem.addDateProperty("last_opened");
+
         chatItem.addIntProperty("status");
         chatItem.addDateProperty("created_at");
         chatItem.addDateProperty("updated_at");
@@ -212,6 +214,7 @@ public class ElanicDaoGenerator {
         wsRequest.addDateProperty("updated_at");
         wsRequest.addBooleanProperty("is_deleted");
         wsRequest.addStringProperty("event_name");
+        wsRequest.addStringProperty("room_id");
 
     }
 }

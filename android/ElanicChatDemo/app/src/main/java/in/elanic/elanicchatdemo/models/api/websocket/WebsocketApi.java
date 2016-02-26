@@ -21,6 +21,8 @@ public interface WebsocketApi {
     @Deprecated void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId);
     void sendData(@NonNull JSONObject data, @NonNull String event, @NonNull String requestId);
 
+    void joinGlobalChat(@NonNull String userId, long since);
+
     void joinChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String postId,
                   boolean isBuyer, long epocTimestamp, @NonNull String requestId);
 

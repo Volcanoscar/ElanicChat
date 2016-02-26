@@ -3,6 +3,7 @@ package in.elanic.elanicchatdemo.utils;
 import android.support.annotation.NonNull;
 
 import java.util.Date;
+import java.util.TimeZone;
 
 import in.elanic.elanicchatdemo.models.db.Message;
 
@@ -11,9 +12,9 @@ import in.elanic.elanicchatdemo.models.db.Message;
  */
 public class DateUtils {
 
-    public static String getPrintableTime(Date date) {
+    public static String getPrintableTime(Date date, TimeZone tz) {
         Date now = new Date();
-        long diff = (now.getTime() - date.getTime()) / 1000;
+        long diff = (now.getTime() - (date.getTime() + tz.getOffset(date.getTime()))) / 1000;
 
         if (diff < 5 * 60 /* 5 mins */) {
             return "Just Now";
@@ -30,9 +31,13 @@ public class DateUtils {
         }
     }
 
-    public static String getRemainingTime(Date date) {
+    public static String getRemainingTime(Date date, TimeZone tz) {
+        return getRemainingTime(new Date(date.getTime() + tz.getOffset(date.getTime())));
+    }
+
+    public static String getRemainingTime(Date alreadyOffsetDate) {
         Date now = new Date();
-        long diff = (date.getTime() - now.getTime()) / (1000 * 60);
+        long diff = (alreadyOffsetDate.getTime() - now.getTime()) / (1000 * 60);
 
         if (diff > 0 && diff < 60) {
             return diff + " mins";
@@ -43,12 +48,13 @@ public class DateUtils {
         return "";
     }
 
-    public static boolean isOfferExpired(@NonNull Message message) {
-        Date expiryDate = getExpiryDate(message);
+    public static boolean isOfferExpired(@NonNull Message message, TimeZone tz) {
+        Date expiryDate = getExpiryDate(message, tz);
         return (expiryDate == null || new Date().compareTo(expiryDate) > 0);
     }
 
-    public static Date getExpiryDate(@NonNull Message message) {
+    public static Date getExpiryDate(@NonNull Message message, TimeZone tz) {
+
         Date createdAt = message.getCreated_at();
         if (createdAt == null) {
             return null;
@@ -59,6 +65,6 @@ public class DateUtils {
             return null;
         }
 
-        return new Date(createdAt.getTime() + validity * 1000);
+        return new Date(createdAt.getTime() + tz.getOffset(createdAt.getTime()) + validity * 1000);
     }
 }

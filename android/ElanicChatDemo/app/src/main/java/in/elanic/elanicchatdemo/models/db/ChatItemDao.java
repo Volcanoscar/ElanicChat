@@ -30,10 +30,11 @@ public class ChatItemDao extends AbstractDao<ChatItem, String> {
         public final static Property Buyer_id = new Property(1, String.class, "buyer_id", false, "BUYER_ID");
         public final static Property Seller_id = new Property(2, String.class, "seller_id", false, "SELLER_ID");
         public final static Property Product_id = new Property(3, String.class, "product_id", false, "PRODUCT_ID");
-        public final static Property Status = new Property(4, Integer.class, "status", false, "STATUS");
-        public final static Property Created_at = new Property(5, java.util.Date.class, "created_at", false, "CREATED_AT");
-        public final static Property Updated_at = new Property(6, java.util.Date.class, "updated_at", false, "UPDATED_AT");
-        public final static Property Is_deleted = new Property(7, Boolean.class, "is_deleted", false, "IS_DELETED");
+        public final static Property Last_opened = new Property(4, java.util.Date.class, "last_opened", false, "LAST_OPENED");
+        public final static Property Status = new Property(5, Integer.class, "status", false, "STATUS");
+        public final static Property Created_at = new Property(6, java.util.Date.class, "created_at", false, "CREATED_AT");
+        public final static Property Updated_at = new Property(7, java.util.Date.class, "updated_at", false, "UPDATED_AT");
+        public final static Property Is_deleted = new Property(8, Boolean.class, "is_deleted", false, "IS_DELETED");
     };
 
     private DaoSession daoSession;
@@ -56,10 +57,11 @@ public class ChatItemDao extends AbstractDao<ChatItem, String> {
                 "\"BUYER_ID\" TEXT," + // 1: buyer_id
                 "\"SELLER_ID\" TEXT," + // 2: seller_id
                 "\"PRODUCT_ID\" TEXT," + // 3: product_id
-                "\"STATUS\" INTEGER," + // 4: status
-                "\"CREATED_AT\" INTEGER," + // 5: created_at
-                "\"UPDATED_AT\" INTEGER," + // 6: updated_at
-                "\"IS_DELETED\" INTEGER);"); // 7: is_deleted
+                "\"LAST_OPENED\" INTEGER," + // 4: last_opened
+                "\"STATUS\" INTEGER," + // 5: status
+                "\"CREATED_AT\" INTEGER," + // 6: created_at
+                "\"UPDATED_AT\" INTEGER," + // 7: updated_at
+                "\"IS_DELETED\" INTEGER);"); // 8: is_deleted
     }
 
     /** Drops the underlying database table. */
@@ -93,24 +95,29 @@ public class ChatItemDao extends AbstractDao<ChatItem, String> {
             stmt.bindString(4, product_id);
         }
  
+        java.util.Date last_opened = entity.getLast_opened();
+        if (last_opened != null) {
+            stmt.bindLong(5, last_opened.getTime());
+        }
+ 
         Integer status = entity.getStatus();
         if (status != null) {
-            stmt.bindLong(5, status);
+            stmt.bindLong(6, status);
         }
  
         java.util.Date created_at = entity.getCreated_at();
         if (created_at != null) {
-            stmt.bindLong(6, created_at.getTime());
+            stmt.bindLong(7, created_at.getTime());
         }
  
         java.util.Date updated_at = entity.getUpdated_at();
         if (updated_at != null) {
-            stmt.bindLong(7, updated_at.getTime());
+            stmt.bindLong(8, updated_at.getTime());
         }
  
         Boolean is_deleted = entity.getIs_deleted();
         if (is_deleted != null) {
-            stmt.bindLong(8, is_deleted ? 1L: 0L);
+            stmt.bindLong(9, is_deleted ? 1L: 0L);
         }
     }
 
@@ -134,10 +141,11 @@ public class ChatItemDao extends AbstractDao<ChatItem, String> {
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // buyer_id
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // seller_id
             cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // product_id
-            cursor.isNull(offset + 4) ? null : cursor.getInt(offset + 4), // status
-            cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)), // created_at
-            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // updated_at
-            cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0 // is_deleted
+            cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)), // last_opened
+            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5), // status
+            cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)), // created_at
+            cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)), // updated_at
+            cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0 // is_deleted
         );
         return entity;
     }
@@ -149,10 +157,11 @@ public class ChatItemDao extends AbstractDao<ChatItem, String> {
         entity.setBuyer_id(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setSeller_id(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setProduct_id(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
-        entity.setStatus(cursor.isNull(offset + 4) ? null : cursor.getInt(offset + 4));
-        entity.setCreated_at(cursor.isNull(offset + 5) ? null : new java.util.Date(cursor.getLong(offset + 5)));
-        entity.setUpdated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
-        entity.setIs_deleted(cursor.isNull(offset + 7) ? null : cursor.getShort(offset + 7) != 0);
+        entity.setLast_opened(cursor.isNull(offset + 4) ? null : new java.util.Date(cursor.getLong(offset + 4)));
+        entity.setStatus(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
+        entity.setCreated_at(cursor.isNull(offset + 6) ? null : new java.util.Date(cursor.getLong(offset + 6)));
+        entity.setUpdated_at(cursor.isNull(offset + 7) ? null : new java.util.Date(cursor.getLong(offset + 7)));
+        entity.setIs_deleted(cursor.isNull(offset + 8) ? null : cursor.getShort(offset + 8) != 0);
      }
     
     /** @inheritdoc */

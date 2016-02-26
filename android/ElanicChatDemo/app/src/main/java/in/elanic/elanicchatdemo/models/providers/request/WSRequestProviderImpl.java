@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.models.providers.request;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.Date;
@@ -58,7 +59,8 @@ public class WSRequestProviderImpl implements WSRequestProvider {
 
     @Override
     public WSRequest createRequest(@NonNull String requestId, @NonNull String event,
-                                   @NonNull String content, @NonNull String userId) {
+                                   @NonNull String content, @NonNull String userId,
+                                   @Nullable String roomId) {
         Date timestamp = new Date();
 
         WSRequest wsRequest = new WSRequest();
@@ -70,6 +72,10 @@ public class WSRequestProviderImpl implements WSRequestProvider {
         wsRequest.setIs_completed(false);
         wsRequest.setIs_deleted(false);
         wsRequest.setUser_id(userId);
+
+        if (roomId != null) {
+            wsRequest.setRoom_id(roomId);
+        }
 
         mDao.insert(wsRequest);
 

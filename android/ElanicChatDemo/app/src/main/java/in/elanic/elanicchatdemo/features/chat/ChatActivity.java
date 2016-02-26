@@ -25,6 +25,7 @@ import android.transition.ChangeTransform;
 import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.transition.TransitionSet;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -164,6 +165,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
             @Override
             public void cancelOffer(int position) {
+                Log.i(TAG, "presenter confirm cancellation: " + position);
                 mPresenter.confirmOfferCancellation(position);
             }
 
