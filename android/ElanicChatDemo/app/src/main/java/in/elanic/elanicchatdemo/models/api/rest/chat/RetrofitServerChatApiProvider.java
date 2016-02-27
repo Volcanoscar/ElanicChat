@@ -106,6 +106,12 @@ public class RetrofitServerChatApiProvider implements ChatApiProvider {
         StringBuilder users = new StringBuilder();
         StringBuilder posts = new StringBuilder();
 
+        // Change the fucking API
+        if (userIds == null || userIds.isEmpty()) {
+            userIds = new ArrayList<>();
+            userIds.add("16550");
+        }
+
         if (userIds != null) {
             for (String userId : userIds) {
                 users.append(userId);
@@ -115,6 +121,12 @@ public class RetrofitServerChatApiProvider implements ChatApiProvider {
             if (users.length() > 0) {
                 users.deleteCharAt(users.length() - 1);
             }
+        }
+
+        // Change the fucking API
+        if (productIds == null || productIds.isEmpty()) {
+            productIds = new ArrayList<>();
+            productIds.add("4636");
         }
 
         if (productIds != null) {

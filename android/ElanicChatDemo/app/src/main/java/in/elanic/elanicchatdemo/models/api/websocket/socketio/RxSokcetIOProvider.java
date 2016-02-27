@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
@@ -258,7 +257,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
                 if (event.equals(SocketIOConstants.EVENT_SEND_CHAT)) {
                     JSONUtils.injectLolcaIdFromMessageToExtras(data, jsonBundle);
                 } else if (event.equals(SocketIOConstants.EVENT_MAKE_OFFER)) {
-                    JSONUtils.injectLolcaIdFromOfferToExtras(data, jsonBundle);
+                    JSONUtils.injectLocalIdFromOfferToExtras(data, jsonBundle);
                 }
 
             } catch (JSONException e) {

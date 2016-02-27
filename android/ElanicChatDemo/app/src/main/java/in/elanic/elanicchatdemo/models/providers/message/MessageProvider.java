@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.db.Message;
@@ -23,9 +24,10 @@ public interface MessageProvider {
     List<Message> getMessages(@Nullable Date timestamp, String buyer, String seller, String productId);
 
     Message createNewMessage(@NonNull String content, @NonNull User sender, @NonNull User buyer,
-                             @NonNull User seller, @NonNull Product product);
+                             @NonNull User seller, @NonNull Product product, @NonNull TimeZone timeZone);
     Message createNewOffer(int price, @NonNull User sender, @NonNull User buyer,
-                           @NonNull User seller, @NonNull Product product, @Nullable JsonObject commission);
+                           @NonNull User seller, @NonNull Product product, @Nullable JsonObject commission,
+                           @NonNull TimeZone timeZone);
     boolean updateMessage(@NonNull Message message);
     boolean updateLocalMessage(@NonNull Message message);
     boolean addNewMessage(@NonNull Message message);
@@ -36,9 +38,9 @@ public interface MessageProvider {
     long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId, @NonNull String productId);
     long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId);
 
-    @Deprecated int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
+    int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
     int updateReadTimestamps(@NonNull DualList<String, Date> updateVals);
-    @Deprecated int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt);
+    int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt);
     int updateDeliveredTimestamps(@NonNull DualList<String, Date> updateVals);
 
 

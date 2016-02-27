@@ -108,8 +108,18 @@ public class JSONUtils {
         messageJson.put(KEY_MESSAGE_TEXT, message.getContent());
         messageJson.put(KEY_USER_PROFILE, message.getSender_id());
         messageJson.put(KEY_TYPE, Constants.TYPE_MESSAGE_TEXT);
+        messageJson.put(KEY_ID, message.getMessage_id());
         if (message.getLocal_id() != null && !message.getLocal_id().isEmpty()) {
             messageJson.put(KEY_LOCAL_ID, message.getLocal_id());
+        }
+
+        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        if (message.getRead_at() != null) {
+            messageJson.put(KEY_READ_AT, df.format(message.getRead_at()));
+        }
+
+        if (message.getDelivered_at() != null) {
+            messageJson.put(KEY_DELIVERED_DATE, df.format(message.getDelivered_at()));
         }
 
         json.put(KEY_MESSAGE, messageJson);
@@ -117,6 +127,8 @@ public class JSONUtils {
         json.put(KEY_BUYER_PROFILE, message.getBuyer_id());
         json.put(KEY_SELLER_PROFILE, message.getSeller_id());
         json.put(KEY_POST, message.getProduct_id());
+
+
 
         /*DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
 
@@ -149,6 +161,7 @@ public class JSONUtils {
         JSONObject json = new JSONObject();
         JSONObject messageJson = new JSONObject();
 
+        messageJson.put(KEY_ID, message.getMessage_id());
         messageJson.put(KEY_USER_PROFILE, message.getSender_id());
         messageJson.put(KEY_QUOTED_PRICE, message.getOffer_price());
 
@@ -158,6 +171,15 @@ public class JSONUtils {
 
         if (message.getLocal_id() != null && !message.getLocal_id().isEmpty()) {
             messageJson.put(KEY_LOCAL_ID, message.getLocal_id());
+        }
+
+        DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
+        if (message.getRead_at() != null) {
+            messageJson.put(KEY_READ_AT, df.format(message.getRead_at()));
+        }
+
+        if (message.getDelivered_at() != null) {
+            messageJson.put(KEY_DELIVERED_DATE, df.format(message.getDelivered_at()));
         }
 
         json.put(KEY_QUOTATION, messageJson);
@@ -353,7 +375,7 @@ public class JSONUtils {
         return false;
     }
 
-    public static boolean injectLolcaIdFromOfferToExtras(@NonNull JSONObject request, @NonNull JSONObject extra) {
+    public static boolean injectLocalIdFromOfferToExtras(@NonNull JSONObject request, @NonNull JSONObject extra) {
         if (request.has(JSONUtils.KEY_QUOTATION)) {
             try {
                 String localId = request.getJSONObject(JSONUtils.KEY_QUOTATION).optString(JSONUtils.KEY_LOCAL_ID, null);

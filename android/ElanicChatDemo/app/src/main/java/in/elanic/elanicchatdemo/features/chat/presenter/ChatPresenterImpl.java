@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import de.greenrobot.event.EventBus;
@@ -86,6 +87,8 @@ public class ChatPresenterImpl implements ChatPresenter {
     private HashMap<Integer, JsonObject> commissionMap;
     private Subscription offerEarnSubscription;
 
+    private TimeZone timeZone;
+
     private static final boolean DEBUG = true;
 
     public ChatPresenterImpl(ChatView mChatView, DaoSession mDaoSession, ChatApiProvider chatApiProvider) {
@@ -97,6 +100,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         mMessageProvider = new MessageProviderImpl(this.mDaoSession.getMessageDao());
         mProductProvider = new ProductProviderImpl(this.mDaoSession.getProductDao());
         chatItemProvider = new ChatItemProviderImpl(this.mDaoSession.getChatItemDao());
+
+        timeZone = TimeZone.getDefault();
     }
 
     @Override
@@ -162,7 +167,8 @@ public class ChatPresenterImpl implements ChatPresenter {
     @Override
     public void pause() {
         if (chatItem != null) {
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND_READ_DATA, chatItem.getChat_id()));
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_MARK_MESSAGES_AS_READ, null, null, chatId));
+//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND_READ_DATA, chatItem.getChat_id()));
         }
     }
 
@@ -204,7 +210,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
 
-        Message message = mMessageProvider.createNewMessage(content, mSender, buyer, seller, mProduct);
+        Message message = mMessageProvider.createNewMessage(content, mSender, buyer, seller,
+                mProduct, timeZone);
 
         addMessageToChat(0, message);
 
@@ -256,7 +263,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         Message message = mMessageProvider.createNewOffer(mPrice, mSender, buyer, seller, mProduct,
-                commission);
+                commission, timeZone);
 
         addMessageToChat(0, message);
 

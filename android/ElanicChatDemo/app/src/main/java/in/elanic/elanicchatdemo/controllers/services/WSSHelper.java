@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.websocket.socketio.SocketIOConstants;
@@ -572,6 +573,64 @@ public class WSSHelper {
         return mMessageProvider.getUnreadMessages(buyerId, sellerId, senderId, productId);
     }
 
+    public static Pair<JSONObject, String> createReadReceiptRequest(@NonNull Message message,
+                                                                    @NonNull TimeZone timeZone) throws JSONException {
+        JSONObject jsonObject;
+        if (message.getType() == null) {
+            return null;
+        }
+
+        Date readAt = new Date();
+        readAt = new Date(new Date().getTime() - timeZone.getOffset(readAt.getTime()));
+        message.setRead_at(readAt);
+
+        String event;
+        if (message.getType().equals(Constants.TYPE_MESSAGE_TEXT) ||
+                message.getType().equals(Constants.TYPE_MESSAGE_SYSTEM)) {
+            jsonObject = JSONUtils.textMessageToJSON(message);
+            event = SocketIOConstants.EVENT_SET_MESSAGES_READ_AT;
+        } else if (message.getType().equals(Constants.TYPE_MESSAGE_OFFER)) {
+            jsonObject = JSONUtils.offerMessageToJSON(message);
+            event = SocketIOConstants.EVENT_SET_QUOTATIONS_READ_AT;
+        } else {
+            return null;
+        }
+
+
+//        jsonObject.put(JSONUtils.KEY_READ_AT, JSONUtils.convertDateToString(readAt));
+
+        return new Pair<>(jsonObject, event);
+    }
+
+    public static Pair<JSONObject, String> createDeliveryReceipt(@NonNull Message message,
+                                                                 @NonNull TimeZone timeZone) throws JSONException {
+        JSONObject jsonObject;
+        if (message.getType() == null) {
+            return null;
+        }
+
+        Date deliveredAt = new Date();
+        deliveredAt = new Date(new Date().getTime() - timeZone.getOffset(deliveredAt.getTime()));
+        message.setDelivered_at(deliveredAt);
+
+        String event;
+        if (message.getType().equals(Constants.TYPE_MESSAGE_TEXT) ||
+                message.getType().equals(Constants.TYPE_MESSAGE_SYSTEM)) {
+            jsonObject = JSONUtils.textMessageToJSON(message);
+            event = SocketIOConstants.EVENT_SET_MESSAGES_DELIVERD_ON;
+        } else if (message.getType().equals(Constants.TYPE_MESSAGE_OFFER)) {
+            jsonObject = JSONUtils.offerMessageToJSON(message);
+            event = SocketIOConstants.EVENT_SET_QUOTATIONS_DELIVERED_ON;
+        } else {
+            return null;
+        }
+
+
+//        jsonObject.put(JSONUtils.KEY_READ_AT, JSONUtils.convertDateToString(readAt));
+
+        return new Pair<>(jsonObject, event);
+    }
+
     public static Pair<JSONObject, String> createReadReceiptsRequest(@NonNull @Size(min=1) List<Message> messages) throws JSONException {
         JSONObject jsonObject = new JSONObject();
 
@@ -610,6 +669,49 @@ public class WSSHelper {
         return jsonObject;
     }
 
+    public String updateDeliveredReceipt(@NonNull JSONObject jsonResponse, @NonNull DateFormat df) throws JSONException, ParseException {
+        String messageId = null;
+        Date deliveredAt= null;
+        if (jsonResponse.has(JSONUtils.KEY_MESSAGE)) {
+            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_ID);
+            deliveredAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_DELIVERED_DATE));
+        } else if (jsonResponse.has(JSONUtils.KEY_QUOTATION)) {
+            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_ID);
+            deliveredAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_DELIVERED_DATE));
+        } else {
+            return null;
+        }
+
+        if (messageId != null && deliveredAt != null) {
+            mMessageProvider.updateDeliveredTimestamp(messageId, deliveredAt);
+            return messageId;
+        }
+
+        return null;
+    }
+
+    public String updateReadReceipt(@NonNull JSONObject jsonResponse, @NonNull DateFormat df) throws JSONException, ParseException {
+        String messageId = null;
+        Date readAt= null;
+        if (jsonResponse.has(JSONUtils.KEY_MESSAGE)) {
+            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_ID);
+            readAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_READ_AT));
+        } else if (jsonResponse.has(JSONUtils.KEY_QUOTATION)) {
+            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_ID);
+            readAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_READ_AT));
+        } else {
+            return null;
+        }
+
+        if (messageId != null && readAt != null) {
+            mMessageProvider.updateReadTimestamp(messageId, readAt);
+            return messageId;
+        }
+
+        return null;
+    }
+
+    @Deprecated
     public List<String> updateDeliveredReceipts(JSONObject jsonResponse) throws JSONException {
         JSONArray deliveredReceipts = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
 

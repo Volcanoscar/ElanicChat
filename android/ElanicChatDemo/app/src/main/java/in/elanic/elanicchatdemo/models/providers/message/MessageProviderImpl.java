@@ -2,6 +2,7 @@ package in.elanic.elanicchatdemo.models.providers.message;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.format.Time;
 import android.util.Log;
 import android.util.Pair;
 
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TimeZone;
 
 import de.greenrobot.dao.query.CountQuery;
 import de.greenrobot.dao.query.QueryBuilder;
@@ -63,7 +65,7 @@ public class MessageProviderImpl implements MessageProvider {
     @Override
     public Message createNewMessage(@NonNull String content, @NonNull User sender,
                                     @NonNull User buyer, @NonNull User seller,
-                                    @NonNull Product product) {
+                                    @NonNull Product product, @NonNull TimeZone timeZone) {
         Message message = new Message();
 
         Date date = new Date();
@@ -75,7 +77,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setSeller(seller);
         message.setBuyer(buyer);
         message.setIs_deleted(false);
-        message.setCreated_at(date);
+        message.setCreated_at(new Date(date.getTime() - timeZone.getOffset(date.getTime())));
         message.setType(Constants.TYPE_MESSAGE_TEXT);
         message.setProduct(product);
         message.setOffer_price(0);
@@ -88,7 +90,7 @@ public class MessageProviderImpl implements MessageProvider {
     public Message createNewOffer(int price, @NonNull User sender,
                                   @NonNull User buyer, @NonNull User seller,
                                   @NonNull Product product,
-                                  @Nullable JsonObject commission) {
+                                  @Nullable JsonObject commission, @NonNull TimeZone timeZone) {
         Message message = new Message();
 
         Date date = new Date();
@@ -102,7 +104,7 @@ public class MessageProviderImpl implements MessageProvider {
         message.setBuyer(buyer);
         message.setSeller(seller);
         message.setIs_deleted(false);
-        message.setCreated_at(date);
+        message.setCreated_at(new Date(date.getTime() - timeZone.getOffset(date.getTime())));
         message.setType(Constants.TYPE_MESSAGE_OFFER);
         message.setProduct(product);
         message.setOffer_price(price);
@@ -211,7 +213,6 @@ public class MessageProviderImpl implements MessageProvider {
         return cq.count();
     }
 
-    @Deprecated
     @Override
     public int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt) {
 
@@ -255,7 +256,6 @@ public class MessageProviderImpl implements MessageProvider {
         return count;
     }
 
-    @Override
     @Deprecated
     public int updateDeliveredTimestamp(@NonNull String messageId, @NonNull Date deliveredAt) {
         Message message = mDao.load(messageId);

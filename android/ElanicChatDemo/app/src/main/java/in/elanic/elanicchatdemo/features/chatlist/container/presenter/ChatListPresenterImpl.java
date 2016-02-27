@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.greenrobot.event.EventBus;
+import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.features.chatlist.container.view.ChatListView;
@@ -79,6 +80,8 @@ public class ChatListPresenterImpl implements ChatListPresenter {
 
         boolean newLogin = extras.getBoolean(Constants.EXTRA_JUST_LOGGED_IN, true);
         mEventBus = EventBus.getDefault();
+
+        mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_JOIN_CHAT, null, null, null));
 
         _subscription = new CompositeSubscription();
 

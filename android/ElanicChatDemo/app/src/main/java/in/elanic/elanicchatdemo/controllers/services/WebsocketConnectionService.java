@@ -17,10 +17,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -88,6 +91,7 @@ public class WebsocketConnectionService extends Service {
     private static final int RETRY_CONNECTION_LONG_DELAY = 60 * 60 * 1000; // 1 hour
 
     private List<String> conncetedRooms;
+    private DateFormat dateFormat;
 
     @Nullable
     @Override
@@ -120,7 +124,7 @@ public class WebsocketConnectionService extends Service {
         clearPendingRequests();
 
         conncetedRooms = new ArrayList<>();
-
+        dateFormat = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT);
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
@@ -233,6 +237,9 @@ public class WebsocketConnectionService extends Service {
                     Log.i(TAG, "ws connected");
                 }
 
+                if (conncetedRooms != null) {
+                    conncetedRooms.clear();
+                }
                 checkIncompleteRequests();
                 sendWSConnectedEvent();
                 sendJoinChatEvent();
@@ -481,6 +488,23 @@ public class WebsocketConnectionService extends Service {
         mWSSHelper.saveMessagesToDB(newMessages);
         mWSSHelper.createChatItems(newMessages);
 
+        // Send delivery
+        TimeZone timeZone = TimeZone.getDefault();
+        for (Message message : newMessages) {
+            if (message.getSender_id() != null && !message.getSender_id().equals(mUserId) && message.getDelivered_at() == null) {
+                try {
+                    Pair<JSONObject, String> request = WSSHelper.createDeliveryReceipt(message, timeZone);
+                    if (request == null) {
+                        continue;
+                    }
+
+                    sendData(request.first, request.second, null, null);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         if (DEBUG) {
             Log.i(TAG, "check for users which are not in db");
         }
@@ -717,18 +741,34 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
-        if (DEBUG) {
-            for (Message message : unreadMessages) {
+        TimeZone timeZone = TimeZone.getDefault();
+
+        for (Message message : unreadMessages) {
+            if (DEBUG) {
                 Log.i(TAG, "unread message: " + message.getMessage_id());
             }
+
+            try {
+                Pair<JSONObject, String> request = WSSHelper.createReadReceiptRequest(message, timeZone);
+                if (request == null) {
+                    continue;
+                }
+
+                sendData(request.first, request.second, null, chatItemId);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+//                continue;
+            }
+
         }
 
-        try {
+        /*try {
             Pair<JSONObject, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
             sendData(request.first, request.second, null, chatItemId);
         } catch (JSONException e) {
             e.printStackTrace();
-        }
+        }*/
 
         /*try {
             JSONObject jsonRequest = WSSHelper.createUnreadMessagesRequest(unreadMessages);
@@ -739,23 +779,47 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
-        List<String> updatedIds = mWSSHelper.updateReadReceipts(jsonResponse);
+
+        try {
+            String updatedId = mWSSHelper.updateReadReceipt(jsonResponse, dateFormat);
+            if (updatedId != null) {
+                List<String> ids = new ArrayList<>();
+                ids.add(updatedId);
+                mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, ids));
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        /*List<String> updatedIds = mWSSHelper.updateReadReceipts(jsonResponse);
         if (updatedIds.isEmpty()) {
             Log.e(TAG, "update ids is empty");
             return;
         }
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));*/
     }
 
     private void onMarkAsDeliveredRequestCompleted(JSONObject jsonResponse) throws JSONException {
-        List<String> updatedIds = mWSSHelper.updateDeliveredReceipts(jsonResponse);
+
+        try {
+            String updatedId = mWSSHelper.updateDeliveredReceipt(jsonResponse, dateFormat);
+            if (updatedId != null) {
+                List<String> ids = new ArrayList<>();
+                ids.add(updatedId);
+                mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, ids));
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        /*List<String> updatedIds = mWSSHelper.updateDeliveredReceipts(jsonResponse);
 
         if (updatedIds.isEmpty()) {
             Log.e(TAG, "update ids is empty");
             return;
         }
 
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
+        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));*/
     }
 
     ///////////////////////////////////////////
@@ -967,6 +1031,14 @@ public class WebsocketConnectionService extends Service {
 
             case WSDataRequestEvent.EVENT_JOIN_ROOM:
                 joinRoom(event.getRoomId());
+                break;
+
+            case WSDataRequestEvent.EVENT_MARK_MESSAGES_AS_READ:
+                markMessagesAsRead(event.getRoomId());
+                break;
+
+            case WSDataRequestEvent.EVENT_JOIN_CHAT:
+                sendJoinChatEvent();
                 break;
         }
     }
