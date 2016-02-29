@@ -27,6 +27,7 @@ public class Message {
     private java.util.Date read_at;
     private Boolean is_read;
     private Boolean is_deleted;
+    private String offer_id;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -54,7 +55,7 @@ public class Message {
         this.message_id = message_id;
     }
 
-    public Message(String message_id, String local_id, String type, String content, String product_id, String buyer_id, String seller_id, String sender_id, Integer offer_price, String offer_status, Integer validity, String offer_earning_data, java.util.Date created_at, java.util.Date updated_at, java.util.Date delivered_at, java.util.Date read_at, Boolean is_read, Boolean is_deleted) {
+    public Message(String message_id, String local_id, String type, String content, String product_id, String buyer_id, String seller_id, String sender_id, Integer offer_price, String offer_status, Integer validity, String offer_earning_data, java.util.Date created_at, java.util.Date updated_at, java.util.Date delivered_at, java.util.Date read_at, Boolean is_read, Boolean is_deleted, String offer_id) {
         this.message_id = message_id;
         this.local_id = local_id;
         this.type = type;
@@ -73,6 +74,7 @@ public class Message {
         this.read_at = read_at;
         this.is_read = is_read;
         this.is_deleted = is_deleted;
+        this.offer_id = offer_id;
     }
 
     /** called by internal mechanisms, do not call yourself. */
@@ -223,6 +225,14 @@ public class Message {
 
     public void setIs_deleted(Boolean is_deleted) {
         this.is_deleted = is_deleted;
+    }
+
+    public String getOffer_id() {
+        return offer_id;
+    }
+
+    public void setOffer_id(String offer_id) {
+        this.offer_id = offer_id;
     }
 
     /** To-one relationship, resolved on first access. */

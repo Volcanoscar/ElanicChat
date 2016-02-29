@@ -555,6 +555,9 @@ public class ChatPresenterImpl implements ChatPresenter {
                             return;
                         }
 
+                        // 56d42089efbc0a446c32666f
+                        // 56d42091efbc0a446c326670
+
                         onOfferCommissionDetailsReceived(offer, jsonObject);
                     }
                 });

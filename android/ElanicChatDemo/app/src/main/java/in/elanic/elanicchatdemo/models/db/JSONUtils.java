@@ -93,6 +93,7 @@ public class JSONUtils {
     public static final String KEY_CREATION_DATE = "creation_date";
     public static final String KEY_MODIFIED_DATE = "modified_date";
     public static final String KEY_DELIVERED_DATE = "delivered_date";
+    public static final String KEY_QUOTE_ID = "quoteId";
 
     public static final String KEY_MESSAGES = "messages";
     public static final String KEY_QUOTATIONS = "quotations";
@@ -161,7 +162,10 @@ public class JSONUtils {
         JSONObject json = new JSONObject();
         JSONObject messageJson = new JSONObject();
 
-        messageJson.put(KEY_ID, message.getMessage_id());
+        if (message.getOffer_id() != null) {
+            messageJson.put(KEY_ID, message.getOffer_id());
+        }
+        messageJson.put(KEY_QUOTE_ID, message.getMessage_id());
         messageJson.put(KEY_USER_PROFILE, message.getSender_id());
         messageJson.put(KEY_QUOTED_PRICE, message.getOffer_price());
 
@@ -224,6 +228,7 @@ public class JSONUtils {
     public static void setTextMessageFields(@NonNull Message message, @NonNull JSONObject jsonMessage) throws JSONException {
         message.setContent(jsonMessage.getString(KEY_MESSAGE_TEXT));
         message.setType(jsonMessage.getString(KEY_TYPE));
+        message.setMessage_id(jsonMessage.getString(KEY__ID));
     }
 
     public static void setOfferMessageFields(@NonNull Message message, @NonNull JSONObject jsonMessage) throws JSONException {
@@ -234,11 +239,13 @@ public class JSONUtils {
             message.setOffer_earning_data(jsonMessage.getString(KEY_OFFER_EARNING_DATA));
         }
         message.setType(Constants.TYPE_MESSAGE_OFFER);
+        message.setMessage_id(jsonMessage.getString(KEY_QUOTE_ID));
+        message.setOffer_id(jsonMessage.getString(KEY__ID));
+
     }
 
     public static void setMessageFields(@NonNull Message message, @NonNull JSONObject jsonMessage) throws JSONException, ParseException {
         message.setSender_id(jsonMessage.getString(KEY_USER_PROFILE));
-        message.setMessage_id(jsonMessage.getString(KEY__ID));
 
         DateFormat df = new SimpleDateFormat(JSON_DATE_FORMAT);
         message.setCreated_at(df.parse(jsonMessage.getString(KEY_CREATION_DATE)));

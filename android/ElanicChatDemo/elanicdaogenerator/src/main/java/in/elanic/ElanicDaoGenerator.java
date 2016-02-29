@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class ElanicDaoGenerator {
 
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public static void main(String[] args) throws Exception {
         Schema schema = new Schema(DB_VERSION, "in.elanic.elanicchatdemo.models.db");
@@ -21,6 +21,7 @@ public class ElanicDaoGenerator {
 
     // If adding new items in entity's schema, add it at the bottom
     // as when running sql upgrade, columns are added at the end
+    @Deprecated
     private static void addEntities(Schema schema) {
 
         // Added in Version 1
@@ -186,6 +187,9 @@ public class ElanicDaoGenerator {
         message.addDateProperty("read_at");
         message.addBooleanProperty("is_read");
         message.addBooleanProperty("is_deleted");
+
+        // Added in version 3
+        message.addStringProperty("offer_id");
 
         // Added in Version 1
         Entity chatItem = schema.addEntity("ChatItem");
