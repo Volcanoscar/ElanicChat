@@ -173,37 +173,46 @@ public class MessageProviderImpl implements MessageProvider {
                                            @NonNull String senderId,@NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+        /*WhereCondition boolCondition = qb.or();*/
 
         qb.where(MessageDao.Properties.Sender_id.eq(senderId),
                 MessageDao.Properties.Buyer_id.eq(buyerId),
                 MessageDao.Properties.Seller_id.eq(sellerId),
-                MessageDao.Properties.Product_id.eq(productId), boolCondition);
+                MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Read_at.isNull()
+                /*, boolCondition*/);
 
         return qb.build().list();
     }
 
     @Override
-    public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId, @NonNull String productId) {
+    public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId,
+                                       @NonNull String productId, @NonNull String receiverId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+//        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
         qb.where(MessageDao.Properties.Seller_id.eq(sellerId),
                 MessageDao.Properties.Buyer_id.eq(buyerId),
-                MessageDao.Properties.Product_id.eq(productId), boolCondition);
+                MessageDao.Properties.Product_id.eq(productId),
+                MessageDao.Properties.Sender_id.notEq(receiverId),
+                MessageDao.Properties.Read_at.isNull()
+                /*,boolCondition*/);
 
         // TODO CountQuery for efficiency
         return qb.count();
     }
 
     @Override
-    public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId) {
+    public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId, @NonNull String receiverId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
-        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+//        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
         qb.where(MessageDao.Properties.Product_id.eq(productId),
-                MessageDao.Properties.Seller_id.eq(sellerId), boolCondition);
+                MessageDao.Properties.Seller_id.eq(sellerId),
+                MessageDao.Properties.Sender_id.notEq(receiverId),
+                MessageDao.Properties.Read_at.isNull()
+                /*, boolCondition*/);
         CountQuery<Message> cq = qb.buildCount();
         if (DEBUG) {
             Log.i(TAG, "productId: " + productId + ", sellerId: " + sellerId + ", cq unread count: " + cq.count());

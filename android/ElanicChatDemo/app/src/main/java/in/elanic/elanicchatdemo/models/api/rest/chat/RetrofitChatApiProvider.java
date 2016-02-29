@@ -166,7 +166,7 @@ public class RetrofitChatApiProvider implements ChatApiProvider {
     }
 
     @Override
-    public Observable<JsonObject> getEarning(@NonNull String postId, @NonNull String price) {
+    public Observable<JsonObject> getEarning(@NonNull String postId, int price, @NonNull String requestId) {
         return mService.getEarning(postId, price);
     }
 

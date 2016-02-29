@@ -35,8 +35,8 @@ public interface MessageProvider {
 
     List<Message> getUnreadMessages(@NonNull String buyerId, @NonNull String sellerId,
                                     @NonNull String senderId, @NonNull String productId);
-    long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId, @NonNull String productId);
-    long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId);
+    long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId, @NonNull String productId, @NonNull String receiverId);
+    long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId, @NonNull String receiverId);
 
     int updateReadTimestamp(@NonNull String messageId, @NonNull Date readAt);
     int updateReadTimestamps(@NonNull DualList<String, Date> updateVals);

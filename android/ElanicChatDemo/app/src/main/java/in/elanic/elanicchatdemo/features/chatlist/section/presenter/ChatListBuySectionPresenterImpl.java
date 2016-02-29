@@ -31,7 +31,7 @@ public class ChatListBuySectionPresenterImpl extends ChatListSectionPresenterImp
     public Observable<List<UIChatItem>> loadUIChats(@NonNull String userId,
                                                        @NonNull List<ChatItem> chatItems,
                                                        @NonNull UIChatItemProvider provider) {
-        return provider.getUIBuyChats(chatItems, userId);
+        return provider.getUIBuyChats(chatItems, userId, mUserId);
     }
 
     @Override

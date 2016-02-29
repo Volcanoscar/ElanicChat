@@ -346,7 +346,8 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         mChatView.showOfferEarningProgressbar(true);
 
-        Observable<JsonObject> observable = chatApiProvider.getEarning(mProductId, price);
+        // TODO add requestId
+        Observable<JsonObject> observable = chatApiProvider.getEarning(mProductId, priceValue, "commission_request");
         if (observable == null) {
             mChatView.showSnackbar("commission api is not available");
             return;
@@ -380,7 +381,7 @@ public class ChatPresenterImpl implements ChatPresenter {
                             return;
                         }
 
-                        setCommissionElement(priceValue, jsonObject.getAsJsonObject(JSONUtils.KEY_DATA));
+                        setCommissionElement(priceValue, jsonObject);
                     }
                 });
     }
@@ -513,11 +514,17 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         final Message offer = mMessages.get(position);
-        if (!offer.getType().equals(Constants.TYPE_MESSAGE_OFFER)) {
+        if (!offer.getType().equals(Constants.TYPE_MESSAGE_OFFER) || offer.getOffer_price() == null) {
             return;
         }
 
-        Observable<JsonObject> observable = chatApiProvider.getEarning(offer.getMessage_id());
+        if (DEBUG) {
+            Log.i(TAG, "get commission for offer: " + offer.getMessage_id());
+        }
+
+        // TODO add requestId
+        Observable<JsonObject> observable = chatApiProvider.getEarning(offer.getProduct_id(),
+                offer.getOffer_price(), "commission_request");
         if (observable == null) {
             mChatView.showSnackbar("Commission API is not configured");
             return;
@@ -533,18 +540,22 @@ public class ChatPresenterImpl implements ChatPresenter {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        e.printStackTrace();
                     }
 
                     @Override
                     public void onNext(JsonObject jsonObject) {
+
+                        if (DEBUG) {
+                            Log.i(TAG, "json response: " + jsonObject);
+                        }
+
                         boolean success = jsonObject.get(JSONUtils.KEY_SUCCESS).getAsBoolean();
                         if (!success) {
                             return;
                         }
 
-                        onOfferCommissionDetailsReceived(offer,
-                                jsonObject.getAsJsonObject(JSONUtils.KEY_DATA));
+                        onOfferCommissionDetailsReceived(offer, jsonObject);
                     }
                 });
 
@@ -692,7 +703,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         int matchIndex = -1;
         for(int i=0; i<mMessages.size(); i++) {
             Message existingMessage = mMessages.get(i);
-            if (existingMessage.getLocal_id().equals(message.getLocal_id())) {
+            String localId = existingMessage.getLocal_id();
+            if (localId != null && localId.equals(message.getLocal_id())) {
                 matchIndex = i;
                 break;
             }
@@ -714,23 +726,6 @@ public class ChatPresenterImpl implements ChatPresenter {
             fetchNewMessagesFromDB();
         }
 
-        // This is not happening
-
-/*        try {
-            Message message = JSONUtils.getMessageFromJSON(new JSONObject(data));
-            // Already adding it in the service
-//            boolean addedToDB = mMessageProvider.addNewMessage(message);
-//            if (addedToDB) {
-//                addMessageToChat(0, message);
-//            }
-
-            int index = mMessages.indexOf()
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }*/
     }
 
     private void onOfferResponseCompleted(Message message) {

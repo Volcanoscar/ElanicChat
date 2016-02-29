@@ -791,5 +791,6 @@ public class WSSHelper {
         if (item != null) {
             item.setLast_opened(date);
         }
+        mChatItemProvider.addOrUpdateChatItem(item);
     }
 }

@@ -20,6 +20,10 @@ public interface ChatApiProvider {
     Observable<ChatItem> startChat(String userId, String productId);
     Observable<DualList<User, Product>> getDetails(@Nullable List<String> userIds,
                                                    @Nullable List<String> productIds);
+
+    @Deprecated
     Observable<JsonObject> getEarning(@NonNull String offerId);
-    Observable<JsonObject> getEarning(@NonNull String postId, @NonNull String price);
+
+    Observable<JsonObject> getEarning(@NonNull String postId, int price,
+                                      @NonNull String requestId);
 }

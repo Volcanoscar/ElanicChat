@@ -67,4 +67,9 @@ public class DateUtils {
 
         return new Date(createdAt.getTime() + tz.getOffset(createdAt.getTime()) + validity * 1000);
     }
+
+    public static Date getOffsetDate(TimeZone tz) {
+        Date t = new Date();
+        return new Date(t.getTime() + tz.getOffset(t.getTime()));
+    }
 }

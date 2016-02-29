@@ -165,15 +165,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             viewHolder.mOfferView.setText(sb.toString());
 
             String offerStatus = message.getOffer_status();
-            Date createdAt = message.getCreated_at();
-            // TODO check for createdAt null
 
             boolean isExpired;
-            Integer validity = message.getValidity();
-            Date expiryDate = null;
-            if (validity != null) {
-                expiryDate = new Date(createdAt.getTime() + validity * 1000);
-            }
+            Date expiryDate = DateUtils.getExpiryDate(message, timeZone);
 
 //            boolean hasResponded = false;
             boolean isSent = true;
@@ -212,11 +206,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (offerStatus != null) {
                 switch (offerStatus) {
                     case Constants.STATUS_OFFER_ACTIVE:
-                    case Constants.STATUS_OFFER_INACTIVE:
                         if (!isExpired) {
-                            viewHolder.mOfferStatusView.setText(R.string.offer_waiting_response);
+                            if (isBuyer) {
+                                // show buy now
+                                viewHolder.mOfferStatusView.setText(R.string.offer_buy_now);
+
+                            } else {
+                                // show accepted
+                                viewHolder.mOfferStatusView.setText(R.string.offer_accepted);
+                            }
+
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
-                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate, timeZone));
+                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
                             viewHolder.mOfferTimeView.setVisibility(View.VISIBLE);
 
                             viewHolder.mOfferStatusImageView.setEnabled(true);
@@ -230,51 +231,56 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 }
                             });
 
-                            if (!isBuyer) {
-                                viewHolder.showEarnings(message);
-                            }
-
                         } else {
+                            // show expired
                             viewHolder.mOfferStatusView.setText(R.string.offer_expired);
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_off_grey_400_24dp);
                             viewHolder.mOfferTimeView.setVisibility(View.GONE);
                         }
 
-//                        hasResponded = false;
                         break;
+
+                    case Constants.STATUS_OFFER_INACTIVE:
+                        if (!isExpired) {
+                            if (isBuyer) {
+                                viewHolder.mOfferStatusView.setText(R.string.offer_waiting_response);
+                                viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
+                                viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
+                                viewHolder.mOfferTimeView.setVisibility(View.VISIBLE);
+                            } else {
+                                // show waiting for response ? Accept. This should not happen
+                                viewHolder.mOfferStatusView.setText(R.string.offer_accept);
+                                viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
+                                viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
+                                viewHolder.mOfferTimeView.setVisibility(View.VISIBLE);
+                            }
+
+                            viewHolder.mOfferStatusImageView.setEnabled(true);
+                            viewHolder.mOfferStatusImageView.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if (mCallback != null) {
+                                        Log.i(TAG, "cancel offer: " + position);
+                                        mCallback.cancelOffer(position);
+                                    }
+                                }
+                            });
+                        } else {
+                            // show expired
+                            viewHolder.mOfferStatusView.setText(R.string.offer_expired);
+                            viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_off_grey_400_24dp);
+                            viewHolder.mOfferTimeView.setVisibility(View.GONE);
+                        }
+
+                        break;
+
                     case Constants.STATUS_OFFER_DENIED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_declined);
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_block_grey_400_24dp);
                         viewHolder.mOfferTimeView.setVisibility(View.GONE);
 //                        hasResponded = true;
                         break;
-                    /*case Constants.OFFER_ACCEPTED:
 
-                        if (!isExpired) {
-
-                            if (isBuyer) {
-                                // TODO show buy now
-                                viewHolder.showBuyNowOption(true);
-                            } else {
-                                viewHolder.mOfferStatusView.setText(R.string.offer_accepted);
-                            }
-
-                            viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
-                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
-
-                            if (!isBuyer) {
-                                viewHolder.showEarnings(message);
-                            }
-
-                        } else {
-
-                            viewHolder.mOfferStatusView.setText(R.string.offer_expired);
-                            viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_off_grey_400_24dp);
-                            viewHolder.mOfferTimeView.setVisibility(View.GONE);
-                        }
-
-//                        hasResponded = true;
-                        break;*/
                     case Constants.STATUS_OFFER_EXPIRED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_expired);
                         viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_alarm_off_grey_400_24dp);
@@ -346,7 +352,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                             viewHolder.setLeftDrawable(R.drawable.ic_timer_grey_400_18dp,
                                     viewHolder.mOfferTimeView);
-                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate, timeZone));
+                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
 
                         } else {
                             viewHolder.mOfferStatusView.setText(R.string.offer_expired);

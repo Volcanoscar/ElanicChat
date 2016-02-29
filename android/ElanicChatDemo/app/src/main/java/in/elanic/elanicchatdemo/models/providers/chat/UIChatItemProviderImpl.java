@@ -33,7 +33,8 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
 
     @Override
     public Observable<List<UIChatItem>> getUIBuyChats(@NonNull final List<ChatItem> chats,
-                                                         @NonNull final String buyerId) {
+                                                         @NonNull final String buyerId,
+                                                      @NonNull final String receiverId) {
         return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
             public Observable<List<UIChatItem>> call() {
@@ -42,7 +43,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
                     UIChatItem uiChat = new UIChatItem(chat);
 
                     uiChat.setUnreadMessages((int) messageProvider.getUnreadMessagesCount(
-                            chat.getSeller_id(), chat.getProduct_id()));
+                            chat.getSeller_id(), chat.getProduct_id(), receiverId));
 
                     uiChat.setLatestMessage(messageProvider.getLatestSimpleMessage(chat.getProduct_id()));
                     uiChat.setDisplayOffer(messageProvider.getLatestOffer(chat.getProduct_id()));
@@ -58,7 +59,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
 
     @Override
     public Observable<List<UIChatItem>> getUISellChats(@NonNull final List<ChatItem> chats,
-                                                          @NonNull final String sellerId) {
+                                                          @NonNull final String sellerId, @NonNull final String receiverId) {
         return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
             public Observable<List<UIChatItem>> call() {
@@ -135,7 +136,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
                     }
 
                     // Get display message
-                    long unreadMessageCount = messageProvider.getUnreadMessagesCount(sellerId, productId);
+                    long unreadMessageCount = messageProvider.getUnreadMessagesCount(sellerId, productId, receiverId);
                     uiChat.setUnreadMessages((int) unreadMessageCount);
 
                     uiChats.add(uiChat);
@@ -150,7 +151,8 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
     @Override
     public Observable<List<UIChatItem>> getUISellChatsForProduct(@NonNull final String productId,
                                                                     @NonNull final List<ChatItem> chats,
-                                                                    @NonNull final String sellerId) {
+                                                                    @NonNull final String sellerId,
+                                                                    @NonNull final String receiverId) {
         return Observable.defer(new Func0<Observable<List<UIChatItem>>>() {
             @Override
             public Observable<List<UIChatItem>> call() {
@@ -158,7 +160,7 @@ public class UIChatItemProviderImpl implements UIChatItemProvider {
                 for (ChatItem chat : chats) {
                     UIChatItem uiChat = new UIChatItem(chat);
 
-                    uiChat.setUnreadMessages((int) messageProvider.getUnreadMessagesCount(sellerId, chat.getBuyer_id(), productId));
+                    uiChat.setUnreadMessages((int) messageProvider.getUnreadMessagesCount(sellerId, chat.getBuyer_id(), productId, receiverId));
                     uiChat.setLatestMessage(messageProvider.getLatestSimpleMessage(productId, chat.getBuyer_id()));
                     uiChat.setDisplayOffer(messageProvider.getLatestOffer(productId, chat.getBuyer_id()));
                     uiChats.add(uiChat);

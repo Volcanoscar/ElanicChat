@@ -39,6 +39,12 @@ public interface RetrofitApi {
 
     @GET("api/get_earning")
     Observable<JsonObject> getEarning(@NonNull @Query("post_id") String postId,
-                                      @NonNull @Query("price") String price);
+                                      @Query("price") int price);
+
+    @FormUrlEncoded
+    @POST("post/chat_commission")
+    Observable<JsonObject> getEarning2(@NonNull @Field("post_id") String postId,
+                                       @Field("price") int price,
+                                       @NonNull @Field("request_id") String requestId);
 
 }

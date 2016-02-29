@@ -51,6 +51,7 @@ import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
+import in.elanic.elanicchatdemo.utils.DateUtils;
 import in.elanic.elanicchatdemo.utils.NetworkUtils;
 import rx.Observable;
 import rx.Subscriber;
@@ -92,6 +93,7 @@ public class WebsocketConnectionService extends Service {
 
     private List<String> conncetedRooms;
     private DateFormat dateFormat;
+    private TimeZone timeZone;
 
     @Nullable
     @Override
@@ -103,6 +105,8 @@ public class WebsocketConnectionService extends Service {
     public void onCreate() {
         super.onCreate();
         setupComponent(ELChatApp.get(this).component());
+
+        timeZone = TimeZone.getDefault();
 
         handler = new Handler();
 
@@ -278,22 +282,24 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void disconnectWSConnectionRequested() {
+        Log.i(TAG, "disconnecting connection");
         mWebSocketApi.disconnect();
         mWebSocketApi.setCallback(null);
     }
 
     private void sendData(@NonNull JSONObject request, @NonNull String event,
                           @Nullable String requestId, @Nullable String roomId) {
+
+        if (requestId == null) {
+            requestId = mWSSHelper.createRequest(mUserId, event, request, roomId);
+        }
+
         if (roomId != null) {
             // check if connected to the room
             if (!conncetedRooms.contains(roomId)) {
                 // connect to the room
                 joinRoom(roomId);
             }
-        }
-
-        if (requestId == null) {
-            requestId = mWSSHelper.createRequest(mUserId, event, request, roomId);
         }
 
         if (mWebSocketApi.isConnected()) {
@@ -859,7 +865,7 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void sendJoinChatEvent() {
-        mWebSocketApi.joinGlobalChat(mUserId, 0);
+        mWebSocketApi.joinGlobalChat(mUserId, mSyncTimestamp != 1 ? mSyncTimestamp : 0);
     }
 
     private void joinRoom(String chatId) {
@@ -871,6 +877,9 @@ public class WebsocketConnectionService extends Service {
             long sync = 0;
             if (timestamp != null) {
                 sync = timestamp.getTime();
+                Log.i(TAG, "sync timestamp for room: " + timestamp + ", " + sync);
+            } else {
+                Log.e(TAG, "sync timestamp is null");
             }
 
             joinRoom(chatItem.getBuyer_id(), chatItem.getSeller_id(), chatItem.getProduct_id(),
@@ -884,6 +893,14 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void onGlobalRoomJoined(JSONObject jsonObject) throws JSONException {
+
+        // save sync timestamp
+        Date timestamp = new Date();
+        timestamp = new Date(timestamp.getTime() - timeZone.getOffset(timestamp.getTime()));
+        mSyncTimestamp = timestamp.getTime();
+        Log.i(TAG, "sync timestamp : " + mSyncTimestamp);
+        mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
+
         // Get messages and quotations
         List<Message> messages = new ArrayList<>();
         if (jsonObject.has(JSONUtils.KEY_MESSAGES)) {
@@ -961,13 +978,13 @@ public class WebsocketConnectionService extends Service {
         if (messages != null && !messages.isEmpty()) {
             onNewMessages(messages);
 
-            Message lastMessage = messages.get(messages.size() - 1);
-            if (lastMessage != null) {
-                Date syncDate = lastMessage.getUpdated_at();
-                if (syncDate != null) {
-                    mWSSHelper.updateSyncTimeForChat(room, syncDate);
-                }
+//            Date syncDate = DateUtils.getOffsetDate(timeZone);
+            Date syncDate = new Date();
+            Log.i(TAG, "sync date: " + syncDate + ", " + syncDate.getTime());
+            if (room != null && !room.isEmpty()) {
+                mWSSHelper.updateSyncTimeForChat(room, syncDate);
             }
+
         }
     }
 
