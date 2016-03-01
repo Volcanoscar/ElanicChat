@@ -834,6 +834,9 @@ public class WebsocketConnectionService extends Service {
             if (messagesJson.length() > 0) {
                 for (int i=0; i<messagesJson.length(); i++) {
                     JSONObject roomObject = messagesJson.getJSONObject(i);
+                    if (roomObject == null) {
+                        continue;
+                    }
                     List<Message> roomMessages = getRoomBasedMessages(roomObject);
                     if (roomMessages != null) {
                         messages.addAll(roomMessages);
@@ -847,6 +850,9 @@ public class WebsocketConnectionService extends Service {
             if (messagesJson.length() > 0) {
                 for (int i=0; i<messagesJson.length(); i++) {
                     JSONObject roomObject = messagesJson.getJSONObject(i);
+                    if (roomObject == null) {
+                        continue;
+                    }
                     List<Message> roomMessages = getRoomBasedMessages(roomObject);
                     if (roomMessages != null) {
                         messages.addAll(roomMessages);

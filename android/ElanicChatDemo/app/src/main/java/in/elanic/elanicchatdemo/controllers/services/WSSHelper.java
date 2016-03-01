@@ -140,7 +140,14 @@ public class WSSHelper {
             return null;
         }
 
-        mMessageProvider.updateLocalMessage(message);
+        String type = message.getType();
+        if (type != null && type.equals(Constants.TYPE_MESSAGE_SYSTEM)) {
+            // don't update local message
+            mMessageProvider.addOrUpdateMessage(message);
+            Log.i(TAG, "System message: add or update: " + message.getMessage_id());
+        } else {
+            mMessageProvider.updateLocalMessage(message);
+        }
         return message;
     }
 
@@ -451,7 +458,7 @@ public class WSSHelper {
         return requestId;
     }*/
 
-    public String createRequest(@NonNull String userId, @NonNull String event, @NonNull JSONObject data,
+    public synchronized String createRequest(@NonNull String userId, @NonNull String event, @NonNull JSONObject data,
                                 @Nullable String roomId) {
         String requestId = String.valueOf(new Date().getTime());
         mWSRequestProvider.createRequest(requestId, event, data.toString(), userId, roomId);
@@ -490,7 +497,7 @@ public class WSSHelper {
         return mWSRequestProvider.getIncompleteRequestsForRoom(roomId);
     }
 
-    public static Pair<String, String> createSyncRequest(long timestamp) throws JSONException {
+    /*public static Pair<String, String> createSyncRequest(long timestamp) throws JSONException {
         JSONObject jsonRequest = new JSONObject();
         if (timestamp != -1) {
             jsonRequest.put(JSONUtils.KEY_SYNC_TIMESTAMP,
@@ -498,7 +505,7 @@ public class WSSHelper {
         }
 
         return new Pair<>(jsonRequest.toString(), SocketIOConstants.EVENT_GET_MESSAGES);
-    }
+    }*/
 
     public static Pair<JSONObject, String> createSendMessageRequest(@NonNull Message message) throws JSONException {
         JSONObject jsonObject = JSONUtils.textMessageToJSON(message);

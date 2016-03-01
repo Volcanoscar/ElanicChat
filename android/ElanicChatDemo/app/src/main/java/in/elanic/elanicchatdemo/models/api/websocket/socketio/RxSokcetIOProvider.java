@@ -4,12 +4,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.engineio.client.Transport;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Manager;
-import com.github.nkzawa.socketio.client.Socket;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,6 +17,11 @@ import java.util.Set;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
+import io.socket.client.IO;
+import io.socket.client.Manager;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
+import io.socket.engineio.client.Transport;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -45,6 +44,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
     private WebsocketCallback mCallback;
     private Set<String> joinedRooms;
     private Set<String> joiningRoomsInProcess;
+    private boolean isConnecting = false;
 
     private boolean DEBUG = true;
 
@@ -71,6 +71,11 @@ public class RxSokcetIOProvider implements WebsocketApi {
     public boolean connect(@NonNull String userId, @NonNull String url, @NonNull String apiKey) {
         mUserId = userId;
         mApiKey = apiKey;
+
+        if (isConnecting) {
+            Log.e(TAG, "connection is already in process. Not connecting again");
+            return false;
+        }
 
         if (mSocket != null && mSocket.connected()) {
             disconnect();
@@ -126,7 +131,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
                     mOptions.query="userId="+mUserId;
                     socket = IO.socket(url, mOptions);
 
-                    socket.io().on(Manager.EVENT_TRANSPORT, new Emitter.Listener() {
+                    /*socket.io().on(Manager.EVENT_TRANSPORT, new Emitter.Listener() {
                         @Override
                         public void call(Object... args) {
                             Transport transport = (Transport)args[0];
@@ -142,7 +147,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
                                 }
                             });
                         }
-                    });
+                    });*/
 
                 } catch (URISyntaxException e) {
                     return Observable.error(e);
@@ -179,6 +184,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
                 } else {
                     joiningRoomsInProcess = new HashSet<>();
                 }
+
+                isConnecting = true;
 
                 return Observable.just(socket);
             }
@@ -239,6 +246,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
             if (DEBUG) {
                 Log.i(TAG, "send data: " + event + ", data: " + data);
             }
+
             mSocket.emit(event, data, jsonBundle, mApiKey);
 
         }
@@ -264,7 +272,9 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
             Log.d(TAG, "join global chat: " + SocketIOConstants.EVENT_JOIN_CHAT + " userId " + userId);
             Log.d(TAG, "timestamp: " + since);
+
             mSocket.emit(SocketIOConstants.EVENT_JOIN_CHAT, userId, since, jsonBundle, mApiKey);
+
         }
     }
 
@@ -298,8 +308,10 @@ public class RxSokcetIOProvider implements WebsocketApi {
             }
 
             Log.i(TAG, "join room event: " + buyerId + " " + sellerId + " " + postId + " " + isBuyer + " " + epocTimestamp);
+
             mSocket.emit(SocketIOConstants.EVENT_ADD_USER, buyerId, sellerId, postId, isBuyer,
-                    epocTimestamp, jsonBundle, mApiKey);
+                        epocTimestamp, jsonBundle, mApiKey);
+
         }
 
     }
@@ -384,6 +396,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
     Emitter.Listener onConnected = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
+            isConnecting = false;
+
             if (mCallback != null) {
                 mCallback.onConnected();
             }
@@ -402,6 +416,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
     Emitter.Listener onDisconnected = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
+            isConnecting = false;
+
             if (mCallback != null) {
                 mCallback.onDisconnected();
             }

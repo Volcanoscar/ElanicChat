@@ -88,7 +88,12 @@ dependencies {
     compile 'com.neovisionaries:nv-websocket-client:1.17'
 
     // Socket.io
-    compile ('com.github.nkzawa:socket.io-client:0.3.0') {
+    /*compile ('com.github.nkzawa:socket.io-client:0.3.0') {
+        // excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }*/
+
+    compile ('io.socket:socket.io-client:0.7.0') {
         // excluding org.json which is provided by Android
         exclude group: 'org.json', module: 'json'
     }

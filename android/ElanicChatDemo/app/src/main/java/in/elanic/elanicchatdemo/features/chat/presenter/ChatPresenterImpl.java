@@ -166,14 +166,12 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     @Override
     public void pause() {
-
+        sendMarkMessageAsReadEvent();
     }
 
     @Override
     public void resume() {
-        if (chatItem != null) {
-            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_MARK_MESSAGES_AS_READ, null, null, chatId));
-        }
+        sendMarkMessageAsReadEvent();
     }
 
     @Override
@@ -702,6 +700,12 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
+        // System message. Don't replace. Just add
+        if (message.getType() != null && message.getType().equals(Constants.TYPE_MESSAGE_SYSTEM)) {
+            addMessageToChat(0, message);
+            return;
+        }
+
         int matchIndex = -1;
         for(int i=0; i<mMessages.size(); i++) {
             Message existingMessage = mMessages.get(i);
@@ -770,6 +774,12 @@ public class ChatPresenterImpl implements ChatPresenter {
         mChatView.showSnackbar("Offer Response failed");
     }
 
+    private void sendMarkMessageAsReadEvent() {
+        if (chatItem != null) {
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_MARK_MESSAGES_AS_READ, null, null, chatId));
+        }
+    }
+
     private synchronized void onUpdateMessages(List<String> messageIds) {
         if (messageIds == null || messageIds.isEmpty() || mMessages == null || mMessages.isEmpty()) {
             return;
@@ -780,6 +790,8 @@ public class ChatPresenterImpl implements ChatPresenter {
                 Log.i(TAG, "update message: " + messageId);
             }
         }
+
+        sendMarkMessageAsReadEvent();
 
         List<Message> messages = mMessageProvider.getRelevantMessages(mSenderId, buyerId, sellerId,
                 mProductId, messageIds);
@@ -856,6 +868,14 @@ public class ChatPresenterImpl implements ChatPresenter {
 
             case WSResponseEvent.EVENT_OTHER_OFFER_UPDATED:
                 onOfferResponseUpdated(event.getMessage());
+                break;
+
+            case WSResponseEvent.EVENT_CONNECTED:
+                mChatView.showSnackbar("Socket connected");
+                break;
+
+            case WSResponseEvent.EVENT_DISCONNECTED:
+                mChatView.showSnackbar("Socket disconnected");
                 break;
         }
     }

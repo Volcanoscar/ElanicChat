@@ -169,6 +169,11 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public boolean addOrUpdateMessage(@NonNull Message message) {
+        return mDao.insertOrReplace(message) != 0;
+    }
+
+    @Override
     public List<Message> getUnreadMessages(@NonNull String buyerId, @NonNull String sellerId,
                                            @NonNull String senderId,@NonNull String productId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();

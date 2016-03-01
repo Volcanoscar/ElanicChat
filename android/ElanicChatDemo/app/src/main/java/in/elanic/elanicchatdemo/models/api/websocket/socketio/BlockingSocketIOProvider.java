@@ -4,12 +4,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.engineio.client.Transport;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Manager;
-import com.github.nkzawa.socketio.client.Socket;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,6 +15,11 @@ import java.util.Map;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
+import io.socket.client.IO;
+import io.socket.client.Manager;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
+import io.socket.engineio.client.Transport;
 
 /**
  * Created by Jay Rambhia on 1/21/16.
@@ -95,26 +94,10 @@ public class BlockingSocketIOProvider implements WebsocketApi {
         return mSocket != null && mSocket.connected();
     }
 
-    @Override
-    public void sendData(@NonNull String data) {
-        if (mSocket != null) {
-            try {
-                mSocket.emit("send_message", new JSONObject(data));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     @Override
     public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
-    }
-
-    @Deprecated
-    @Override
-    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
-        // TODO add stuff here
     }
 
     @Override

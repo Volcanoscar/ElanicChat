@@ -106,35 +106,8 @@ public class RxWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    @Deprecated
-    public void sendData(@NonNull String data) {
-        if (mWebsocket == null) {
-            Log.e(TAG, "websocket is null");
-            return;
-        }
-
-        mWebsocket.sendText(data);
-    }
-
-    @Override
     public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
-    }
-
-    @Deprecated
-    @Override
-    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
-
-        Log.e(TAG, "sendData is deprecated");
-
-        try {
-            JSONObject request = new JSONObject(data);
-            request.put(JSONUtils.KEY_REQUEST_TYPE, event);
-            request.put(JSONUtils.KEY_REQUEST_ID, requestId);
-            mWebsocket.sendText(request.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

@@ -150,8 +150,8 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
         mAdapter = new ChatAdapter(this, mPresenter.getUserId());
         mAdapter.setHasStableIds(true);
-
         mRecyclerView.setAdapter(mAdapter);
+        mAdapter.attach();
         mPresenter.loadData();
 
         bottomOfferLayout.setVisibility(View.INVISIBLE);
@@ -279,6 +279,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
     @Override
     protected void onDestroy() {
+        if (mAdapter != null) {
+            mAdapter.release();
+        }
         mPresenter.detachView();
         super.onDestroy();
     }

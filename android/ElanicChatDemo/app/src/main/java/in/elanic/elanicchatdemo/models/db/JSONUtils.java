@@ -195,6 +195,54 @@ public class JSONUtils {
         return json;
     }
 
+    public static Message getTextMessageFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
+        Message message = new Message();
+        message.setBuyer_id(jsonObject.getString(KEY_BUYER_PROFILE));
+        message.setSeller_id(jsonObject.getString(KEY_SELLER_PROFILE));
+        message.setProduct_id(jsonObject.getString(KEY_POST));
+
+        if (!jsonObject.has(KEY_MESSAGE)) {
+            return null;
+        }
+
+        JSONObject jsonMessage = jsonObject.getJSONObject(KEY_MESSAGE);
+        setTextMessageFields(message, jsonMessage);
+
+        setMessageFields(message, jsonMessage);
+
+        if (jsonMessage.has(KEY_LOCAL_ID)) {
+            message.setLocal_id(jsonMessage.getString(KEY_LOCAL_ID));
+        }
+
+        message.setIs_deleted(jsonMessage.optBoolean(KEY_IS_DELETED, false));
+
+        return message;
+    }
+
+    public static Message getOfferMessageFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
+        Message message = new Message();
+        message.setBuyer_id(jsonObject.getString(KEY_BUYER_PROFILE));
+        message.setSeller_id(jsonObject.getString(KEY_SELLER_PROFILE));
+        message.setProduct_id(jsonObject.getString(KEY_POST));
+
+        if (!jsonObject.has(KEY_QUOTATION)) {
+            return null;
+        }
+
+        JSONObject jsonMessage = jsonObject.getJSONObject(KEY_QUOTATION);
+        setOfferMessageFields(message, jsonMessage);
+
+        setMessageFields(message, jsonMessage);
+
+        if (jsonMessage.has(KEY_LOCAL_ID)) {
+            message.setLocal_id(jsonMessage.getString(KEY_LOCAL_ID));
+        }
+
+        message.setIs_deleted(jsonMessage.optBoolean(KEY_IS_DELETED, false));
+
+        return message;
+    }
+
     public static Message getMessageFromJSON(JSONObject jsonObject) throws JSONException, ParseException {
         Message message = new Message();
         message.setBuyer_id(jsonObject.getString(KEY_BUYER_PROFILE));
@@ -482,9 +530,13 @@ public class JSONUtils {
             message.setProduct_id(postId);
 
             try {
-                JSONObject jsonMessage = jsonMessages.getJSONObject(i);
-                setMessageFields(message, jsonMessage);
-                setOfferMessageFields(message, jsonMessage);
+
+                // TODO temp check for null
+                if (!jsonMessages.isNull(i)) {
+                    JSONObject jsonMessage = jsonMessages.getJSONObject(i);
+                    setMessageFields(message, jsonMessage);
+                    setOfferMessageFields(message, jsonMessage);
+                }
             } catch (JSONException | ParseException e) {
                 e.printStackTrace();
                 continue;

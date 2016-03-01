@@ -76,21 +76,8 @@ public class BlockingWebsocketProvider implements WebsocketApi {
     }
 
     @Override
-    public void sendData(@NonNull String data) {
-        if (mWebsocket == null || !mWebsocket.isOpen()) {
-            throw new RuntimeException("Websocket connection is not available");
-        }
-        mWebsocket.sendText(data);
-    }
-
-    @Override
     public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
-    }
-
-    @Override
-    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
-        // TODO move things here
     }
 
     @Deprecated

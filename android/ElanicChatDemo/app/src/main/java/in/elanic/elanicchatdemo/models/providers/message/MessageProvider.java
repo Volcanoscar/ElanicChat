@@ -32,6 +32,7 @@ public interface MessageProvider {
     boolean updateLocalMessage(@NonNull Message message);
     boolean addNewMessage(@NonNull Message message);
     int addOrUpdateMessages(@NonNull List<Message> messages);
+    boolean addOrUpdateMessage(@NonNull Message message);
 
     List<Message> getUnreadMessages(@NonNull String buyerId, @NonNull String sellerId,
                                     @NonNull String senderId, @NonNull String productId);

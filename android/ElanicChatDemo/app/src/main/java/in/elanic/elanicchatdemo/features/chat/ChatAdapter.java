@@ -58,6 +58,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private JsonParser parser;
     private TimeZone timeZone;
 
+    private int latestOfferIndex = -1;
+
     public ChatAdapter(Context context, String userId) {
         mContext = context;
         mInflater = LayoutInflater.from(context);
@@ -82,6 +84,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return new OtherOfferViewHolder(mInflater.inflate(R.layout.offer_message_left_item_layout, parent, false));
         } else if (viewType == VIEW_OTHER_EVENT) {
             return new EventViewHolder(mInflater.inflate(R.layout.event_message_item_layout, parent, false));
+        } else if (viewType == VIEW_MY_EVENT) {
+            return new EventViewHolder(mInflater.inflate(R.layout.event_message_item_layout, parent, false));
         } else {
             return new EmptyViewHolder(new View(mContext));
         }
@@ -100,38 +104,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof MessageHolder) {
             MessageHolder mHolder = (MessageHolder)holder;
 
-
-            /*String sender_text = message.getSender_id();
-            if (sender != null) {
-                sender_text = sender.getUsername();
-            }*/
-
-            /*StringBuilder sb = new StringBuilder();
-            sb.append(sender_text);
-            sb.append("\n");
-            sb.append("Message: ");
-            sb.append(message.getContent());
-            sb.append("\n");
-            sb.append("Offer Price: ");
-            sb.append(String.valueOf(message.getOffer_price()));
-            sb.append("\n");
-            sb.append("Product Id: ");
-            sb.append(message.getProduct_id());
-            sb.append("\n");
-            sb.append("Created At: ");
-            sb.append(message.getCreated_at());
-            sb.append("\n");
-            sb.append("Delivered At: ");
-            sb.append(message.getDelivered_at());
-            sb.append("\n");
-            sb.append("Read At: ");
-            sb.append(message.getRead_at());
-            sb.append("\n");
-            sb.append("ID: ");
-            sb.append(message.getMessage_id());
-            sb.append("\n");
-
-            mHolder.mTextView.setText(sb.toString());*/
 
             mHolder.mTextView.setText(message.getContent());
             mHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
@@ -160,8 +132,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             sb.append("Rs. ");
             sb.append(String.valueOf(message.getOffer_price()));
 
-//            Log.i(TAG, "offer response: " + message.getOffer_response());
-
             viewHolder.mOfferView.setText(sb.toString());
 
             String offerStatus = message.getOffer_status();
@@ -169,7 +139,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             boolean isExpired;
             Date expiryDate = DateUtils.getExpiryDate(message, timeZone);
 
-//            boolean hasResponded = false;
             boolean isSent = true;
             viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
 
@@ -202,6 +171,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             // hide offer earn view
             viewHolder.mOfferEarnView.setVisibility(View.GONE);
+
+            // Check if invalid
+            if (!isExpired) {
+                if (position > latestOfferIndex) {
+                    offerStatus = Constants.STATUS_OFFER_DENIED;
+                }
+            }
 
             if (offerStatus != null) {
                 switch (offerStatus) {
@@ -332,9 +308,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (validity != null) {
                 expiryDate = DateUtils.getExpiryDate(message, timeZone);
             }
-//            boolean hasResponded = false;
 
             isExpired = DateUtils.isOfferExpired(message, timeZone);
+
+            // Check if invalid
+            if (!isExpired) {
+                if (position > latestOfferIndex) {
+                    offerStatus = Constants.STATUS_OFFER_DENIED;
+                }
+            }
 
             if (offerStatus != null) {
                 switch (offerStatus) {
@@ -362,7 +344,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             viewHolder.showStatus(true);
                         }
 
-//                        hasResponded = false;
                         break;
                     case Constants.STATUS_OFFER_DENIED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_declined);
@@ -370,41 +351,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 viewHolder.mOfferStatusView);
                         viewHolder.mOfferTimeView.setText("");
                         viewHolder.showStatus(true);
-//                        hasResponded = true;
                         break;
-                    /*case Constants.OFFER_ACCEPTED:
 
-                        if (!isExpired) {
-
-                            if (isBuyer) {
-                                viewHolder.showBuyNowButton(true);
-                            } else {
-                                viewHolder.mOfferStatusView.setText(R.string.offer_accepted);
-                                viewHolder.showStatus(false);
-                                viewHolder.showEarnings(message);
-                            }
-
-                            viewHolder.setLeftDrawable(R.drawable.ic_timer_grey_400_18dp,
-                                    viewHolder.mOfferTimeView);
-                            viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
-
-                        } else {
-                            viewHolder.mOfferStatusView.setText(R.string.offer_expired);
-                            viewHolder.setRightDrawable(R.drawable.ic_alarm_off_grey_600_18dp,
-                                    viewHolder.mOfferStatusView);
-                            viewHolder.mOfferTimeView.setText("");
-                            viewHolder.showStatus(true);
-                        }
-
-//                        hasResponded = true;
-                        break;*/
                     case Constants.STATUS_OFFER_EXPIRED:
                         viewHolder.mOfferStatusView.setText(R.string.offer_expired);
                         viewHolder.setRightDrawable(R.drawable.ic_alarm_off_grey_600_18dp,
                                 viewHolder.mOfferStatusView);
                         viewHolder.mOfferTimeView.setText("");
                         viewHolder.showStatus(true);
-//                        hasResponded = false;
                         break;
 
                     case Constants.STATUS_OFFER_CANCELLED:
@@ -413,7 +367,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 viewHolder.mOfferStatusView);
                         viewHolder.mOfferTimeView.setText("");
                         viewHolder.showStatus(true);
-//                        hasResponded = false;
                         break;
                 }
             }
@@ -458,6 +411,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public void setItems(List<Message> mItems) {
         this.mItems = mItems;
+    }
+
+    public void attach() {
+        registerAdapterDataObserver(observer);
+    }
+
+    public void release() {
+        unregisterAdapterDataObserver(observer);
     }
 
     public class MessageHolder extends RecyclerView.ViewHolder {
@@ -667,4 +628,27 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void cancelOffer(int position);
         void getCommissionDetails(int position);
     }
+
+    private RecyclerView.AdapterDataObserver observer = new RecyclerView.AdapterDataObserver() {
+        @Override
+        public void onChanged() {
+            super.onChanged();
+            Log.i(TAG, "adapter changed");
+            if (mItems == null || mItems.isEmpty()) {
+                latestOfferIndex = -1;
+                return;
+            }
+
+            for (int i=0; i<mItems.size(); i++) {
+                Message message = mItems.get(i);
+                if (message.getType() != null &&
+                        message.getType().equals(Constants.TYPE_MESSAGE_OFFER) &&
+                        message.getUpdated_at() != null) {
+                    latestOfferIndex = i;
+                    return;
+                }
+            }
+        }
+    };
+
 }

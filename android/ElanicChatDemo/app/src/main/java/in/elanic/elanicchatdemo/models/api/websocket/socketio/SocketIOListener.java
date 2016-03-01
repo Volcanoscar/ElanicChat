@@ -2,11 +2,11 @@ package in.elanic.elanicchatdemo.models.api.websocket.socketio;
 
 import android.support.annotation.NonNull;
 
-import com.github.nkzawa.emitter.Emitter;
 
 import org.json.JSONObject;
 
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
+import io.socket.emitter.Emitter;
 
 /**
  * Created by Jay Rambhia on 2/23/16.

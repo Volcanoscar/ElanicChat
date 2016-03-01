@@ -4,12 +4,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.github.nkzawa.socketio.client.Socket;
-
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.socket.client.Socket;
 
 /**
  * Created by Jay Rambhia on 2/23/16.
