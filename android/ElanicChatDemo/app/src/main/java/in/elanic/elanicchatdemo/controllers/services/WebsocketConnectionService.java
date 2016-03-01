@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.inject.Inject;
@@ -33,7 +34,6 @@ import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
-import in.elanic.elanicchatdemo.controllers.events.WSMessageEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.models.DualList;
@@ -51,7 +51,6 @@ import in.elanic.elanicchatdemo.models.db.WSRequest;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
 import in.elanic.elanicchatdemo.models.api.websocket.dagger.WebsocketApiProviderModule;
-import in.elanic.elanicchatdemo.utils.DateUtils;
 import in.elanic.elanicchatdemo.utils.NetworkUtils;
 import rx.Observable;
 import rx.Subscriber;
@@ -74,7 +73,7 @@ public class WebsocketConnectionService extends Service {
 
     private WSSHelper mWSSHelper;
 
-    private CompositeSubscription _subsriptions;
+    private CompositeSubscription _subscriptions;
 
     private EventBus mEventBus;
 
@@ -91,7 +90,7 @@ public class WebsocketConnectionService extends Service {
     private static final int RETRY_CONNECTION_SHORT_DELAY = 30000; // 30 sec
     private static final int RETRY_CONNECTION_LONG_DELAY = 60 * 60 * 1000; // 1 hour
 
-    private List<String> conncetedRooms;
+    private List<String> connectedRooms;
     private DateFormat dateFormat;
     private TimeZone timeZone;
 
@@ -127,8 +126,8 @@ public class WebsocketConnectionService extends Service {
         mWSSHelper = new WSSHelper(mDaoSession);
         clearPendingRequests();
 
-        conncetedRooms = new ArrayList<>();
-        dateFormat = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT);
+        connectedRooms = new ArrayList<>();
+        dateFormat = new SimpleDateFormat(JSONUtils.JSON_DATE_FORMAT, Locale.getDefault());
     }
 
     private void setupComponent(ApplicationComponent applicationComponent) {
@@ -163,8 +162,8 @@ public class WebsocketConnectionService extends Service {
             mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
         }
 
-        if (_subsriptions != null && !_subsriptions.isUnsubscribed()) {
-            _subsriptions.unsubscribe();
+        if (_subscriptions != null && !_subscriptions.isUnsubscribed()) {
+            _subscriptions.unsubscribe();
         }
 
         disconnectWSConnectionRequested();
@@ -241,19 +240,24 @@ public class WebsocketConnectionService extends Service {
                     Log.i(TAG, "ws connected");
                 }
 
-                if (conncetedRooms != null) {
-                    conncetedRooms.clear();
+                if (connectedRooms != null) {
+                    connectedRooms.clear();
                 }
                 checkIncompleteRequests();
                 sendWSConnectedEvent();
                 sendJoinChatEvent();
-                // TODO send request for sync
+                // TODO send request for sync. Ask for APIs
             }
 
             @Override
             public void onDisconnected() {
                 if (DEBUG) {
                     Log.e(TAG, "ws disconnected");
+                }
+
+                Log.i(TAG, "socket disconnected. Handle reconnection manually");
+                if (mWebSocketApi != null) {
+                    mWebSocketApi.disconnect();
                 }
 
                 sendWSDisconnectedEvent();
@@ -296,9 +300,11 @@ public class WebsocketConnectionService extends Service {
 
         if (roomId != null) {
             // check if connected to the room
-            if (!conncetedRooms.contains(roomId)) {
+            if (!connectedRooms.contains(roomId)) {
                 // connect to the room
                 joinRoom(roomId);
+                // Don't send requests until the room is joined
+                return;
             }
         }
 
@@ -313,24 +319,6 @@ public class WebsocketConnectionService extends Service {
 
         createWSConnectionRequested();
     }
-
-    /*@Deprecated
-    private void sendData(@NonNull String data, @NonNull String event, @Nullable String requestId) {
-
-        if (requestId == null) {
-            requestId = mWSSHelper.createRequest(mUserId, event, data);
-        }
-
-        if (mWebSocketApi.isConnected()) {
-            mWebSocketApi.sendData(data, event, requestId);
-            return;
-        }
-
-        if (DEBUG) {
-            Log.i(TAG, "ws connection not available. Create new connection");
-        }
-        createWSConnectionRequested();
-    }*/
 
     private void processServerResponse(boolean success, JSONObject jsonResponse, String event,
                                        String requestId, String senderId) {
@@ -349,19 +337,19 @@ public class WebsocketConnectionService extends Service {
 
             if (!success) {
                 // TODO handle request failure
-                if (event.equals(SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS)) {
-                    mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
+                if (isMyRequest) {
+                    if (event.equals(SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS)) {
+                        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
+                    }
                 }
                 return;
             }
 
-            long syncTimestmap = WSSHelper.getTimestampFromResponse(jsonResponse);
+            /*long syncTimestmap = WSSHelper.getTimestampFromResponse(jsonResponse);
             if (syncTimestmap != -1) {
                 mSyncTimestamp = syncTimestmap;
                 mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
-            }
-
-            // TODO Handle messages coming from other user properly.
+            }*/
 
             if (isMyRequest) {
                 //noinspection IfCanBeSwitch
@@ -373,17 +361,10 @@ public class WebsocketConnectionService extends Service {
                     onMessageSentSuccessfully(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT)) {
                     onMessageSentSuccessfully(jsonResponse);
-                }/* else if (event.equals(SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER)) {
-                    onOfferResponseSuccessful(jsonResponse);
-                } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_DENY_OFFER)) {
-                    onOfferResponseSuccessful(jsonResponse);
-                }*/
+                }
 
                 else if (event.equals(SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS)) {
                     onOfferResponseSuccessful(jsonResponse);
-                }
-                else if (event.equals(SocketIOConstants.EVENT_GET_MESSAGES)) {
-                    onNewMessagesArrived(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER)) {
                     onOfferResponseSuccessful(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON)) {
@@ -472,23 +453,6 @@ public class WebsocketConnectionService extends Service {
         }
     }
 
-    @Deprecated
-    private void onNewMessagesArrived(JSONObject jsonResponse) throws JSONException {
-
-        Log.i(TAG, "on new messages arrived");
-
-        List<Message> newMessages = WSSHelper.parseMessagesFromResponse(jsonResponse);
-        if (newMessages == null || newMessages.isEmpty()) {
-            if (DEBUG) {
-                Log.e(TAG, "new messages is null");
-            }
-
-            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NO_NEW_MESSAGES));
-            return;
-        }
-
-        onNewMessages(newMessages);
-    }
 
     private void onNewMessages(@NonNull @Size(min = 1) List<Message> newMessages) {
         mWSSHelper.saveMessagesToDB(newMessages);
@@ -530,35 +494,15 @@ public class WebsocketConnectionService extends Service {
             // TODO send notification
         }
 
-        // TODO get and add chatRoom ID
-        /*if (!newMessages.isEmpty()) {
-            Pair<JSONObject, String> request = WSSHelper.createDeliveredReceiptsRequest(newMessages);
-            sendData(request.first, request.second, null);
-        }*/
     }
-
-    /*@Deprecated
-    private void fetchUsersData(@NonNull List<String> userIds) {
-        sendDataRequested(WSSHelper.createFetchUsersDataRequest(userIds));
-    }
-
-    @Deprecated
-    private void fetchProductsData(@NonNull List<String> productIds) {
-        sendDataRequested(WSSHelper.createFetchProductsDataRequest(productIds));
-    }
-
-    @Deprecated
-    private void fetchUsersAndProductsData(@NonNull List<String> userIds, @NonNull List<String> productIds) {
-        sendDataRequested(WSSHelper.createFetchUsersAndProductsDataRequest(userIds, productIds));
-    }*/
 
     private void fetchUsersAndProductsDataREST(@Nullable List<String> userIds,
                                                @Nullable List<String> productIds) {
 
         Observable<DualList<User, Product>> observable = chatApiProvider.getDetails(userIds, productIds);
 
-        if (_subsriptions == null || _subsriptions.isUnsubscribed()) {
-            _subsriptions = new CompositeSubscription();
+        if (_subscriptions == null || _subscriptions.isUnsubscribed()) {
+            _subscriptions = new CompositeSubscription();
         }
 
         Subscription subscription = observable.subscribeOn(Schedulers.io())
@@ -580,7 +524,7 @@ public class WebsocketConnectionService extends Service {
                     }
                 });
 
-        _subsriptions.add(subscription);
+        _subscriptions.add(subscription);
     }
 
     /*@Deprecated
@@ -677,49 +621,49 @@ public class WebsocketConnectionService extends Service {
 
     private void onNewOfferResponse(JSONObject jsonResponse) {
         try {
+
+            Log.i(TAG, "on new offer response");
             Message message = mWSSHelper.updateMessageInDB(jsonResponse);
+
+            if (message == null) {
+                Log.e(TAG, "null message");
+                return;
+            }
+
+            Log.i(TAG, "offer message id: " + message.getMessage_id());
+
             mWSSHelper.createChatItem(message);
-            List<String> updatedIds = new ArrayList<>();
-            updatedIds.add(message.getMessage_id());
-            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
+//            List<String> updatedIds = new ArrayList<>();
+//            updatedIds.add(message.getMessage_id());
+
+            Log.i(TAG, "send messages_updated event");
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OTHER_OFFER_UPDATED, message));
+
+//            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-
-    private void onCancelOfferSuccessful(JSONObject jsonResponse) throws JSONException {
-        if (DEBUG) {
-            Log.i(TAG, "update local message in db");
-        }
-
-        Message message = mWSSHelper.updateMessageInDB(jsonResponse);
-        mWSSHelper.createChatItem(message);
-        if (message == null) {
-            Log.e(TAG, "unable to update message to db");
-            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_FAILED));
-            return;
-        }
-
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OFFER_RESPONSE_COMPLETED, message));
-    }
-
-    /*private void syncData() {
-
-        Log.i(TAG, "sync data");
-
-        try {
-
-            Pair<String, String> request = WSSHelper.createSyncRequest(mSyncTimestamp);
-            sendData(request.first, request.second, null);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-//        sendDataRequested(WSSHelper.createSyncDataRequest(mSyncTimestamp));
-    }*/
 
     private void checkIncompleteRequests() {
         List<WSRequest> mRequests = mWSSHelper.getIncompleteRequests();
+        if (mRequests == null || mRequests.isEmpty()) {
+            return;
+        }
+
+        for (WSRequest request : mRequests) {
+            Log.i(TAG, "trying to re-send request: " + request.getRequest_id());
+            try {
+                sendData(new JSONObject(request.getContent()), request.getEvent_name(),
+                        request.getRequest_id(), request.getRoom_id());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void checkIncompleteRequestsForRoom(@NonNull String roomId) {
+        List<WSRequest> mRequests = mWSSHelper.getIncompleteRequestsForRoom(roomId);
         if (mRequests == null || mRequests.isEmpty()) {
             return;
         }
@@ -754,6 +698,8 @@ public class WebsocketConnectionService extends Service {
                 Log.i(TAG, "unread message: " + message.getMessage_id());
             }
 
+            message.setIs_read(true);
+
             try {
                 Pair<JSONObject, String> request = WSSHelper.createReadReceiptRequest(message, timeZone);
                 if (request == null) {
@@ -768,6 +714,9 @@ public class WebsocketConnectionService extends Service {
             }
 
         }
+
+        // Update is_read true
+        mWSSHelper.updateMessagesInDB(unreadMessages);
 
         /*try {
             Pair<JSONObject, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
@@ -832,55 +781,25 @@ public class WebsocketConnectionService extends Service {
     /////////////// NEW METHODS ///////////////
     ///////////////////////////////////////////
 
-    @Deprecated
-    private void sendMessage(WSMessageEvent event) {
-        /*String buyerId = event.getBuyerId();
-        String sellerId = event.getSellerId();
-        String postId = event.getPostId();
-        String message_text = event.getMessage();
-
-        JSONObject messageRequest = new JSONObject();
-        try {
-            messageRequest.put("buyer_profile", buyerId);
-            messageRequest.put("seller_profile", sellerId);
-            messageRequest.put("post", postId);
-
-            JSONObject message = new JSONObject();
-            message.put("User_profile", event.getUserId());
-            message.put("message_text", message_text);
-            message.put("type", Constants.TYPE_MESSAGE_TEXT);
-            message.put("local_id", "yolo-42");
-            messageRequest.put("message", message);
-
-            if (!conncetedRooms.contains(postId + "-" + buyerId)) {
-                Log.i(TAG, "Need to join room first");
-                joinRoom(buyerId, sellerId, postId, buyerId.equals(event.getUserId()), 0);
-            }
-
-            sendData(messageRequest, SocketIOConstants.EVENT_SEND_CHAT, "42");
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
-    }
-
     private void sendJoinChatEvent() {
-        mWebSocketApi.joinGlobalChat(mUserId, mSyncTimestamp != 1 ? mSyncTimestamp : 0);
+        mWebSocketApi.joinGlobalChat(mUserId, mSyncTimestamp != -1 ? mSyncTimestamp : 0);
     }
 
     private void joinRoom(String chatId) {
         ChatItem chatItem = mWSSHelper.getChatItem(chatId);
         if (chatItem != null) {
 
-            // TODO change timestamp settings here
-            Date timestamp = chatItem.getLast_opened();
-            long sync = 0;
-            if (timestamp != null) {
-                sync = timestamp.getTime();
-                Log.i(TAG, "sync timestamp for room: " + timestamp + ", " + sync);
-            } else {
-                Log.e(TAG, "sync timestamp is null");
-            }
+//            Date timestamp = chatItem.getLast_opened();
+//            long sync = 0;
+//            if (timestamp != null) {
+//                sync = timestamp.getTime();
+//                Log.i(TAG, "sync timestamp for room: " + timestamp + ", " + sync);
+//            } else {
+//                Log.e(TAG, "sync timestamp is null");
+//            }
+
+            long sync = mWSSHelper.getSyncTimeForChat(chatItem);
+            Log.i(TAG, "sync time for room: " + chatItem.getChat_id() + ", " + sync);
 
             joinRoom(chatItem.getBuyer_id(), chatItem.getSeller_id(), chatItem.getProduct_id(),
                     mUserId.equals(chatItem.getBuyer_id()), sync);
@@ -888,8 +807,15 @@ public class WebsocketConnectionService extends Service {
     }
 
     private void joinRoom(String buyerId, String sellerId, String postId, boolean isBuyer, long timestamp) {
-        // TODO make join room request
-        mWebSocketApi.joinChat(buyerId, sellerId, postId, isBuyer, timestamp, "join_room_request");
+
+        // Check if connection is active or not
+        if (mWebSocketApi.isConnected()) {
+            mWebSocketApi.joinChat(buyerId, sellerId, postId, isBuyer, timestamp, "join_room_request");
+            return;
+        }
+
+        createWSConnectionRequested();
+
     }
 
     private void onGlobalRoomJoined(JSONObject jsonObject) throws JSONException {
@@ -964,27 +890,28 @@ public class WebsocketConnectionService extends Service {
     private void onRoomJoined(JSONObject jsonResponse) {
         String room = jsonResponse.optString("room");
         if (room != null && !room.isEmpty()) {
-            conncetedRooms.add(room);
+            connectedRooms.add(room);
         }
 
 
-        if (!jsonResponse.has(JSONUtils.KEY_POST)) {
-            // There's not much data I guess
-            return;
-        }
+        if (jsonResponse.has(JSONUtils.KEY_POST)) {
+            List<Message> messages = getRoomBasedMessages(jsonResponse);
 
-        List<Message> messages = getRoomBasedMessages(jsonResponse);
-
-        if (messages != null && !messages.isEmpty()) {
-            onNewMessages(messages);
+            if (messages != null && !messages.isEmpty()) {
+                onNewMessages(messages);
 
 //            Date syncDate = DateUtils.getOffsetDate(timeZone);
-            Date syncDate = new Date();
-            Log.i(TAG, "sync date: " + syncDate + ", " + syncDate.getTime());
-            if (room != null && !room.isEmpty()) {
-                mWSSHelper.updateSyncTimeForChat(room, syncDate);
-            }
+                Date syncDate = new Date();
+                Log.i(TAG, "sync date: " + syncDate + ", " + syncDate.getTime());
+                if (room != null && !room.isEmpty()) {
+                    mWSSHelper.updateSyncTimeForChat(room, syncDate);
+                }
 
+            }
+        }
+
+        if (room != null && !room.isEmpty()) {
+            checkIncompleteRequestsForRoom(room);
         }
     }
 
@@ -1010,18 +937,6 @@ public class WebsocketConnectionService extends Service {
             case WSRequestEvent.EVENT_DISCONNECT:
                 disconnectWSConnectionRequested();
                 break;
-
-            /*case WSRequestEvent.EVENT_SEND:
-                sendData(event.getJsonData(), event.getWSEvent(), null);
-                break;
-
-            case WSRequestEvent.EVENT_SYNC:
-                syncData();
-                break;
-
-            case WSRequestEvent.EVENT_SEND_READ_DATA:
-                markMessagesAsRead(event.getData());
-                break;*/
 
             case WSRequestEvent.EVENT_QUIT:
                 quit();

@@ -15,8 +15,10 @@ import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketApi;
 import in.elanic.elanicchatdemo.models.api.websocket.WebsocketCallback;
@@ -41,33 +43,23 @@ public class RxSokcetIOProvider implements WebsocketApi {
     private SocketIOListenerFactory listenerFactory;
 
     private WebsocketCallback mCallback;
+    private Set<String> joinedRooms;
+    private Set<String> joiningRoomsInProcess;
 
     private boolean DEBUG = true;
 
     private static final String[] socketIOEvents = {
             SocketIOConstants.EVENT_CONFIRM_JOIN_CHAT,
             SocketIOConstants.EVENT_CONFIRM_ADD_USER,
-            SocketIOConstants.EVENT_GET_MESSAGES,
-            SocketIOConstants.EVENT_GET_QUOTATIONS,
             SocketIOConstants.EVENT_CONFIRM_SEND_CHAT,
-//            SocketIOConstants.EVENT_REVOKE_SEND_CHAT,
             SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER,
             SocketIOConstants.EVENT_CONFIRM_EDIT_OFFER_STATUS,
-//            SocketIOConstants.EVENT_REVOKE_MAKE_OFFER,
-//            SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER,
-//            SocketIOConstants.EVENT_REVOKE_DENY_OFFER,
             SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER,
-//            SocketIOConstants.EVENT_REVOKE_CANCEL_OFFER,
             SocketIOConstants.EVENT_CONFIRM_BUY_NOW,
-//            SocketIOConstants.EVENT_REVOKE_BUY_NOW,
             SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON,
             SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON,
             SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT,
             SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT
-//            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_DELIVERED_ON,
-//            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_DELIVERED_ON,
-//            SocketIOConstants.EVENT_REVOKE_SET_QUOTATIONS_READ_AT,
-//            SocketIOConstants.EVENT_REVOKE_SET_MESSAGES_READ_AT
     };
 
     public RxSokcetIOProvider() {
@@ -99,6 +91,9 @@ public class RxSokcetIOProvider implements WebsocketApi {
                     @Override
                     public void onError(Throwable e) {
                         e.printStackTrace();
+                        if (mCallback != null) {
+                            mCallback.onError(e);
+                        }
                     }
 
                     @Override
@@ -163,21 +158,6 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
                 // Attach custom events
                 listenerFactory.connect(socket, eventCallback);
-                /*socket.on(SocketIOConstants.EVENT_GET_MESSAGES, onGetMessages);
-                socket.on(SocketIOConstants.EVENT_GET_QUOTATIONS, onGetQuotations);
-
-                socket.on(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT, onConfirmSendChat);
-                socket.on(SocketIOConstants.EVENT_REVOKE_SEND_CHAT, onRevokeSendChat);
-                socket.on(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER, onConfirmMakeOffer);
-                socket.on(SocketIOConstants.EVENT_REVOKE_MAKE_OFFER, onRevokeMakeOffer);
-
-                socket.on(SocketIOConstants.EVENT_CONFIRM_ACCEPT_OFFER, onConfirmAcceptOffer);
-                socket.on(SocketIOConstants.EVENT_REVOKE_ACCEPT_OFFER, onRevokeAcceptOffer);
-                socket.on(SocketIOConstants.EVENT_CONFIRM_DENY_OFFER, onConfirmDenyOffer);
-                socket.on(SocketIOConstants.EVENT_REVOKE_DENY_OFFER, onRevokeDenyOffer);
-
-                socket.on(SocketIOConstants.EVENT_CONFIRM_BUY_NOW, onConfirmBuyNow);
-                socket.on(SocketIOConstants.EVENT_REVOKE_BUY_NOW, onRevokeBuyNow);*/
 
                 if (DEBUG) {
                     Log.i(TAG, "Calling connect");
@@ -188,6 +168,18 @@ public class RxSokcetIOProvider implements WebsocketApi {
                     Log.i(TAG, "connect returned");
                 }
 
+                if (joinedRooms != null) {
+                    joinedRooms.clear();
+                } else {
+                    joinedRooms = new HashSet<>();
+                }
+
+                if (joiningRoomsInProcess != null) {
+                    joiningRoomsInProcess.clear();
+                } else {
+                    joiningRoomsInProcess = new HashSet<>();
+                }
+
                 return Observable.just(socket);
             }
         });
@@ -195,10 +187,12 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
     @Override
     public void disconnect() {
-        if (mSocket != null && mSocket.connected()) {
+        if (mSocket != null) {
             Log.i(TAG, "disconnect socketio");
             mSocket.disconnect();
             listenerFactory.disconnect(mSocket);
+            mSocket.close();
+            mSocket = null;
         }
     }
 
@@ -216,31 +210,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
     }
 
     @Override
-    @Deprecated
-    public void sendData(@NonNull String data) {
-        if (mSocket != null) {
-            try {
-                Emitter emitter = mSocket.emit("send_message", new JSONObject(data));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
     public void setCallback(@Nullable WebsocketCallback callback) {
         mCallback = callback;
-    }
-
-    @Deprecated
-    @Override
-    public void sendData(@NonNull String data, @NonNull String event, @NonNull String requestId) {
-        Log.e(TAG, "deprecated API. Forwarding data to different API");
-        try {
-            sendData(new JSONObject(data), event, requestId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -270,7 +241,6 @@ public class RxSokcetIOProvider implements WebsocketApi {
             }
             mSocket.emit(event, data, jsonBundle, mApiKey);
 
-            // 56d4264cefbc0a446c326684
         }
     }
 
@@ -293,6 +263,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
             }
 
             Log.d(TAG, "join global chat: " + SocketIOConstants.EVENT_JOIN_CHAT + " userId " + userId);
+            Log.d(TAG, "timestamp: " + since);
             mSocket.emit(SocketIOConstants.EVENT_JOIN_CHAT, userId, since, jsonBundle, mApiKey);
         }
     }
@@ -303,6 +274,17 @@ public class RxSokcetIOProvider implements WebsocketApi {
                          @NonNull String requestId) {
 
         if (mSocket != null && mSocket.connected()) {
+
+            String roomId = postId + "-" + buyerId;
+            if (joiningRoomsInProcess.contains(roomId)) {
+                Log.e(TAG, "Already sent a request to join the room: " + roomId);
+                return;
+            }
+
+            if (joinedRooms.contains(roomId)) {
+                Log.e(TAG, "Already joined the room: " + roomId);
+                return;
+            }
 
             JSONObject jsonBundle = new JSONObject();
             try {
@@ -365,6 +347,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
 
                 if (isMyRequest && response != null && args.length >= 3) {
                     // Add local id to the bundle
+
+                    //noinspection IfCanBeSwitch
                     if (event.equals(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT)) {
 
                         // get local id
@@ -381,6 +365,12 @@ public class RxSokcetIOProvider implements WebsocketApi {
                         JSONObject extra = (JSONObject)args[2];
                         if (extra != null) {
                             JSONUtils.injectLocalIdToOffer(response, extra);
+                        }
+                    } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_ADD_USER)) {
+                        String room = response.optString("room", null);
+                        if (room != null && !room.isEmpty()) {
+                            joinedRooms.add(room);
+                            joiningRoomsInProcess.remove(room);
                         }
                     }
                 }

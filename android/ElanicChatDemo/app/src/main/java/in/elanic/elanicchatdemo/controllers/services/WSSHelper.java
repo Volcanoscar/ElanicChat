@@ -157,6 +157,10 @@ public class WSSHelper {
         return message;
     }
 
+    public int updateMessagesInDB(@NonNull List<Message> messages) {
+        return mMessageProvider.addOrUpdateMessages(messages);
+    }
+
     public Message saveMessageToDB(JSONObject jsonResponse) throws JSONException{
         JSONObject message_json = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE);
         Message message;
@@ -482,6 +486,10 @@ public class WSSHelper {
         return mWSRequestProvider.getIncompleteRequests();
     }
 
+    public List<WSRequest> getIncompleteRequestsForRoom(@NonNull String roomId) {
+        return mWSRequestProvider.getIncompleteRequestsForRoom(roomId);
+    }
+
     public static Pair<String, String> createSyncRequest(long timestamp) throws JSONException {
         JSONObject jsonRequest = new JSONObject();
         if (timestamp != -1) {
@@ -676,7 +684,7 @@ public class WSSHelper {
             messageId = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_ID);
             deliveredAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_DELIVERED_DATE));
         } else if (jsonResponse.has(JSONUtils.KEY_QUOTATION)) {
-            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_ID);
+            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_QUOTE_ID);
             deliveredAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_DELIVERED_DATE));
         } else {
             return null;
@@ -697,7 +705,7 @@ public class WSSHelper {
             messageId = jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_ID);
             readAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_MESSAGE).getString(JSONUtils.KEY_READ_AT));
         } else if (jsonResponse.has(JSONUtils.KEY_QUOTATION)) {
-            messageId = jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_ID);
+        messageId = jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_QUOTE_ID);
             readAt = df.parse(jsonResponse.getJSONObject(JSONUtils.KEY_QUOTATION).getString(JSONUtils.KEY_READ_AT));
         } else {
             return null;
@@ -792,5 +800,34 @@ public class WSSHelper {
             item.setLast_opened(date);
         }
         mChatItemProvider.addOrUpdateChatItem(item);
+    }
+
+    public long getSyncTimeForChat(@NonNull ChatItem chat) {
+        Message message = mMessageProvider.getLatestUpdatedMessageForChat(chat.getBuyer_id(),
+                chat.getSeller_id(), chat.getProduct_id());
+        if (message != null) {
+            if (message.getUpdated_at() == null) {
+                Log.e(TAG, "updated at is null");
+                return 0;
+            }
+
+            return message.getUpdated_at().getTime();
+        }
+
+        return 0;
+    }
+
+    public long getSyncTime() {
+        Message message = mMessageProvider.getLatestUpdatedMessage();
+        if (message != null) {
+            if (message.getUpdated_at() == null) {
+                Log.e(TAG, "updated at is null");
+                return 0;
+            }
+
+            return message.getUpdated_at().getTime();
+        }
+
+        return 0;
     }
 }

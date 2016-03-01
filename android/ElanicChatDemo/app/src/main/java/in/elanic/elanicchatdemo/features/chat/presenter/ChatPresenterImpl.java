@@ -166,15 +166,14 @@ public class ChatPresenterImpl implements ChatPresenter {
 
     @Override
     public void pause() {
-        if (chatItem != null) {
-            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_MARK_MESSAGES_AS_READ, null, null, chatId));
-//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND_READ_DATA, chatItem.getChat_id()));
-        }
+
     }
 
     @Override
     public void resume() {
-
+        if (chatItem != null) {
+            mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_MARK_MESSAGES_AS_READ, null, null, chatId));
+        }
     }
 
     @Override
@@ -776,15 +775,26 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
+        if (DEBUG) {
+            for (String messageId : messageIds) {
+                Log.i(TAG, "update message: " + messageId);
+            }
+        }
+
         List<Message> messages = mMessageProvider.getRelevantMessages(mSenderId, buyerId, sellerId,
                 mProductId, messageIds);
-        if (messages == null) {
+        if (messages == null || messages.isEmpty()) {
             Log.e(TAG, "relevant messages is null");
             return;
         }
 
         for (Message message : messages) {
             int index = mMessages.indexOf(message);
+
+            if (DEBUG) {
+                Log.i(TAG, "relevant message index: " + index);
+            }
+
             if (index != -1) {
                 mMessages.set(index, message);
                 mChatView.updateMessageAtIndex(index);
@@ -794,6 +804,28 @@ public class ChatPresenterImpl implements ChatPresenter {
                 Log.i(TAG, "message: " + message.getContent());
             }
         }
+    }
+
+    private synchronized void onOfferResponseUpdated(@NonNull Message message) {
+        if (mMessages == null || mMessages.isEmpty()) {
+            return;
+        }
+
+        int index = mMessages.indexOf(message);
+
+        if (DEBUG) {
+            Log.i(TAG, "relevant message index: " + index);
+        }
+
+        if (index != -1) {
+            mMessages.set(index, message);
+            mChatView.updateMessageAtIndex(index);
+        }
+
+        if (DEBUG) {
+            Log.i(TAG, "message: " + message.getContent());
+        }
+
     }
 
     @SuppressWarnings("unused")
@@ -820,6 +852,10 @@ public class ChatPresenterImpl implements ChatPresenter {
 
             case WSResponseEvent.EVENT_MESSAGES_UPDATED:
                 onUpdateMessages(event.getMessageIds());
+                break;
+
+            case WSResponseEvent.EVENT_OTHER_OFFER_UPDATED:
+                onOfferResponseUpdated(event.getMessage());
                 break;
         }
     }

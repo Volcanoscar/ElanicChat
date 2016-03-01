@@ -110,6 +110,12 @@ public class WSRequestProviderImpl implements WSRequestProvider {
     }
 
     @Override
+    public List<WSRequest> getIncompleteRequestsForRoom(@NonNull String roomId) {
+        return mDao.queryBuilder().where(WSRequestDao.Properties.Is_completed.eq(false),
+                WSRequestDao.Properties.Room_id.eq(roomId)).list();
+    }
+
+    @Override
     public void clearPendingRequests() {
         List<WSRequest> mRequests = mDao.queryBuilder()
                 .where(WSRequestDao.Properties.Is_completed.eq(false)).list();

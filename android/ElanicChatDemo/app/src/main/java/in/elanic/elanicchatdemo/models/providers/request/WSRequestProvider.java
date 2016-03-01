@@ -21,5 +21,6 @@ public interface WSRequestProvider {
                             @Nullable String roomId);
     boolean markRequestAsCompleted(String requestId);
     List<WSRequest> getIncompleteRequests();
+    List<WSRequest> getIncompleteRequestsForRoom(@NonNull String roomId);
     void clearPendingRequests();
 }

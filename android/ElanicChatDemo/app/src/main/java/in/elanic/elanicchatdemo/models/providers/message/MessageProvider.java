@@ -53,4 +53,11 @@ public interface MessageProvider {
     List<Message> getRelevantMessages(@NonNull String senderId, @NonNull String buyerId,
                                       @NonNull String sellerId, @NonNull String productId,
                                       @NonNull List<String> messages);
+
+    @Nullable
+    Message getLatestUpdatedMessageForChat(@NonNull String buyerId, @NonNull String sellerId,
+                                           @NonNull String productId);
+
+    @Nullable
+    Message getLatestUpdatedMessage();
 }

@@ -190,14 +190,14 @@ public class MessageProviderImpl implements MessageProvider {
                                        @NonNull String productId, @NonNull String receiverId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
 
-//        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
         qb.where(MessageDao.Properties.Seller_id.eq(sellerId),
                 MessageDao.Properties.Buyer_id.eq(buyerId),
                 MessageDao.Properties.Product_id.eq(productId),
                 MessageDao.Properties.Sender_id.notEq(receiverId),
                 MessageDao.Properties.Read_at.isNull()
-                /*,boolCondition*/);
+                ,boolCondition);
 
         // TODO CountQuery for efficiency
         return qb.count();
@@ -206,13 +206,13 @@ public class MessageProviderImpl implements MessageProvider {
     @Override
     public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String productId, @NonNull String receiverId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();
-//        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
 
         qb.where(MessageDao.Properties.Product_id.eq(productId),
                 MessageDao.Properties.Seller_id.eq(sellerId),
                 MessageDao.Properties.Sender_id.notEq(receiverId),
                 MessageDao.Properties.Read_at.isNull()
-                /*, boolCondition*/);
+                , boolCondition);
         CountQuery<Message> cq = qb.buildCount();
         if (DEBUG) {
             Log.i(TAG, "productId: " + productId + ", sellerId: " + sellerId + ", cq unread count: " + cq.count());
@@ -376,5 +376,39 @@ public class MessageProviderImpl implements MessageProvider {
                 MessageDao.Properties.Product_id.eq(productId));
 
         return qb.list();
+    }
+
+    @Nullable
+    @Override
+    public Message getLatestUpdatedMessageForChat(@NonNull String buyerId, @NonNull String sellerId, @NonNull String productId) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        List<Message> messages = qb.where(MessageDao.Properties.Seller_id.eq(sellerId),
+                MessageDao.Properties.Buyer_id.eq(buyerId),
+                MessageDao.Properties.Product_id.eq(productId))
+                .limit(1)
+                .orderDesc(MessageDao.Properties.Updated_at)
+                .list();
+
+        if (messages != null && !messages.isEmpty()) {
+            return messages.get(0);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Message getLatestUpdatedMessage() {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        List<Message> messages = qb
+                .limit(1)
+                .orderDesc(MessageDao.Properties.Updated_at)
+                .list();
+
+        if (messages != null && !messages.isEmpty()) {
+            return messages.get(0);
+        }
+
+        return null;
     }
 }

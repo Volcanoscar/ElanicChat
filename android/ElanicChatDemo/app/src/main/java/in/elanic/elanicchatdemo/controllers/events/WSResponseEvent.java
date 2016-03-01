@@ -18,6 +18,7 @@ public class WSResponseEvent {
     public static final int EVENT_OFFER_RESPONSE_FAILED = 93;
 
     public static final int EVENT_MESSAGES_UPDATED = 92;
+    public static final int EVENT_OTHER_OFFER_UPDATED = 91;
 
     private int mEvent;
     private String mData;
