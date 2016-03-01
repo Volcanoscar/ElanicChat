@@ -3,4 +3,5 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="chat_recyclerview_bottom_padding">58dp</dimen>
+    <dimen name="fab_top_margin_offer_layout">4dp</dimen>
 </resources>

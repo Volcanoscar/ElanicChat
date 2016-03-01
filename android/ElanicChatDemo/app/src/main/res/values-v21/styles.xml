@@ -3,4 +3,9 @@
     <style name="MediumFontTextView">
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
+
+    <style name="chat_floating_action_button">
+        <item name="android:layout_marginBottom">12dp</item>
+        <item name="android:layout_marginRight">12dp</item>
+    </style>
 </resources>

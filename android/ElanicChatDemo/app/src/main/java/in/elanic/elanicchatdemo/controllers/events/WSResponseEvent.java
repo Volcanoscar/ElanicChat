@@ -19,6 +19,7 @@ public class WSResponseEvent {
 
     public static final int EVENT_MESSAGES_UPDATED = 92;
     public static final int EVENT_OTHER_OFFER_UPDATED = 91;
+    public static final int EVENT_GLOBAL_CHAT_JOINED = 90;
 
     private int mEvent;
     private String mData;

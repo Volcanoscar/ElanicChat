@@ -86,6 +86,7 @@ public class WebsocketConnectionService extends Service {
 
     private Handler handler;
     private Runnable mConnectionRunnable;
+    private int reconnectionAttempts = 0;
     private static final int BROADCAST_CONNECTION_DELAY = 5000; // 5sec
     private static final int RETRY_CONNECTION_SHORT_DELAY = 30000; // 30 sec
     private static final int RETRY_CONNECTION_LONG_DELAY = 60 * 60 * 1000; // 1 hour
@@ -243,6 +244,9 @@ public class WebsocketConnectionService extends Service {
                 if (connectedRooms != null) {
                     connectedRooms.clear();
                 }
+
+                reconnectionAttempts = 0;
+
                 checkIncompleteRequests();
                 sendWSConnectedEvent();
                 sendJoinChatEvent();
@@ -279,7 +283,21 @@ public class WebsocketConnectionService extends Service {
                     Log.e(TAG, "ws error", error);
                 }
 
+                if (mWebSocketApi != null) {
+                    mWebSocketApi.disconnect();
+                }
+
                 sendWSDisconnectedEvent();
+
+                if (reconnectionAttempts < 5) {
+                    reconnectionAttempts++;
+                    handler.postDelayed(mConnectionRunnable, RETRY_CONNECTION_SHORT_DELAY);
+                } else if (reconnectionAttempts < 10) {
+                    reconnectionAttempts++;
+                    handler.postDelayed(mConnectionRunnable, RETRY_CONNECTION_LONG_DELAY);
+                } else {
+                    // Don't auto connect now
+                }
             }
         });
 
@@ -398,23 +416,6 @@ public class WebsocketConnectionService extends Service {
                 }
             }
 
-            /*
-
-            else if (requestType == Constants.REQUEST_RESPOND_TO_OFFER) {
-                onOfferResponseSuccessful(jsonResponse);
-            } else if (requestType == Constants.REQUEST_MARK_AS_READ) {
-                onMarkAsReadRequestCompleted(jsonResponse);
-            } else if (requestType == Constants.REQUEST_CANCEL_OFFER) {
-                onCancelOfferSuccessful(jsonResponse);
-            }
-
-            int responseType = WSSHelper.getResponseType(jsonResponse);
-            Log.i(TAG, "response type: " + responseType);
-            if (responseType == Constants.RESPONSE_NEW_MESSAGE) {
-                Log.i(TAG, "response_new_message");
-                onNewMessagesArrived(jsonResponse);
-            }*/
-
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -527,58 +528,6 @@ public class WebsocketConnectionService extends Service {
         _subscriptions.add(subscription);
     }
 
-    /*@Deprecated
-    private void onUserDataFetched(JSONObject jsonResponse) throws JSONException {
-        JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
-        if (users.length() == 0) {
-            if (DEBUG) {
-                Log.e(TAG, "empty users array");
-            }
-            return;
-        }
-        mWSSHelper.saveUsersToDB(WSSHelper.parseNewUsers(users));
-        // send event to ui
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
-    }*/
-
-    /*@Deprecated
-    private void onProductsDataFetched(JSONObject jsonResponse) throws JSONException {
-        JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_DATA);
-        if (products.length() == 0) {
-            if (DEBUG) {
-                Log.e(TAG, "empty products array");
-            }
-            return;
-        }
-        mWSSHelper.saveProductsToDB(WSSHelper.parseNewProducts(products));
-        // send event to ui
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
-    }
-
-    @Deprecated
-    private void onUsersAndPrdouctsDataFetched(JSONObject jsonResponse) throws JSONException {
-        JSONArray products = jsonResponse.getJSONArray(JSONUtils.KEY_PRODUCTS);
-        JSONArray users = jsonResponse.getJSONArray(JSONUtils.KEY_USERS);
-        if (products.length() != 0) {
-            mWSSHelper.saveProductsToDB(WSSHelper.parseNewProducts(products));
-        } else {
-            if (DEBUG) {
-                Log.e(TAG, "empty products array");
-            }
-        }
-
-        if (users.length() != 0) {
-            mWSSHelper.saveUsersToDB(WSSHelper.parseNewUsers(users));
-        } else {
-            if (DEBUG) {
-                Log.e(TAG, "empty users array");
-            }
-        }
-
-        if (users.length() > 0 || products.length() > 0) {
-            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
-        }
-    }*/
 
     private void onUsersAndProductsDataFetched(@NonNull List<User> users, @NonNull List<Product> products) {
         if (products.size() != 0) {
@@ -633,13 +582,10 @@ public class WebsocketConnectionService extends Service {
             Log.i(TAG, "offer message id: " + message.getMessage_id());
 
             mWSSHelper.createChatItem(message);
-//            List<String> updatedIds = new ArrayList<>();
-//            updatedIds.add(message.getMessage_id());
 
             Log.i(TAG, "send messages_updated event");
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_OTHER_OFFER_UPDATED, message));
 
-//            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -718,19 +664,6 @@ public class WebsocketConnectionService extends Service {
         // Update is_read true
         mWSSHelper.updateMessagesInDB(unreadMessages);
 
-        /*try {
-            Pair<JSONObject, String> request = WSSHelper.createReadReceiptsRequest(unreadMessages);
-            sendData(request.first, request.second, null, chatItemId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
-
-        /*try {
-            JSONObject jsonRequest = WSSHelper.createUnreadMessagesRequest(unreadMessages);
-            sendDataRequested(jsonRequest.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
     }
 
     private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
@@ -745,13 +678,6 @@ public class WebsocketConnectionService extends Service {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
-        /*List<String> updatedIds = mWSSHelper.updateReadReceipts(jsonResponse);
-        if (updatedIds.isEmpty()) {
-            Log.e(TAG, "update ids is empty");
-            return;
-        }
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));*/
     }
 
     private void onMarkAsDeliveredRequestCompleted(JSONObject jsonResponse) throws JSONException {
@@ -766,15 +692,6 @@ public class WebsocketConnectionService extends Service {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
-        /*List<String> updatedIds = mWSSHelper.updateDeliveredReceipts(jsonResponse);
-
-        if (updatedIds.isEmpty()) {
-            Log.e(TAG, "update ids is empty");
-            return;
-        }
-
-        mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_MESSAGES_UPDATED, updatedIds));*/
     }
 
     ///////////////////////////////////////////
@@ -863,6 +780,8 @@ public class WebsocketConnectionService extends Service {
 
         if (!messages.isEmpty()) {
             onNewMessages(messages);
+        } else {
+            mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_GLOBAL_CHAT_JOINED));
         }
     }
 

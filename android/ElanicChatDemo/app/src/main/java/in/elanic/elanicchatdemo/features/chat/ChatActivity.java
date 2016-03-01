@@ -534,7 +534,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
                 }
                 transition.setDuration(ANIMATION_DURATION);
                 TransitionManager.beginDelayedTransition(rootView, transition);
-                transition.removeTarget(R.id.recyclerview);
+                transition.removeTarget(mRecyclerView);
 
             }
         } else {
@@ -548,7 +548,7 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
         }
 
-        params.topMargin = (int) (getResources().getDisplayMetrics().density * 16);
+        params.topMargin = getResources().getDimensionPixelOffset(R.dimen.fab_top_margin_offer_layout);
         params.addRule(RelativeLayout.ALIGN_TOP, R.id.bottom_offer_layout);
         offerFAB.setLayoutParams(params);
         offerFAB.setRotation(45);

@@ -65,29 +65,13 @@
         android:layout_height="wrap_content"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/offer_fab"
-        android:transitionName="offer_fab_transition"
-        tools:targetApi="21"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="12dp"
-        android:layout_marginRight="12dp"
-        android:src="@drawable/ic_add_white_18dp"
-        app:fabSize="mini"
-        android:elevation="8dp"
-        tools:ignore="RelativeOverlap" />
-
-    <android.support.design.widget.FloatingActionButton
         android:id="@+id/send_fab"
         android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="12dp"
-        android:layout_marginRight="12dp"
+        style="@style/chat_floating_action_button"
         android:src="@drawable/ic_send_white_24dp"
         app:fabSize="mini"/>
 
@@ -105,12 +89,27 @@
         android:id="@+id/edittext"/>
 
     <in.elanic.elanicchatdemo.features.shared.widgets.ChatBottomLayout
-        android:visibility="visible"
+        android:visibility="gone"
         android:id="@+id/bottom_offer_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         layout="@layout/chat_bottom_layout"
         android:layout_alignParentBottom="true"
         tools:ignore="UnusedAttribute"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/offer_fab"
+        android:transitionName="offer_fab_transition"
+        tools:targetApi="21"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        style="@style/chat_floating_action_button"
+        android:src="@drawable/ic_add_white_18dp"
+        app:fabSize="mini"
+        android:elevation="8dp"
+        tools:ignore="RelativeOverlap" />
+
 
 </RelativeLayout>

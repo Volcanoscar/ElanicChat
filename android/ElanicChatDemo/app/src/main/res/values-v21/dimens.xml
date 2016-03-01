@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fab_top_margin_offer_layout">16dp</dimen>
+</resources>

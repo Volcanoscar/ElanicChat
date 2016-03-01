@@ -196,9 +196,8 @@ public class RxSokcetIOProvider implements WebsocketApi {
     public void disconnect() {
         if (mSocket != null) {
             Log.i(TAG, "disconnect socketio");
-            mSocket.disconnect();
             listenerFactory.disconnect(mSocket);
-            mSocket.close();
+            mSocket.disconnect();
             mSocket = null;
         }
     }

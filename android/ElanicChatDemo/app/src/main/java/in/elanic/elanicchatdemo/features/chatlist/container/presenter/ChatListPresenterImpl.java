@@ -46,6 +46,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     private User mUser;
 
     private Handler mHandler;
+    private boolean isChatlistLoaded = false;
 
     private static final boolean DEBUG = true;
 
@@ -150,7 +151,14 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     }
 
     private void loadChatList() {
-        mChatListView.loadChatSections(mUserId);
+        if (!isChatlistLoaded) {
+            mChatListView.loadChatSections(mUserId);
+            isChatlistLoaded = true;
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "chat list is already loaded");
+            }
+        }
     }
 
     private void fetchAllDataFromServer() {
@@ -215,6 +223,14 @@ public class ChatListPresenterImpl implements ChatListPresenter {
             case WSResponseEvent.EVENT_NEW_MESSAGES:
                 if (DEBUG) {
                     Log.i(TAG, "new messages arrived");
+                }
+
+                loadChatList();
+                break;
+
+            case WSResponseEvent.EVENT_GLOBAL_CHAT_JOINED:
+                if (DEBUG) {
+                    Log.i(TAG, "global chat joined");
                 }
 
                 loadChatList();
