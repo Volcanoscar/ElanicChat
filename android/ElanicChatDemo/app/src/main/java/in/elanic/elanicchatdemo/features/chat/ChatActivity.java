@@ -61,6 +61,7 @@ import in.elanic.elanicchatdemo.features.shared.widgets.VerticalTwoTextView;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.models.providers.PreferenceProvider;
 import in.elanic.elanicchatdemo.utils.CustomAnimationUtils;
 
@@ -319,6 +320,13 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     public void setData(List<Message> data) {
         mAdapter.setItems(data);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void setOtherUser(@NonNull User user) {
+        if (mAdapter != null) {
+            mAdapter.setOtherUser(user);
+        }
     }
 
     @Override

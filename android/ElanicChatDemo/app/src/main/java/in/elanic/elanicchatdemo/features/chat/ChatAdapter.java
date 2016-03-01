@@ -27,6 +27,7 @@ import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.db.JSONUtils;
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.User;
 import in.elanic.elanicchatdemo.utils.DateUtils;
 
 /**
@@ -57,6 +58,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private JsonParser parser;
     private TimeZone timeZone;
+
+    private User otherUser;
 
     private int latestOfferIndex = -1;
 
@@ -373,8 +376,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         } else if (holder instanceof EventViewHolder) {
             EventViewHolder viewHolder = (EventViewHolder)holder;
-            viewHolder.mContentView.setText(message.getContent());
             viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
+
+            String eventContent = message.getContent();
+            Log.i(TAG, "content: " + eventContent);
+            Log.i(TAG, "other user: " + otherUser);
+            if (eventContent != null && otherUser != null && otherUser.getUsername() != null) {
+                if (isMyMessage) {
+                   eventContent = eventContent.replace("||username||", "YOU");
+                } else {
+                    eventContent = eventContent.replace("||username||", "@" + otherUser.getUsername());
+                }
+            }
+
+            viewHolder.mContentView.setText(eventContent);
+
         }
     }
 
@@ -419,6 +435,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public void release() {
         unregisterAdapterDataObserver(observer);
+    }
+
+    public void setOtherUser(User otherUser) {
+        this.otherUser = otherUser;
     }
 
     public class MessageHolder extends RecyclerView.ViewHolder {

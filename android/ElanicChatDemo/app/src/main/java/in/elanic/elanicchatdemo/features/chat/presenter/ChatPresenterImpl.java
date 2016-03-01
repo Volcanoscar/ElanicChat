@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
@@ -19,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 
 import de.greenrobot.event.EventBus;
 import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
-import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.controllers.services.WSSHelper;
 import in.elanic.elanicchatdemo.features.chat.view.ChatView;
@@ -74,6 +72,7 @@ public class ChatPresenterImpl implements ChatPresenter {
     private User buyer;
     private Product mProduct;
     private ChatItem chatItem;
+    private User otherUser;
 
     private List<Message> mMessages;
     private Message latestOffer;
@@ -195,6 +194,7 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
         mMessages = mMessageProvider.getAllMessages(buyerId, sellerId, mProductId);
+
         mChatView.setData(mMessages);
     }
 
@@ -580,7 +580,9 @@ public class ChatPresenterImpl implements ChatPresenter {
     }
 
     private void setReceiver(@NonNull User receiver) {
+        otherUser = receiver;
         mChatView.setUsername(receiver.getUsername());
+        mChatView.setOtherUser(receiver);
     }
 
     private void setProduct(@NonNull Product product) {
@@ -639,6 +641,9 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         mMessages.add(position, message);
         mChatView.setData(mMessages);
+        if (otherUser != null) {
+            mChatView.setOtherUser(otherUser);
+        }
 
         getLatestOffer(mProduct, buyer);
     }

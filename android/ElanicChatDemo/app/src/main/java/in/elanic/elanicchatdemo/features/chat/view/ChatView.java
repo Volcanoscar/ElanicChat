@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import java.util.List;
 
 import in.elanic.elanicchatdemo.models.db.Message;
+import in.elanic.elanicchatdemo.models.db.User;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -12,6 +13,7 @@ import in.elanic.elanicchatdemo.models.db.Message;
 public interface ChatView {
 
     void setData(List<Message> data);
+    void setOtherUser(@NonNull User user);
     void updateMessageAtIndex(int position);
     void confirmOfferResponse(int position, boolean accept);
     void confirmOfferCancellation(int position);
