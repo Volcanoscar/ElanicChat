@@ -97,6 +97,7 @@ public class JSONUtils {
 
     public static final String KEY_MESSAGES = "messages";
     public static final String KEY_QUOTATIONS = "quotations";
+    public static final String KEY_AVAILABLE = "available";
 
 //    public static final String JSON_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String JSON_DATE_FORMAT = "yyyy-MM-dd'T'kk:mm:ss.SSS'Z'";

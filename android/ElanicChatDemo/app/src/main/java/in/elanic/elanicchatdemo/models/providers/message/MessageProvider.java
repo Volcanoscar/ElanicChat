@@ -75,4 +75,6 @@ public interface MessageProvider {
 
     @Nullable
     Message getLatestUpdatedMessage();
+
+    List<String> getActiveChatIds(long timestamp);
 }

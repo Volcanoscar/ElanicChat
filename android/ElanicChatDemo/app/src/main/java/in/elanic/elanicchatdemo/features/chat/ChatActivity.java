@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
+import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
@@ -231,11 +232,9 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
 
             @Override
             public void onPriceChanged(CharSequence price) {
-                // TODO calculate commission and stuff
                 mPresenter.offerPriceEditStarted();
                 handler.removeCallbacks(offerPriceEditRunnable);
                 handler.postDelayed(offerPriceEditRunnable, OFFER_CALL_DELAY);
-//                handler
             }
 
             @Override
@@ -652,6 +651,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             mRecyclerView.setLayoutParams(rParams);
             mRecyclerView.setPadding(0, 0, 0, recyclerViewBottomPadding);
         }
+    }
+
+    @Override
+    public void disableOffers(@StringRes int resId) {
+        bottomOfferLayout.showInfoView(resId);
     }
 
     public void hideKeyboard() {

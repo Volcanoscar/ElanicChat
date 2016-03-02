@@ -170,4 +170,9 @@ public class RetrofitChatApiProvider implements ChatApiProvider {
         return mService.getEarning(postId, price);
     }
 
+    @Override
+    public Observable<Boolean> isPostAvailable(@NonNull String postId) {
+        return null;
+    }
+
 }

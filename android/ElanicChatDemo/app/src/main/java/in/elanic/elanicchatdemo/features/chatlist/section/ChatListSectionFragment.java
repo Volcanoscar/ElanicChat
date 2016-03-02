@@ -86,8 +86,15 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
     public void onResume() {
         super.onResume();
         if (mPresenter != null) {
+            mPresenter.resume();
             mPresenter.reloadData();
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mPresenter.pause();
     }
 
     @Override

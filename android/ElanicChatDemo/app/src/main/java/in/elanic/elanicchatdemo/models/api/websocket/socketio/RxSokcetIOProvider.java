@@ -199,6 +199,7 @@ public class RxSokcetIOProvider implements WebsocketApi {
             listenerFactory.disconnect(mSocket);
             mSocket.disconnect();
             mSocket = null;
+            isConnecting = false;
         }
     }
 

@@ -12,6 +12,9 @@ public interface ChatListSectionPresenter {
     void loadData();
     void reloadData();
 
+    void resume();
+    void pause();
+
     void onOfferActionRequested(int position);
     void openChat(int position);
     boolean openIfChatExists(String productId);

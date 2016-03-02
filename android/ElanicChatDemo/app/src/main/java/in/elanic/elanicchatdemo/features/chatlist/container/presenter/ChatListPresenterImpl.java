@@ -104,7 +104,7 @@ public class ChatListPresenterImpl implements ChatListPresenter {
     @Override
     public void detachView() {
         _subscription.unsubscribe();
-        EventBus.getDefault().post(new WSRequestEvent(WSRequestEvent.EVENT_DISCONNECT));
+//        EventBus.getDefault().post(new WSRequestEvent(WSRequestEvent.EVENT_DISCONNECT));
     }
 
     @Override

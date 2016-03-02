@@ -26,4 +26,6 @@ public interface ChatApiProvider {
 
     Observable<JsonObject> getEarning(@NonNull String postId, int price,
                                       @NonNull String requestId);
+
+    Observable<Boolean> isPostAvailable(@NonNull String postId);
 }

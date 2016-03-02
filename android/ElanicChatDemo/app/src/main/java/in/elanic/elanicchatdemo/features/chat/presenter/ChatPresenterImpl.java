@@ -45,6 +45,7 @@ import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -86,6 +87,7 @@ public class ChatPresenterImpl implements ChatPresenter {
     private JsonObject commissionDetails;
     private HashMap<Integer, JsonObject> commissionMap;
     private Subscription offerEarnSubscription;
+    private CompositeSubscription _subscriptions;
 
     private TimeZone timeZone;
 
@@ -104,6 +106,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         chatItemProvider = new ChatItemProviderImpl(this.mDaoSession.getChatItemDao());
 
         timeZone = TimeZone.getDefault();
+
+        _subscriptions = new CompositeSubscription();
     }
 
     @Override
@@ -157,12 +161,21 @@ public class ChatPresenterImpl implements ChatPresenter {
         initialized = true;
 
         joinRoom(chatId);
+
+        // check product's availability
+        checkPostAvailability(mProductId);
+
+        mMessageProvider.getActiveChatIds(0);
     }
 
     @Override
     public void detachView() {
         if (mMessages != null) {
             mMessages.clear();
+        }
+
+        if (_subscriptions != null) {
+            _subscriptions.unsubscribe();
         }
     }
 
@@ -426,6 +439,8 @@ public class ChatPresenterImpl implements ChatPresenter {
                         setCommissionElement(priceValue, jsonObject);
                     }
                 });
+
+        _subscriptions.add(offerEarnSubscription);
     }
 
     private void setCommissionElement(int price, JsonObject commission) {
@@ -458,21 +473,12 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         Message message = mMessages.get(position);
-        /*try {
-            JSONObject jsonRequest = WSSHelper.createOfferResponseRequest(message, accept);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
-
-            mChatView.showProgressDialog(true);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
 
         try {
             Pair<JSONObject, String> pair = WSSHelper.createOfferResponse(message, accept, mSenderId);
             mChatView.showProgressDialog(true);
             mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_SEND_DATA,
                     pair.first, pair.second, chatId));
-//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, pair.first, pair.second));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -507,20 +513,10 @@ public class ChatPresenterImpl implements ChatPresenter {
             return;
         }
 
-        /*try {
-            JSONObject jsonRequest = WSSHelper.createOfferCancellationRequest(message);
-            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, jsonRequest.toString()));
-
-            mChatView.showProgressDialog(true);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*/
-
         try {
             Pair<JSONObject, String> request = WSSHelper.createOfferCancelRequest(message, mSenderId);
             mEventBus.post(new WSDataRequestEvent(WSDataRequestEvent.EVENT_SEND_DATA,
                     request.first, request.second, chatId));
-//            mEventBus.post(new WSRequestEvent(WSRequestEvent.EVENT_SEND, request.first, request.second));
             mChatView.showProgressDialog(true);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -597,14 +593,11 @@ public class ChatPresenterImpl implements ChatPresenter {
                             return;
                         }
 
-                        // 56d42089efbc0a446c32666f
-                        // 56d42091efbc0a446c326670
-
                         onOfferCommissionDetailsReceived(offer, jsonObject);
                     }
                 });
 
-        // TODO Add this to subcriptions
+        _subscriptions.add(subscription);
     }
 
     private void joinRoom(String chatId) {
@@ -888,6 +881,33 @@ public class ChatPresenterImpl implements ChatPresenter {
             Log.i(TAG, "message: " + message.getContent());
         }
 
+    }
+
+    private void checkPostAvailability(@NonNull String postId) {
+        Observable<Boolean> observable = chatApiProvider.isPostAvailable(postId);
+        Subscription subscription = observable.subscribeOn(Schedulers.io())
+                .delaySubscription(100, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Boolean>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onNext(Boolean aBoolean) {
+                        Log.i(TAG, "product available: " + aBoolean);
+                        // TODO check if product is unavailable and disable offers
+//                        mChatView.disableOffers(R.string.product_unavailable);
+                    }
+                });
+
+        _subscriptions.add(subscription);
     }
 
     @SuppressWarnings("unused")

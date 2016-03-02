@@ -200,4 +200,24 @@ public class RetrofitServerChatApiProvider implements ChatApiProvider {
     public Observable<JsonObject> getEarning(@NonNull String postId, int price, @NonNull String requestId) {
         return mService.getEarning2(postId, price, requestId);
     }
+
+    @Override
+    public Observable<Boolean> isPostAvailable(@NonNull String postId) {
+        return mService.isPostAvailable(postId).flatMap(new Func1<JsonObject, Observable<Boolean>>() {
+            @Override
+            public Observable<Boolean> call(JsonObject jsonObject) {
+
+                if (DEBUG) {
+                    Log.i(TAG, "Response: " + jsonObject.toString());
+                }
+
+                boolean success = jsonObject.get(JSONUtils.KEY_SUCCESS).getAsBoolean();
+                if (!success) {
+                    return Observable.error(new Throwable("success is false"));
+                }
+
+                return Observable.just(jsonObject.get(JSONUtils.KEY_AVAILABLE).getAsBoolean());
+            }
+        });
+    }
 }

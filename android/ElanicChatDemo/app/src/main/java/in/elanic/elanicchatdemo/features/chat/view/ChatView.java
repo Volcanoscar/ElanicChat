@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.features.chat.view;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 
 import java.util.List;
 
@@ -37,4 +38,5 @@ public interface ChatView {
     void showOfferEarningProgressbar(boolean show);
     void showOfferError(CharSequence text);
     void hideOfferBottomLayout(boolean animate);
+    void disableOffers(@StringRes int resId);
 }

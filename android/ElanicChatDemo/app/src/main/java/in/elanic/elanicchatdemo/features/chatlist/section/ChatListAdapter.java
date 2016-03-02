@@ -91,12 +91,36 @@ public class ChatListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
 
         if (latestMessage != null) {
-            viewHolder.messageView.setText(latestMessage.getContent());
             viewHolder.timeView.setText(DateUtils.getPrintableTime(latestMessage.getCreated_at(), timeZone));
+
+            boolean isMyMessage = latestMessage.getSender_id().equals(userId);
+            if (isMyMessage) {
+                viewHolder.messageView.setText(latestMessage.getContent());
+
+                if (latestMessage.getRead_at() != null) {
+                    viewHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_done_all_theme_12dp, 0, 0, 0);
+                } else if (latestMessage.getDelivered_at() != null) {
+                    viewHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_done_all_grey_400_12dp, 0, 0, 0);
+                } else if (latestMessage.getUpdated_at() != null) {
+                    viewHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_done_grey_400_12dp, 0, 0, 0);
+                } else {
+                    viewHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_timer_grey_400_12dp, 0, 0, 0);
+                }
+            } else {
+                viewHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+                User sender = latestMessage.getSender();
+                if (sender != null && sender.getUsername() != null) {
+                    viewHolder.messageView.setText("@" + sender.getUsername() + " : " + latestMessage.getContent());
+                } else {
+                    viewHolder.messageView.setText(latestMessage.getContent());
+                }
+            }
+
 
         } else {
             viewHolder.messageView.setText("Latest message is null");
             viewHolder.timeView.setText("");
+            viewHolder.messageView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
 
         // Remove offer response onClickListener

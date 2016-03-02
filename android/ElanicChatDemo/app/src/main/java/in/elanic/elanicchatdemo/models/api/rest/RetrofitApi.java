@@ -47,4 +47,8 @@ public interface RetrofitApi {
                                        @Field("price") int price,
                                        @NonNull @Field("request_id") String requestId);
 
+    @FormUrlEncoded
+    @POST("post/available")
+    Observable<JsonObject> isPostAvailable(@NonNull @Field("post_id") String postId);
+
 }

@@ -845,4 +845,8 @@ public class WSSHelper {
     public Product getProduct(@NonNull String productId) {
         return mProductProvider.getProduct(productId);
     }
+
+    public List<String> getActiveChats(@NonNull String userId, long timestamp) {
+        return mMessageProvider.getActiveChatIds(timestamp);
+    }
 }

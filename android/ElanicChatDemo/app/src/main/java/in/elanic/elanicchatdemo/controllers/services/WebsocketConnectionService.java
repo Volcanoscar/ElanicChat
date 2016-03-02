@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.controllers.services;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -111,6 +112,8 @@ public class WebsocketConnectionService extends Service {
     private int notificationId = 42;
     private static final int NOTIFICATION_DELAY = 1000; // 1 sec
     private Runnable notificationRunnable;
+
+    private static final int ACTIVE_CHAT_THRESHOLD = 24 * 3600 * 1000; // 24 hours
 
     @Nullable
     @Override
@@ -689,6 +692,9 @@ public class WebsocketConnectionService extends Service {
         // Update is_read true
         mWSSHelper.updateMessagesInDB(unreadMessages);
 
+        Log.i(TAG, "regenerate notifications");
+        handler.postDelayed(notificationRunnable, NOTIFICATION_DELAY);
+
     }
 
     private void onMarkAsReadRequestCompleted(JSONObject jsonResponse, boolean isMyRequest) throws JSONException {
@@ -820,6 +826,9 @@ public class WebsocketConnectionService extends Service {
         } else {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_GLOBAL_CHAT_JOINED));
         }
+
+        // TODO Auto join rooms
+        autoJoinRooms();
     }
 
     private List<Message> getRoomBasedMessages(@NonNull JSONObject jsonResponse) {
@@ -874,6 +883,26 @@ public class WebsocketConnectionService extends Service {
 
         if (room != null && !room.isEmpty()) {
             checkIncompleteRequestsForRoom(room);
+        }
+    }
+
+    private void autoJoinRooms() {
+        Date date = new Date(new Date().getTime() - ACTIVE_CHAT_THRESHOLD);
+
+        // offset
+        date = new Date(date.getTime() - timeZone.getOffset(date.getTime()));
+
+        Log.i(TAG, "auto join timestamp: " + date.getTime());
+        List<String> activeChatIds = mWSSHelper.getActiveChats(mUserId, date.getTime());
+        if (activeChatIds != null && !activeChatIds.isEmpty()) {
+            for (String chatId : activeChatIds) {
+                Log.i(TAG, "auto join room: " + chatId);
+                joinRoom(chatId);
+            }
+        } else {
+            if (DEBUG) {
+                Log.e(TAG, "auto join rooms is null");
+            }
         }
     }
 
@@ -957,11 +986,15 @@ public class WebsocketConnectionService extends Service {
     ////////////////////////////////////////////////
 
     private synchronized void generateNotifications() {
+
+        Log.i(TAG, "generate notifications");
+
         // Get unread messages
         List<Message> messages = mWSSHelper.getUnreadMessages(mUserId, true);
         if (messages == null || messages.isEmpty()) {
             Log.d(TAG, "no unread messages for notification");
             // no unread messages
+            notificationManager.cancel(notificationId);
             return;
         }
 
@@ -1135,7 +1168,7 @@ public class WebsocketConnectionService extends Service {
         }
 
         builder.setStyle(inboxStyle);
-
+        builder.setDefaults(Notification.DEFAULT_ALL);
         builder.setAutoCancel(true);
 
         if (intent != null) {

@@ -7,6 +7,8 @@ import android.util.Log;
 import java.util.List;
 import java.util.TimeZone;
 
+import de.greenrobot.event.EventBus;
+import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
 import in.elanic.elanicchatdemo.features.chatlist.section.view.ChatListSectionView;
 import in.elanic.elanicchatdemo.models.UIChatItem;
 import in.elanic.elanicchatdemo.models.db.ChatItem;
@@ -39,6 +41,10 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
 
     protected TimeZone timeZone;
 
+    protected boolean isPaused = true;
+
+    protected EventBus eventBus;
+
     public ChatListSectionPresenterImpl(ChatListSectionView mChatListSectionView,
                                         ChatItemProvider mChatItemProvider, UIChatItemProvider chatItemProvider) {
         this.mChatListSectionView = mChatListSectionView;
@@ -50,11 +56,28 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     @Override
     public void attachView(Bundle extras) {
         mUserId = extras.getString(Constants.EXTRA_USER_ID);
+        eventBus = EventBus.getDefault();
     }
 
     @Override
     public void detachView() {
 
+    }
+
+    @Override
+    public void resume() {
+        isPaused = false;
+        if (!eventBus.isRegistered(this)) {
+            eventBus.register(this);
+        }
+    }
+
+    @Override
+    public void pause() {
+        isPaused = true;
+        if (eventBus.isRegistered(this)) {
+            eventBus.unregister(this);
+        }
     }
 
     @Override
@@ -95,6 +118,7 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
                     public void onNext(List<UIChatItem> uiChatItems) {
                         uiItems = uiChatItems;
                         mChatListSectionView.setData(uiItems);
+                        Log.i(TAG, "loaded chats");
                         onUIChatsLoaded(uiChatItems);
                     }
                 });
@@ -105,6 +129,10 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
 
     @Override
     public void reloadData() {
+        if (isPaused) {
+            Log.e(TAG, "paused. don't reload");
+            return;
+        }
         loadData();
     }
 
@@ -169,6 +197,17 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     @Override
     public void openBestOfferChat() {
         // Do nothing
+    }
+
+    /// Events
+    public void onEventMainThread(WSResponseEvent event) {
+        switch (event.getEvent()) {
+            case WSResponseEvent.EVENT_NEW_MESSAGES:
+                Log.i(TAG, "new messages. reload data");
+                // TODO optimize this
+                reloadData();
+                break;
+        }
     }
 
     public abstract List<ChatItem> loadChats(@NonNull String userId, @NonNull ChatItemProvider provider);

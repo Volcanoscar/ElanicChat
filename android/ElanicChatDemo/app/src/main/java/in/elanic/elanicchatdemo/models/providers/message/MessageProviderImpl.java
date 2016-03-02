@@ -1,5 +1,6 @@
 package in.elanic.elanicchatdemo.models.providers.message;
 
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.format.Time;
@@ -451,6 +452,135 @@ public class MessageProviderImpl implements MessageProvider {
             return messages.get(0);
         }
 
+//        MessageDao.Properties.Seller_id;
         return null;
+    }
+
+    @Override
+    public List<String> getActiveChatIds(long timestamp) {
+
+        String buyerColumn = MessageDao.Properties.Buyer_id.columnName;
+        String productColumn = MessageDao.Properties.Product_id.columnName;
+        String dateColumn = MessageDao.Properties.Updated_at.columnName;
+        String table = MessageDao.TABLENAME;
+
+
+        StringBuilder sb = new StringBuilder();
+
+        /*sb.append("SELECT ");
+        sb.append("b.");
+        sb.append(buyerColumn);
+        sb.append(", b.");
+        sb.append(productColumn);
+        sb.append(", b.");
+        sb.append(dateColumn);
+        sb.append(" FROM ");
+        sb.append(table);
+        sb.append(" b ");
+        sb.append(" JOIN ");
+        sb.append("( SELECT ");
+        sb.append(buyerColumn);
+        sb.append(", ");
+        sb.append(productColumn);
+        sb.append(", MAX(");
+        sb.append(dateColumn);
+        sb.append(") ");
+        sb.append(dateColumn);
+        sb.append(" FROM ");
+        sb.append(table);
+        sb.append(" GROUP BY ");
+        sb.append(buyerColumn);
+        sb.append(", ");
+        sb.append(productColumn);
+        sb.append(" ) a ON ");
+        sb.append("b.");
+        sb.append(buyerColumn);
+        sb.append(" = ");
+        sb.append("a.");
+        sb.append(buyerColumn);
+        sb.append(" AND ");
+        sb.append("b.");
+        sb.append(productColumn);
+        sb.append(" = ");
+        sb.append("a.");
+        sb.append(productColumn);
+        sb.append(" AND ");
+        sb.append("b.");
+        sb.append(dateColumn);
+        sb.append(" = ");
+        sb.append("a.");
+        sb.append(dateColumn);
+        sb.append(";");*/
+
+
+        sb.append("SELECT ");
+        sb.append("b.");
+        sb.append(buyerColumn);
+        sb.append(", b.");
+        sb.append(productColumn);
+        sb.append(" , a.date1");
+        sb.append(" from ( SELECT ");
+        sb.append(buyerColumn);
+        sb.append(", ");
+        sb.append(productColumn);
+        sb.append(", max(");
+        sb.append(dateColumn);
+        sb.append(") as date1 FROM ");
+        sb.append(table);
+        sb.append(" GROUP BY ");
+        sb.append(buyerColumn);
+        sb.append(" , ");
+        sb.append(productColumn);
+        sb.append(" ) a inner join ");
+        sb.append(table);
+        sb.append(" b on ");
+        sb.append("a.");
+        sb.append(buyerColumn);
+        sb.append(" = b.");
+        sb.append(buyerColumn);
+        sb.append(" and a.");
+        sb.append(productColumn);
+        sb.append(" = b.");
+        sb.append(productColumn);
+        sb.append(" and a.date1");
+        sb.append(" = ");
+        sb.append("b.");
+        sb.append(dateColumn);
+
+        String query = sb.toString();
+        Log.i(TAG, "query: " + query);
+
+        Cursor c = mDao.getDatabase().rawQuery(query, null);
+
+        if (c == null) {
+            Log.e(TAG, "null cursor in get active chats");
+            return null;
+        }
+
+        List<String> activeChatIds = new ArrayList<>();
+
+        Log.i(TAG, "cursor length: " + c.getCount());
+        try {
+
+            if (c.moveToFirst()) {
+                do {
+
+                    long date = c.getLong(2);
+                    if (date >= timestamp) {
+                        String chatId = c.getString(1) + "-" + c.getString(0);
+                        activeChatIds.add(chatId);
+                    }
+
+                    Log.i(TAG, "c0: " + c.getString(0) + " c1: " + c.getString(1) + " d: " + c.getLong(2));
+
+                } while (c.moveToNext());
+            }
+
+        } finally {
+            c.close();
+        }
+
+        return activeChatIds;
+
     }
 }
