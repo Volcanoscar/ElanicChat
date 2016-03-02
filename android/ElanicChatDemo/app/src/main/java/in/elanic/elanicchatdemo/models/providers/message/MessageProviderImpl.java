@@ -62,6 +62,29 @@ public class MessageProviderImpl implements MessageProvider {
         return qb.orderDesc(MessageDao.Properties.Created_at).list();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Message> getMessages(@NonNull String buyerId, @NonNull String sellerId,
+                                     @NonNull String productId, int limit,
+                                     @Nullable Date timestamp) {
+
+        WhereCondition c1 = MessageDao.Properties.Buyer_id.eq(buyerId);
+        WhereCondition c2 = MessageDao.Properties.Seller_id.eq(sellerId);
+        WhereCondition c3 = MessageDao.Properties.Product_id.eq(productId);
+
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+
+        if (timestamp != null) {
+            qb.where(MessageDao.Properties.Created_at.lt(timestamp), c3, c1, c2);
+        } else {
+            qb.where(c3, c1, c2);
+        }
+
+        return qb.orderDesc(MessageDao.Properties.Created_at).limit(limit).list();
+    }
+
     @Override
     public Message createNewMessage(@NonNull String content, @NonNull User sender,
                                     @NonNull User buyer, @NonNull User seller,

@@ -11,6 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
@@ -87,6 +88,8 @@ public class ChatPresenterImpl implements ChatPresenter {
     private Subscription offerEarnSubscription;
 
     private TimeZone timeZone;
+
+    private static final int MESSAGE_LIMIT = 15;
 
     private static final boolean DEBUG = true;
 
@@ -193,9 +196,51 @@ public class ChatPresenterImpl implements ChatPresenter {
         if (!initialized) {
             return;
         }
-        mMessages = mMessageProvider.getAllMessages(buyerId, sellerId, mProductId);
+
+        mMessages = mMessageProvider.getMessages(buyerId, sellerId, mProductId, MESSAGE_LIMIT, null);
+
+        if (otherUser != null) {
+            mChatView.setOtherUser(otherUser);
+        }
+
+        if (mMessages != null && mMessages.size() >= MESSAGE_LIMIT) {
+            mChatView.setLoadMoreEnabled(true);
+        } else {
+            mChatView.setLoadMoreEnabled(false);
+        }
 
         mChatView.setData(mMessages);
+    }
+
+    @Override
+    public void loadMoreData() {
+        if (mMessages == null || mMessages.isEmpty()) {
+            loadData();
+            return;
+        }
+
+        if (!initialized) {
+            return;
+        }
+
+        Date timestamp = null;
+        for (int i=mMessages.size() - 1; i>=0; i--) {
+            Message message = mMessages.get(i);
+            if (message.getCreated_at() != null) {
+                timestamp = message.getCreated_at();
+                break;
+            }
+        }
+
+        List<Message> olderMessages = mMessageProvider.getMessages(buyerId, sellerId, mProductId, MESSAGE_LIMIT, timestamp);
+        if (olderMessages != null) {
+            if (olderMessages.size() < MESSAGE_LIMIT) {
+                mChatView.setLoadMoreEnabled(false);
+            }
+
+            mMessages.addAll(olderMessages);
+            mChatView.setData(mMessages);
+        }
     }
 
 
@@ -641,9 +686,6 @@ public class ChatPresenterImpl implements ChatPresenter {
 
         mMessages.add(position, message);
 
-        if (otherUser != null) {
-            mChatView.setOtherUser(otherUser);
-        }
         mChatView.setData(mMessages);
 
         getLatestOffer(mProduct, buyer);
@@ -737,6 +779,8 @@ public class ChatPresenterImpl implements ChatPresenter {
         if (data == null || data.isEmpty()) {
             fetchNewMessagesFromDB();
         }
+
+        sendMarkMessageAsReadEvent();
 
     }
 

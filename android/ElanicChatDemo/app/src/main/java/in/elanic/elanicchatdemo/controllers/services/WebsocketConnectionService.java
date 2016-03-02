@@ -109,6 +109,8 @@ public class WebsocketConnectionService extends Service {
     private NotificationCompat.Builder notificationBuilder;
     private NotificationManager notificationManager;
     private int notificationId = 42;
+    private static final int NOTIFICATION_DELAY = 1000; // 1 sec
+    private Runnable notificationRunnable;
 
     @Nullable
     @Override
@@ -133,6 +135,12 @@ public class WebsocketConnectionService extends Service {
         };
 
         notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notificationRunnable = new Runnable() {
+            @Override
+            public void run() {
+                generateNotifications();
+            }
+        };
 
         mPreferenceProvider = new PreferenceProvider(this);
         mUserId = mPreferenceProvider.getLoginUserId();
@@ -403,24 +411,24 @@ public class WebsocketConnectionService extends Service {
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_CANCEL_OFFER)) {
                     onOfferResponseSuccessful(jsonResponse);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON)) {
-                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                    onMarkAsDeliveredRequestCompleted(jsonResponse, true);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON)) {
-                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                    onMarkAsDeliveredRequestCompleted(jsonResponse, true);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT)) {
-                    onMarkAsReadRequestCompleted(jsonResponse);
+                    onMarkAsReadRequestCompleted(jsonResponse, true);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT)) {
-                    onMarkAsReadRequestCompleted(jsonResponse);
+                    onMarkAsReadRequestCompleted(jsonResponse, true);
                 }
             } else {
                 //noinspection IfCanBeSwitch
                 if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_DELIVERED_ON)) {
-                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                    onMarkAsDeliveredRequestCompleted(jsonResponse, false);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_DELIVERED_ON)) {
-                    onMarkAsDeliveredRequestCompleted(jsonResponse);
+                    onMarkAsDeliveredRequestCompleted(jsonResponse, false);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_MESSAGES_READ_AT)) {
-                    onMarkAsReadRequestCompleted(jsonResponse);
+                    onMarkAsReadRequestCompleted(jsonResponse, false);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SET_QUOTATIONS_READ_AT)) {
-                    onMarkAsReadRequestCompleted(jsonResponse);
+                    onMarkAsReadRequestCompleted(jsonResponse, false);
                 } else if (event.equals(SocketIOConstants.EVENT_CONFIRM_SEND_CHAT)
                         || event.equals(SocketIOConstants.EVENT_CONFIRM_MAKE_OFFER)) {
                     onNewMessageArrived(jsonResponse);
@@ -509,7 +517,7 @@ public class WebsocketConnectionService extends Service {
 
         } else {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
-            generateNotifications();
+            handler.postDelayed(notificationRunnable, NOTIFICATION_DELAY);
         }
 
     }
@@ -683,10 +691,16 @@ public class WebsocketConnectionService extends Service {
 
     }
 
-    private void onMarkAsReadRequestCompleted(JSONObject jsonResponse) throws JSONException {
+    private void onMarkAsReadRequestCompleted(JSONObject jsonResponse, boolean isMyRequest) throws JSONException {
 
         try {
             String updatedId = mWSSHelper.updateReadReceipt(jsonResponse, dateFormat);
+
+            if (isMyRequest) {
+                // Don't send events
+                return;
+            }
+
             if (updatedId != null) {
                 List<String> ids = new ArrayList<>();
                 ids.add(updatedId);
@@ -697,10 +711,16 @@ public class WebsocketConnectionService extends Service {
         }
     }
 
-    private void onMarkAsDeliveredRequestCompleted(JSONObject jsonResponse) throws JSONException {
+    private void onMarkAsDeliveredRequestCompleted(JSONObject jsonResponse, boolean isMyRequest) throws JSONException {
 
         try {
             String updatedId = mWSSHelper.updateDeliveredReceipt(jsonResponse, dateFormat);
+
+            if (isMyRequest) {
+                // Don't send events
+                return;
+            }
+
             if (updatedId != null) {
                 List<String> ids = new ArrayList<>();
                 ids.add(updatedId);

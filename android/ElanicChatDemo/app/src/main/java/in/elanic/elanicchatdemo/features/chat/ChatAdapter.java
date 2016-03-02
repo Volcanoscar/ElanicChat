@@ -52,6 +52,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static final int VIEW_OTHER_OFFER = OTHER_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_OFFER;
     public static final int VIEW_MY_EVENT = MY_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_SYSTEM;
     public static final int VIEW_OTHER_EVENT = OTHER_MESSAGE << Constants.DUMMY_TYPE_MESSAGE_SYSTEM;
+    public static final int VIEW_LOAD_MORE = -4;
 
     private int myChatColor;
     private int otherChatColor;
@@ -62,6 +63,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private User otherUser;
 
     private int latestOfferIndex = -1;
+    private boolean isLoadMoreAvailable = true;
 
     public ChatAdapter(Context context, String userId) {
         mContext = context;
@@ -89,6 +91,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return new EventViewHolder(mInflater.inflate(R.layout.event_message_item_layout, parent, false));
         } else if (viewType == VIEW_MY_EVENT) {
             return new EventViewHolder(mInflater.inflate(R.layout.event_message_item_layout, parent, false));
+        } else if (viewType == VIEW_LOAD_MORE) {
+            return new LoadMoreHolder(mInflater.inflate(R.layout.load_more_item_layout, parent, false));
         } else {
             return new EmptyViewHolder(new View(mContext));
         }
@@ -97,6 +101,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
+
+        if (isLoadMoreAvailable && position == getItemCount() - 1) {
+            return;
+        }
 
         Message message = mItems.get(position);
         boolean isMyMessage = message.getSender_id().equals(myUserId);
@@ -396,6 +404,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public long getItemId(int position) {
+
+        if (isLoadMoreAvailable && position == getItemCount() - 1) {
+            // show load more
+            return VIEW_LOAD_MORE;
+        }
+
         return mItems.get(position).getMessage_id().hashCode();
     }
 
@@ -403,11 +417,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public int getItemViewType(int position) {
         // TODO check if sender_id is not null, it crashes here
 
+        if (isLoadMoreAvailable && position == getItemCount() - 1) {
+            // show load more
+            return VIEW_LOAD_MORE;
+        }
+
         int whoseMessage = mItems.get(position).getSender_id().equals(myUserId) ? MY_MESSAGE : OTHER_MESSAGE;
         String type = mItems.get(position).getType();
         if (type == null) {
             return -1;
         }
+
         switch (type) {
             case Constants.TYPE_MESSAGE_TEXT:
                 return whoseMessage << Constants.DUMMY_TYPE_MESSAGE_TEXT;
@@ -422,7 +442,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return mItems != null ? mItems.size() : 0;
+        int size = mItems != null ? mItems.size() : 0;
+        if (isLoadMoreAvailable) {
+            size++;
+        }
+
+        return size;
     }
 
     public void setItems(List<Message> mItems) {
@@ -439,6 +464,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public void setOtherUser(User otherUser) {
         this.otherUser = otherUser;
+    }
+
+    public void setIsLoadMoreAvailable(boolean isLoadMoreAvailable) {
+        this.isLoadMoreAvailable = isLoadMoreAvailable;
     }
 
     public class MessageHolder extends RecyclerView.ViewHolder {
@@ -639,6 +668,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    public class LoadMoreHolder extends RecyclerView.ViewHolder {
+
+        public LoadMoreHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mCallback != null) {
+                        mCallback.onLoadMoreCalled();
+                    }
+                }
+            });
+        }
+    }
+
     public void setCallback(ActionCallback mCallback) {
         this.mCallback = mCallback;
     }
@@ -647,6 +691,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void respondToOffer(int position, boolean accept);
         void cancelOffer(int position);
         void getCommissionDetails(int position);
+        void onLoadMoreCalled();
     }
 
     private RecyclerView.AdapterDataObserver observer = new RecyclerView.AdapterDataObserver() {

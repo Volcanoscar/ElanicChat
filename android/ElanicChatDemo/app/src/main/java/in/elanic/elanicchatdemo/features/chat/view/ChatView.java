@@ -13,6 +13,7 @@ import in.elanic.elanicchatdemo.models.db.User;
 public interface ChatView {
 
     void setData(List<Message> data);
+    void setLoadMoreEnabled(boolean status);
     void setOtherUser(@NonNull User user);
     void updateMessageAtIndex(int position);
     void confirmOfferResponse(int position, boolean accept);

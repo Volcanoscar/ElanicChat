@@ -23,6 +23,19 @@ public interface MessageProvider {
     List<Message> getAllMessages(@NonNull String buyer, @NonNull String seller, @NonNull String productId);
     List<Message> getMessages(@Nullable Date timestamp, String buyer, String seller, String productId);
 
+    /**
+     * Get messages which are older than the given timestamp
+     *
+     * @param buyerId user Id of the buyer
+     * @param sellerId user Id of the seller
+     * @param productId Id of the product
+     * @param limit number of messages
+     * @param timestamp Date
+     * @return List of Message
+     */
+    List<Message> getMessages(@NonNull String buyerId, @NonNull String sellerId, @NonNull String productId,
+                              int limit, @Nullable Date timestamp);
+
     Message createNewMessage(@NonNull String content, @NonNull User sender, @NonNull User buyer,
                              @NonNull User seller, @NonNull Product product, @NonNull TimeZone timeZone);
     Message createNewOffer(int price, @NonNull User sender, @NonNull User buyer,

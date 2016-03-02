@@ -17,6 +17,7 @@ public interface ChatPresenter {
     void unregisterForEvents();
 
     void loadData();
+    void loadMoreData();
     void sendMessage(String content);
     boolean sendOffer(CharSequence price);
     String getUserId();
