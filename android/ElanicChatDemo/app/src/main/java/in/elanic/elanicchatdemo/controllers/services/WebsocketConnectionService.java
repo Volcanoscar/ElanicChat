@@ -1,6 +1,7 @@
 package in.elanic.elanicchatdemo.controllers.services;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.Size;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.Pair;
 
@@ -22,20 +24,25 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import de.greenrobot.event.EventBus;
+import in.elanic.elanicchatdemo.R;
 import in.elanic.elanicchatdemo.app.ELChatApp;
 import in.elanic.elanicchatdemo.app.ApplicationComponent;
 import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
+import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
 import in.elanic.elanicchatdemo.models.api.rest.chat.dagger.ChatApiProviderModule;
@@ -95,6 +102,10 @@ public class WebsocketConnectionService extends Service {
     private DateFormat dateFormat;
     private TimeZone timeZone;
 
+    private NotificationCompat.Builder notificationBuilder;
+    private NotificationManager notificationManager;
+    private int notificationId = 42;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -116,6 +127,8 @@ public class WebsocketConnectionService extends Service {
                 createWSConnectionRequested();
             }
         };
+
+        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
         mPreferenceProvider = new PreferenceProvider(this);
         mUserId = mPreferenceProvider.getLoginUserId();
@@ -492,7 +505,7 @@ public class WebsocketConnectionService extends Service {
 
         } else {
             mEventBus.post(new WSResponseEvent(WSResponseEvent.EVENT_NEW_MESSAGES));
-            // TODO send notification
+            generateNotifications();
         }
 
     }
@@ -919,8 +932,152 @@ public class WebsocketConnectionService extends Service {
     /////////////// NOTIFICATIONS ///////////////////
     ////////////////////////////////////////////////
 
-    @SuppressWarnings("unused")
-    private void generateNotifications() {
+    private synchronized void generateNotifications() {
+        // Get unread messages
+        List<Message> messages = mWSSHelper.getUnreadMessages(mUserId, true);
+        if (messages == null || messages.isEmpty()) {
+            Log.d(TAG, "no unread messages for notification");
+            // no unread messages
+            return;
+        }
 
+        Set<String> productIds = new HashSet<>();
+        Set<String> senderIds = new HashSet<>();
+
+        Iterator<Message> iterator = messages.iterator();
+
+        //noinspection WhileLoopReplaceableByForEach
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            productIds.add(message.getProduct_id());
+            senderIds.add(message.getSender_id());
+        }
+
+        if (productIds.isEmpty() || senderIds.isEmpty()) {
+            // wtf happened
+            Log.e(TAG, "product ids or sender ids is empty");
+            return;
+        }
+
+        if (productIds.size() == 1) {
+            // Messages for only one product
+            Iterator<String> productIdIterator = productIds.iterator();
+            String productId = productIdIterator.next();
+            Product product = mWSSHelper.getProduct(productId);
+
+            if (product == null) {
+                // I don't have details about the product. Screw this.
+                Log.e(TAG, "Don't have data about product: " + productId);
+                return;
+            }
+
+            // Title - Product Title
+
+            String title = "Elanic: " + product.getTitle();
+            String[] events = new String[6];
+            String contentText = "You have got " + messages.size() + " new messages";
+            fillContentForNotification(messages, events, false);
+            buildNotification(title, events, contentText);
+            return;
+        }
+
+        // Messages for Multiple products
+        String title = "Elanic: New Messages";
+        String[] events = new String[6];
+        String contentText = "You have got " + messages.size() + " new messages for " + productIds.size() + " products";
+        fillContentForNotification(messages, events, true);
+        buildNotification(title, events, contentText);
+    }
+
+    private void fillContentForNotification(@NonNull List<Message> messages,
+                                            @NonNull String[] events, boolean addProductDetails) {
+        int messagesCount = 0;
+
+        StringBuilder sb = new StringBuilder();
+
+        for (Message message : messages) {
+            User sender = message.getSender();
+            if (sender == null || message.getType() == null || sender.getUsername() == null) {
+                continue;
+            }
+
+            Product product = null;
+            if (addProductDetails) {
+                product = message.getProduct();
+                if (product == null || product.getTitle() == null) {
+                    continue;
+                }
+            }
+
+            sb.delete(0, sb.length());
+
+            if (addProductDetails) {
+                if (product.getTitle().length() > 12) {
+                    sb.append(product.getTitle(), 0, 12);
+                    sb.append("..");
+                } else {
+                    sb.append(product.getTitle());
+                }
+                sb.append(" : ");
+            }
+
+            if (message.getType().equals(Constants.TYPE_MESSAGE_OFFER)) {
+
+                sb.append("@");
+                sb.append(sender.getUsername());
+                sb.append(" made a new offer of Rs. ");
+                sb.append(message.getOffer_price());
+
+            } else if (message.getType().equals(Constants.TYPE_MESSAGE_TEXT)) {
+
+                sb.append("@");
+                sb.append(sender.getUsername());
+                sb.append(" : ");
+                sb.append(message.getContent());
+
+            } else if (message.getType().equals(Constants.TYPE_MESSAGE_SYSTEM)) {
+                String content = message.getContent();
+                if (content == null) {
+                    continue;
+                }
+
+                if (content.contains("||username||")) {
+                    content = content.replace("||username||", sender.getUsername());
+                }
+
+                sb.append(content);
+
+            } else {
+                Log.e(TAG, "not supporting message type in notification: " + message.getType());
+                continue;
+            }
+
+            events[messagesCount] = sb.toString();
+            messagesCount++;
+            if (messagesCount >= 6) {
+                break;
+            }
+        }
+    }
+
+    private void buildNotification(@NonNull String title, @NonNull String[] events, @NonNull String contextText) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(contextText);
+
+        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+        inboxStyle.setBigContentTitle(title);
+        inboxStyle.setSummaryText(contextText);
+
+        //noinspection ForLoopReplaceableByForEach
+        for(int i=0; i<events.length; i++) {
+            if (events[i] != null) {
+                inboxStyle.addLine(events[i]);
+            }
+        }
+
+        builder.setStyle(inboxStyle);
+        notificationManager.notify(notificationId, builder.build());
     }
 }

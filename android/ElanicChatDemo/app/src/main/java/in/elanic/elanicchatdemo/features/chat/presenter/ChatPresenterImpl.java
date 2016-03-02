@@ -640,10 +640,11 @@ public class ChatPresenterImpl implements ChatPresenter {
         }
 
         mMessages.add(position, message);
-        mChatView.setData(mMessages);
+
         if (otherUser != null) {
             mChatView.setOtherUser(otherUser);
         }
+        mChatView.setData(mMessages);
 
         getLatestOffer(mProduct, buyer);
     }

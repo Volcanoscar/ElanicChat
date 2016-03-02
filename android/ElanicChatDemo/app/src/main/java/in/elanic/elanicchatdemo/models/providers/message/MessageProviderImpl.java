@@ -191,6 +191,20 @@ public class MessageProviderImpl implements MessageProvider {
     }
 
     @Override
+    public List<Message> getUnreadMessages(@NonNull String receiverId, boolean sorted) {
+        QueryBuilder<Message> qb = mDao.queryBuilder();
+        WhereCondition boolCondition = qb.or(MessageDao.Properties.Is_read.isNull(), MessageDao.Properties.Is_read.eq(false));
+        qb.where(MessageDao.Properties.Sender_id.notEq(receiverId),
+                MessageDao.Properties.Read_at.isNull(), boolCondition);
+
+        if (sorted) {
+            qb.orderDesc(MessageDao.Properties.Created_at);
+        }
+
+        return qb.list();
+    }
+
+    @Override
     public long getUnreadMessagesCount(@NonNull String sellerId, @NonNull String buyerId,
                                        @NonNull String productId, @NonNull String receiverId) {
         QueryBuilder<Message> qb = mDao.queryBuilder();

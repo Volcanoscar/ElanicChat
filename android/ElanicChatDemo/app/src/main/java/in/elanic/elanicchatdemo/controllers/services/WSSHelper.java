@@ -588,6 +588,10 @@ public class WSSHelper {
         return mMessageProvider.getUnreadMessages(buyerId, sellerId, senderId, productId);
     }
 
+    public List<Message> getUnreadMessages(@NonNull String receiverId, boolean sorted) {
+        return mMessageProvider.getUnreadMessages(receiverId, sorted);
+    }
+
     public static Pair<JSONObject, String> createReadReceiptRequest(@NonNull Message message,
                                                                     @NonNull TimeZone timeZone) throws JSONException {
         JSONObject jsonObject;
@@ -836,5 +840,9 @@ public class WSSHelper {
         }
 
         return 0;
+    }
+
+    public Product getProduct(@NonNull String productId) {
+        return mProductProvider.getProduct(productId);
     }
 }
