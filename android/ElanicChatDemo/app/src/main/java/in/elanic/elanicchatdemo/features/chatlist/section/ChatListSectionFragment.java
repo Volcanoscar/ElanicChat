@@ -83,6 +83,14 @@ public abstract class ChatListSectionFragment extends Fragment implements ChatLi
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (mPresenter != null) {
+            mPresenter.reloadData();
+        }
+    }
+
+    @Override
     public void onDestroyView() {
         ButterKnife.unbind(this);
         super.onDestroyView();

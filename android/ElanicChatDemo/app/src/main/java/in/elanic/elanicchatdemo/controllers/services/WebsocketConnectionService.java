@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.util.Pair;
 
@@ -42,6 +43,9 @@ import in.elanic.elanicchatdemo.controllers.events.NetworkConnectivityEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSDataRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSRequestEvent;
 import in.elanic.elanicchatdemo.controllers.events.WSResponseEvent;
+import in.elanic.elanicchatdemo.features.chat.ChatActivity;
+import in.elanic.elanicchatdemo.features.chatlist.container.ChatListActivity;
+import in.elanic.elanicchatdemo.features.chatlist.container.ProductListContainerActivity;
 import in.elanic.elanicchatdemo.models.Constants;
 import in.elanic.elanicchatdemo.models.DualList;
 import in.elanic.elanicchatdemo.models.api.rest.chat.ChatApiProvider;
@@ -959,6 +963,8 @@ public class WebsocketConnectionService extends Service {
             return;
         }
 
+        PendingIntent resultPendingIntent = null;
+
         if (productIds.size() == 1) {
             // Messages for only one product
             Iterator<String> productIdIterator = productIds.iterator();
@@ -971,13 +977,35 @@ public class WebsocketConnectionService extends Service {
                 return;
             }
 
-            // Title - Product Title
 
             String title = "Elanic: " + product.getTitle();
             String[] events = new String[6];
             String contentText = "You have got " + messages.size() + " new messages";
             fillContentForNotification(messages, events, false);
-            buildNotification(title, events, contentText);
+            // Intent
+            if (senderIds.size() == 1) {
+                // Open chat directly
+                Message message = messages.get(0);
+                String chatId = message.getProduct_id() + "-" + message.getBuyer_id();
+                Intent resultIntent = ChatActivity.getActivityIntent(this, chatId);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addParentStack(ChatActivity.class);
+                stackBuilder.addNextIntent(resultIntent);
+                resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            } else {
+
+                // Open ProductContainerActivity
+                // Assumption that this scenario will not occur for a buyer
+
+                Intent resultIntent = ProductListContainerActivity.getActivityIntent(this, productId);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addParentStack(ProductListContainerActivity.class);
+                stackBuilder.addNextIntent(resultIntent);
+                resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+
+            buildNotification(title, events, contentText, resultPendingIntent);
             return;
         }
 
@@ -986,7 +1014,15 @@ public class WebsocketConnectionService extends Service {
         String[] events = new String[6];
         String contentText = "You have got " + messages.size() + " new messages for " + productIds.size() + " products";
         fillContentForNotification(messages, events, true);
-        buildNotification(title, events, contentText);
+
+        // Open ChatListActivity. There's not much we can do about this now.
+        Intent resultIntent = ChatListActivity.getActivityIntent(this, mUserId, false);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(ChatListActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        buildNotification(title, events, contentText, resultPendingIntent);
     }
 
     private void fillContentForNotification(@NonNull List<Message> messages,
@@ -1060,7 +1096,8 @@ public class WebsocketConnectionService extends Service {
         }
     }
 
-    private void buildNotification(@NonNull String title, @NonNull String[] events, @NonNull String contextText) {
+    private void buildNotification(@NonNull String title, @NonNull String[] events,
+                                   @NonNull String contextText, @Nullable PendingIntent intent) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
@@ -1078,6 +1115,13 @@ public class WebsocketConnectionService extends Service {
         }
 
         builder.setStyle(inboxStyle);
+
+        builder.setAutoCancel(true);
+
+        if (intent != null) {
+            builder.setContentIntent(intent);
+        }
+
         notificationManager.notify(notificationId, builder.build());
     }
 }

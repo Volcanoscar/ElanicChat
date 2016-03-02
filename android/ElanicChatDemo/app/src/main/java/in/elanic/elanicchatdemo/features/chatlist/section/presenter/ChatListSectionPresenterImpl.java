@@ -104,6 +104,11 @@ public abstract class ChatListSectionPresenterImpl implements ChatListSectionPre
     }
 
     @Override
+    public void reloadData() {
+        loadData();
+    }
+
+    @Override
     public void openChat(int position) {
         if (position < 0 || uiItems == null || uiItems.size() <= position) {
             return;

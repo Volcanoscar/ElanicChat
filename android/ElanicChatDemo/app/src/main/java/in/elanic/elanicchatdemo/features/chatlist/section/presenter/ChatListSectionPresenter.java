@@ -10,6 +10,7 @@ public interface ChatListSectionPresenter {
     void attachView(Bundle extras);
     void detachView();
     void loadData();
+    void reloadData();
 
     void onOfferActionRequested(int position);
     void openChat(int position);
