@@ -12,7 +12,7 @@
         android:paddingRight="8dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:layout_marginRight="48dp"
+        android:layout_marginRight="40dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -27,7 +27,7 @@
             android:layout_marginBottom="4dp"
             android:textSize="14sp"
             android:drawableLeft="@drawable/ic_timer_grey_400_18dp"
-            android:drawablePadding="8dp"
+            android:drawablePadding="4dp"
             android:text="22:10"/>
 
         <TextView
@@ -42,6 +42,17 @@
             android:textSize="16sp"
             android:text="Rs 66600"/>
 
+        <ImageView
+            android:id="@+id/more_info_button"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toLeftOf="@id/offer_time_view"
+            android:background="@drawable/white_bg_ripple"
+            android:src="@drawable/ic_info_outline_grey_600_18dp"/>
+
         <TextView
             android:id="@+id/offer_earn_view"
             android:layout_width="wrap_content"
@@ -49,8 +60,8 @@
             android:maxLines="2"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
-            android:layout_marginRight="8dp"
-            android:layout_toLeftOf="@id/offer_time_view"
+            android:layout_marginRight="4dp"
+            android:layout_toLeftOf="@id/more_info_button"
             android:layout_toRightOf="@id/offer_view"
             android:textColor="@color/black_60_percent"
             android:textSize="14sp"

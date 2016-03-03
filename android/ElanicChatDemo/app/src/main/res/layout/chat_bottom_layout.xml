@@ -40,7 +40,10 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_width="match_parent"
-        app:contentPadding="12dp"
+        app:contentPaddingLeft="12dp"
+        app:contentPaddingTop="12dp"
+        app:contentPaddingBottom="12dp"
+        app:contentPaddingRight="6dp"
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         android:layout_height="wrap_content">
@@ -53,10 +56,20 @@
             android:textColor="@color/black_80_percent"
             android:text="Rs. 600"/>
 
+        <ImageView
+            android:id="@+id/more_info_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="right|center_vertical"
+            android:padding="7dp"
+            android:background="@drawable/white_bg_ripple"
+            android:src="@drawable/ic_info_outline_grey_600_18dp"/>
+
         <TextView
             android:id="@+id/offer_earn_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginRight="32dp"
             android:layout_gravity="right|center_vertical"
             android:textSize="18sp"
             android:textColor="@color/black_60_percent"
@@ -85,6 +98,7 @@
         android:text="@string/product_sold_out"/>
 
     <TextView
+        android:visibility="gone"
         android:id="@+id/info_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -114,6 +114,7 @@ public class WebsocketConnectionService extends Service {
     private Runnable notificationRunnable;
 
     private static final int ACTIVE_CHAT_THRESHOLD = 24 * 3600 * 1000; // 24 hours
+    private static final int CONNECTION_NOTIFICATION = 41;
 
     @Nullable
     @Override
@@ -279,6 +280,8 @@ public class WebsocketConnectionService extends Service {
                 sendWSConnectedEvent();
                 sendJoinChatEvent();
                 // TODO send request for sync. Ask for APIs
+
+                showConnectedNotification();
             }
 
             @Override
@@ -293,6 +296,7 @@ public class WebsocketConnectionService extends Service {
                 }
 
                 sendWSDisconnectedEvent();
+                notificationManager.cancel(CONNECTION_NOTIFICATION);
             }
 
             @Override
@@ -473,6 +477,14 @@ public class WebsocketConnectionService extends Service {
         try {
 
             Message message = JSONUtils.getMessageFromJSON(jsonResponse);
+
+            if (message == null || message.getCreated_at() == null) {
+                return;
+            }
+
+            mSyncTimestamp = message.getCreated_at().getTime();
+            mPreferenceProvider.setSyncTimestmap(mSyncTimestamp);
+
             List<Message> messages = new ArrayList<>();
             messages.add(message);
             onNewMessages(messages);
@@ -742,7 +754,9 @@ public class WebsocketConnectionService extends Service {
     ///////////////////////////////////////////
 
     private void sendJoinChatEvent() {
-        mWebSocketApi.joinGlobalChat(mUserId, mSyncTimestamp != -1 ? mSyncTimestamp : 0);
+        long timestamp = mWSSHelper.getSyncTime();
+        Log.i(TAG, "sync stamp for join global chat: " + timestamp);
+        mWebSocketApi.joinGlobalChat(mUserId, /*mSyncTimestamp != -1 ? mSyncTimestamp : 0*/ timestamp);
     }
 
     private void joinRoom(String chatId) {
@@ -1176,5 +1190,16 @@ public class WebsocketConnectionService extends Service {
         }
 
         notificationManager.notify(notificationId, builder.build());
+    }
+
+    private void showConnectedNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Socket Connected")
+                .setContentText("Connection available");
+
+        builder.setAutoCancel(false);
+
+        startForeground(CONNECTION_NOTIFICATION, builder.build());
     }
 }

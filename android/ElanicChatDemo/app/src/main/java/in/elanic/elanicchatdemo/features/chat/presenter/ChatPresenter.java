@@ -1,6 +1,9 @@
 package in.elanic.elanicchatdemo.features.chat.presenter;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+
+import in.elanic.elanicchatdemo.models.db.Message;
 
 /**
  * Created by Jay Rambhia on 28/12/15.
@@ -34,4 +37,6 @@ public interface ChatPresenter {
     void scrollToLatestOffer();
 
     void getCommissionDetailsForOffer(int position);
+
+    void showOfferMoreInfo(@Nullable Message message);
 }

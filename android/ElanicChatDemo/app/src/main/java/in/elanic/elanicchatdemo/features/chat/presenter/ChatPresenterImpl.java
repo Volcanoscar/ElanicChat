@@ -2,10 +2,14 @@ package in.elanic.elanicchatdemo.features.chat.presenter;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -90,6 +94,7 @@ public class ChatPresenterImpl implements ChatPresenter {
     private CompositeSubscription _subscriptions;
 
     private TimeZone timeZone;
+    private JsonParser parser;
 
     private static final int MESSAGE_LIMIT = 15;
 
@@ -106,7 +111,7 @@ public class ChatPresenterImpl implements ChatPresenter {
         chatItemProvider = new ChatItemProviderImpl(this.mDaoSession.getChatItemDao());
 
         timeZone = TimeZone.getDefault();
-
+        parser = new JsonParser();
         _subscriptions = new CompositeSubscription();
     }
 
@@ -598,6 +603,40 @@ public class ChatPresenterImpl implements ChatPresenter {
                 });
 
         _subscriptions.add(subscription);
+    }
+
+    @Override
+    public void showOfferMoreInfo(@Nullable Message offer) {
+        JsonObject commissionObject = null;
+        if (offer == null) {
+            if (commissionDetails != null) {
+                commissionObject = commissionDetails;
+            }
+        } else {
+
+            if (offer.getOffer_earning_data() != null) {
+                commissionObject = parser.parse(offer.getOffer_earning_data()).getAsJsonObject();
+            }
+
+        }
+
+        if (commissionObject != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Price : Rs. ");
+            sb.append(commissionObject.get("price").getAsInt());
+            sb.append("\n");
+
+            JsonArray data = commissionObject.getAsJsonArray("data");
+            for(int i=0; i<data.size(); i++) {
+                JsonObject entry = data.get(i).getAsJsonObject();
+                sb.append(entry.get("key").getAsString());
+                sb.append(" : Rs. ");
+                sb.append(entry.get("value").getAsInt());
+                sb.append("\n");
+            }
+
+            mChatView.showOfferDetails(sb.toString());
+        }
     }
 
     private void joinRoom(String chatId) {

@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -30,6 +31,7 @@ public class ChatBottomLayout extends FrameLayout {
     @Bind(R.id.progress_bar) ProgressBar progressBar;
     @Bind(R.id.offer_earn_view) TextView earnView;
     @Bind(R.id.offer_error_view) TextView errorView;
+    @Bind(R.id.more_info_button) ImageView moreInfoButton;
 
     private Callback callback;
 
@@ -91,6 +93,15 @@ public class ChatBottomLayout extends FrameLayout {
             }
         });
 
+        moreInfoButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (callback != null) {
+                    callback.onMoreInfoRequested();
+                }
+            }
+        });
+
         inputView.setText("");
         infoView.setText("");
         infoView.setVisibility(View.GONE);
@@ -98,6 +109,7 @@ public class ChatBottomLayout extends FrameLayout {
         errorView.setVisibility(View.GONE);
         earnView.setVisibility(View.GONE);
         closeButton.setVisibility(View.GONE);
+        moreInfoButton.setVisibility(View.GONE);
     }
 
     public void setCallback(Callback callback) {
@@ -132,6 +144,7 @@ public class ChatBottomLayout extends FrameLayout {
     public void setEarningText(CharSequence text) {
         earnView.setVisibility(text.length() > 0 ?View.VISIBLE : View.GONE);
         earnView.setText(text);
+        moreInfoButton.setVisibility(text.length() > 0 ?View.VISIBLE : View.GONE);
     }
 
     public void showErrorText(CharSequence text) {
@@ -152,5 +165,6 @@ public class ChatBottomLayout extends FrameLayout {
         void onSendOfferRequested(CharSequence price);
         void onPriceChanged(CharSequence price);
         void onCloseRequested();
+        void onMoreInfoRequested();
     }
 }

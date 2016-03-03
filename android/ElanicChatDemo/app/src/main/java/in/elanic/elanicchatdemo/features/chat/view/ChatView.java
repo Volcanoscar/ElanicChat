@@ -39,4 +39,6 @@ public interface ChatView {
     void showOfferError(CharSequence text);
     void hideOfferBottomLayout(boolean animate);
     void disableOffers(@StringRes int resId);
+
+    void showOfferDetails(@NonNull CharSequence text);
 }

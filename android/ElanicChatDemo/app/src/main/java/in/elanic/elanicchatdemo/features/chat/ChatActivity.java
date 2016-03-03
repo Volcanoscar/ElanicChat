@@ -180,6 +180,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             public void onLoadMoreCalled() {
                 mPresenter.loadMoreData();
             }
+
+            @Override
+            public void showCommissionDetails(@NonNull Message message) {
+                mPresenter.showOfferMoreInfo(message);
+            }
         });
 
         offerView.setOnClickListener(new View.OnClickListener() {
@@ -240,6 +245,11 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
             @Override
             public void onCloseRequested() {
                 hideOfferBottomLayout(true);
+            }
+
+            @Override
+            public void onMoreInfoRequested() {
+                mPresenter.showOfferMoreInfo(null);
             }
         });
 
@@ -656,6 +666,14 @@ public class ChatActivity extends AppCompatActivity implements ChatView {
     @Override
     public void disableOffers(@StringRes int resId) {
         bottomOfferLayout.showInfoView(resId);
+    }
+
+    @Override
+    public void showOfferDetails(@NonNull CharSequence text) {
+        new MaterialDialog.Builder(this)
+                .title("Details")
+                .content(text)
+                .show();
     }
 
     public void hideKeyboard() {

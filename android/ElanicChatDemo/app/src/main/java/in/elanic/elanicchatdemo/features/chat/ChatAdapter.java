@@ -182,6 +182,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             // hide offer earn view
             viewHolder.mOfferEarnView.setVisibility(View.GONE);
+            viewHolder.moreInfoButton.setVisibility(View.GONE);
+            viewHolder.moreInfoButton.setOnClickListener(null);
 
             // Check if invalid
             if (!isExpired) {
@@ -201,6 +203,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             } else {
                                 // show accepted
                                 viewHolder.mOfferStatusView.setText(R.string.offer_accepted);
+                                viewHolder.showEarnings(message);
                             }
 
                             viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
@@ -240,6 +243,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 viewHolder.mOfferStatusImageView.setImageResource(R.drawable.ic_close_grey_400_24dp);
                                 viewHolder.mOfferTimeView.setText(DateUtils.getRemainingTime(expiryDate));
                                 viewHolder.mOfferTimeView.setVisibility(View.VISIBLE);
+                                viewHolder.showEarnings(message);
                             }
 
                             viewHolder.mOfferStatusImageView.setEnabled(true);
@@ -305,6 +309,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             // hide offer earn view
             viewHolder.mOfferEarnView.setVisibility(View.GONE);
+            viewHolder.moreInfoButton.setVisibility(View.GONE);
+            viewHolder.moreInfoButton.setOnClickListener(null);
 
             viewHolder.mOfferView.setText(sb.toString());
             viewHolder.mTimeView.setText(DateUtils.getPrintableTime(message.getCreated_at(), timeZone));
@@ -510,6 +516,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @Bind(R.id.offer_status_imageview) ImageView mOfferStatusImageView;
         @Bind(R.id.offer_buy_now_button) TextView mBuyNowButton;
         @Bind(R.id.offer_earn_view) TextView mOfferEarnView;
+        @Bind(R.id.more_info_button) ImageView moreInfoButton;
 
         public MyOfferViewHolder(View itemView) {
             super(itemView);
@@ -545,7 +552,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             setRightDrawable(R.drawable.ic_access_time_grey_400_12dp, mTimeView);
         }
 
-        public void showEarnings(@NonNull Message message) {
+        public void showEarnings(@NonNull final Message message) {
             if (message.getOffer_earning_data() != null) {
 
                 JsonObject earningData = parser.parse(message.getOffer_earning_data()).getAsJsonObject();
@@ -554,6 +561,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     int earning = element.getAsInt();
                     mOfferEarnView.setText("You'll earn Rs. " + earning);
                     mOfferEarnView.setVisibility(View.VISIBLE);
+
+                    moreInfoButton.setVisibility(View.VISIBLE);
+                    moreInfoButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (mCallback != null) {
+                                mCallback.showCommissionDetails(message);
+                            }
+                        }
+                    });
                 }
 
                 return;
@@ -577,6 +594,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @Bind(R.id.offer_status) TextView mOfferStatusView;
         @Bind(R.id.time_view) TextView mTimeView;
         @Bind(R.id.offer_earn_view) TextView mOfferEarnView;
+        @Bind(R.id.more_info_button) ImageView moreInfoButton;
 
         public OtherOfferViewHolder(View itemView) {
             super(itemView);
@@ -625,7 +643,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             mOfferTimeView.setVisibility(View.VISIBLE);
         }
 
-        public void showEarnings(@NonNull Message message) {
+        public void showEarnings(@NonNull final Message message) {
 
             Log.i(TAG, "View holder earning method: " + (message != null));
 
@@ -639,6 +657,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     int earning = element.getAsInt();
                     mOfferEarnView.setText("You'll earn Rs. " + earning);
                     mOfferEarnView.setVisibility(View.VISIBLE);
+
+                    moreInfoButton.setVisibility(View.VISIBLE);
+                    moreInfoButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (mCallback != null) {
+                                mCallback.showCommissionDetails(message);
+                            }
+                        }
+                    });
                 }
 
                 return;
@@ -692,6 +720,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void cancelOffer(int position);
         void getCommissionDetails(int position);
         void onLoadMoreCalled();
+        void showCommissionDetails(@NonNull Message message);
     }
 
     private RecyclerView.AdapterDataObserver observer = new RecyclerView.AdapterDataObserver() {
